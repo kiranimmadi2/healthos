@@ -7,9 +7,10 @@ import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
 
 class OtpVerifyScreen extends ConsumerStatefulWidget {
-  const OtpVerifyScreen({super.key, required this.phone});
+  const OtpVerifyScreen({super.key, this.phone, this.email});
 
-  final String phone;
+  final String? phone;
+  final String? email;
 
   @override
   ConsumerState<OtpVerifyScreen> createState() => _OtpVerifyScreenState();
@@ -18,12 +19,16 @@ class OtpVerifyScreen extends ConsumerStatefulWidget {
 class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
   bool _isLoading = false;
 
+  String get _identifier => widget.email ?? widget.phone ?? '';
+  bool get _isEmail => widget.email != null;
+
   Future<void> _verifyOtp(String otp) async {
     setState(() => _isLoading = true);
 
     try {
       final authService = ref.read(authServiceProvider);
       await authService.verifyOtp(
+        email: widget.email,
         phone: widget.phone,
         token: otp,
       );
@@ -47,6 +52,20 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
     }
   }
 
+  Future<void> _resendOtp() async {
+    final authService = ref.read(authServiceProvider);
+    if (_isEmail) {
+      await authService.signInWithEmailOtp(widget.email!);
+    } else {
+      await authService.signInWithPhone(widget.phone!);
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP resent')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,10 +79,13 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: AppSpacing.xl),
-              Text('Verify your phone', style: AppTypography.h2),
+              Text(
+                _isEmail ? 'Check your email' : 'Verify your phone',
+                style: AppTypography.h2,
+              ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'We sent a 6-digit code to ${widget.phone}',
+                'We sent a 6-digit code to $_identifier',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -76,15 +98,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
                 HosOtpField(onCompleted: _verifyOtp),
               const SizedBox(height: AppSpacing.xl),
               TextButton(
-                onPressed: () async {
-                  final authService = ref.read(authServiceProvider);
-                  await authService.signInWithPhone(widget.phone);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('OTP resent')),
-                    );
-                  }
-                },
+                onPressed: _resendOtp,
                 child: const Text('Resend OTP'),
               ),
             ],

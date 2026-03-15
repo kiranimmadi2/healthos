@@ -19,10 +19,22 @@ class AuthService {
     await _auth.signInWithOtp(phone: phone);
   }
 
+  Future<void> signInWithEmailOtp(String email) async {
+    await _auth.signInWithOtp(email: email);
+  }
+
   Future<AuthResponse> verifyOtp({
-    required String phone,
+    String? phone,
+    String? email,
     required String token,
   }) async {
+    if (email != null) {
+      return await _auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.email,
+      );
+    }
     return await _auth.verifyOTP(
       phone: phone,
       token: token,

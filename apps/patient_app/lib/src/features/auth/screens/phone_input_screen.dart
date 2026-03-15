@@ -13,12 +13,15 @@ class PhoneInputScreen extends ConsumerStatefulWidget {
 }
 
 class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
+  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _useEmail = true;
 
   @override
   void dispose() {
+    _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -29,12 +32,20 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final phone = _phoneController.text.trim();
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithPhone(phone);
 
-      if (mounted) {
-        context.go('/auth/verify', extra: phone);
+      if (_useEmail) {
+        final email = _emailController.text.trim();
+        await authService.signInWithEmailOtp(email);
+        if (mounted) {
+          context.go('/auth/verify', extra: {'email': email});
+        }
+      } else {
+        final phone = _phoneController.text.trim();
+        await authService.signInWithPhone(phone);
+        if (mounted) {
+          context.go('/auth/verify', extra: {'phone': phone});
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -69,31 +80,68 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'Your unified health platform. Enter your phone number to get started.',
+                  _useEmail
+                      ? 'Your unified health platform. Enter your email to get started.'
+                      : 'Your unified health platform. Enter your phone number to get started.',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                HosTextField(
-                  controller: _phoneController,
-                  label: 'Phone Number',
-                  hint: '+91 98765 43210',
-                  prefixIcon: Icons.phone,
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Phone number is required';
-                    }
-                    return null;
-                  },
-                  onSubmitted: (_) => _sendOtp(),
-                ),
+                if (_useEmail)
+                  HosTextField(
+                    controller: _emailController,
+                    label: 'Email Address',
+                    hint: 'you@example.com',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Email is required';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
+                    onSubmitted: (_) => _sendOtp(),
+                  )
+                else
+                  HosTextField(
+                    controller: _phoneController,
+                    label: 'Phone Number',
+                    hint: '+91 98765 43210',
+                    prefixIcon: Icons.phone,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Phone number is required';
+                      }
+                      return null;
+                    },
+                    onSubmitted: (_) => _sendOtp(),
+                  ),
                 const SizedBox(height: AppSpacing.lg),
                 HosButton(
                   label: 'Send OTP',
                   onPressed: _sendOtp,
                   isLoading: _isLoading,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() => _useEmail = !_useEmail);
+                    },
+                    child: Text(
+                      _useEmail
+                          ? 'Use phone number instead'
+                          : 'Use email instead',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                 ),
                 const Spacer(flex: 2),
                 Center(

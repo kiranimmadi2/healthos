@@ -34,11 +34,11 @@ class HosQrCode extends StatelessWidget {
             size: size,
             backgroundColor: AppColors.white,
             eyeStyle: const QrEyeStyle(
-              eyeShape: QrEyeShape.roundedRect,
+              eyeShape: QrEyeShape.square,
               color: AppColors.textPrimary,
             ),
             dataModuleStyle: const QrDataModuleStyle(
-              dataModuleShape: QrDataModuleShape.roundedRect,
+              dataModuleShape: QrDataModuleShape.square,
               color: AppColors.textPrimary,
             ),
           ),

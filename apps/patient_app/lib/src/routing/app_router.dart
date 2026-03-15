@@ -40,8 +40,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'verify',
             builder: (context, state) {
-              final phone = state.extra as String? ?? '';
-              return OtpVerifyScreen(phone: phone);
+              final extra = state.extra as Map<String, String>? ?? {};
+              return OtpVerifyScreen(
+                phone: extra['phone'],
+                email: extra['email'],
+              );
             },
           ),
           GoRoute(

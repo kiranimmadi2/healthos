@@ -9,7 +9,7 @@ import '../../../providers/patient_provider.dart';
 final _aiServiceProvider = Provider<AiService>((ref) {
   final client = SupabaseClientInitializer.client;
   return AiService(
-    supabaseUrl: client.supabaseUrl,
+    supabaseUrl: 'https://jeantydukopukfvydixl.supabase.co',
     supabaseAnonKey: '',
     accessToken: client.auth.currentSession?.accessToken,
   );
