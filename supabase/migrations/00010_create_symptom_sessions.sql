@@ -1,6 +1,6 @@
 -- Symptom check sessions (AI interactions)
 CREATE TABLE symptom_sessions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID REFERENCES patients(id) ON DELETE CASCADE NOT NULL,
   symptoms_input TEXT NOT NULL,
   ai_response JSONB NOT NULL,

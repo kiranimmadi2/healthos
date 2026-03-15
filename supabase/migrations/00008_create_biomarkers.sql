@@ -1,6 +1,6 @@
 -- Individual biomarker values (for graphs and trends)
 CREATE TABLE biomarkers (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   report_id UUID REFERENCES lab_reports(id) ON DELETE CASCADE NOT NULL,
   patient_id UUID REFERENCES patients(id) NOT NULL,
   name TEXT NOT NULL,

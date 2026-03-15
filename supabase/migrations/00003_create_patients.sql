@@ -1,6 +1,6 @@
 -- Patients table
 CREATE TABLE patients (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   auth_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   health_id TEXT UNIQUE NOT NULL,
   phone TEXT UNIQUE NOT NULL,

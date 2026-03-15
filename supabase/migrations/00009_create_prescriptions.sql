@@ -1,6 +1,6 @@
 -- Prescriptions
 CREATE TABLE prescriptions (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID REFERENCES patients(id) ON DELETE CASCADE NOT NULL,
   visit_id UUID REFERENCES visits(id),
   doctor_id UUID REFERENCES doctors(id),

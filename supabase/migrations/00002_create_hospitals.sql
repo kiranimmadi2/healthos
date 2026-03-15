@@ -1,6 +1,6 @@
 -- Hospitals table (created first as doctors reference it)
 CREATE TABLE hospitals (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   address JSONB,
   license TEXT UNIQUE,

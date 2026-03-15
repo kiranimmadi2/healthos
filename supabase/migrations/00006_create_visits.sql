@@ -1,6 +1,6 @@
 -- Clinical visits
 CREATE TABLE visits (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID REFERENCES patients(id) ON DELETE CASCADE NOT NULL,
   doctor_id UUID REFERENCES doctors(id),
   hospital_id UUID REFERENCES hospitals(id),
