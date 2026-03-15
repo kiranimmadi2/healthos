@@ -1,0 +1,38 @@
+version: '3.8'
+
+# Local development environment for HealthOS
+# Run: docker-compose up -d
+# This starts a local Supabase instance for development
+
+services:
+  supabase-db:
+    image: supabase/postgres:15.1.1.61
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  supabase-studio:
+    image: supabase/studio:20240101-ce42139
+    ports:
+      - "54323:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: postgres
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_REST_URL: http://supabase-kong:8000/rest/v1/
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+
+volumes:
+  supabase-db-data:

@@ -1,0 +1,19 @@
+name: healthos
+description: HealthOS - AI-powered unified health platform
+publish_to: none
+
+environment:
+  sdk: ^3.10.7
+
+dev_dependencies:
+  melos: ^7.4.0
+
+workspace:
+  - apps/patient_app
+  - apps/doctor_app
+  - apps/hospital_portal
+  - apps/lab_portal
+  - packages/core
+  - packages/ui_kit
+  - packages/supabase_client
+  - packages/ai_client
