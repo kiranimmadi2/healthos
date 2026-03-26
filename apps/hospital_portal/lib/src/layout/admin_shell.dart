@@ -15,6 +15,7 @@ class AdminShell extends ConsumerWidget {
     if (location.startsWith('/dashboard')) return 0;
     if (location.startsWith('/doctors')) return 1;
     if (location.startsWith('/patients')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
@@ -37,6 +38,8 @@ class AdminShell extends ConsumerWidget {
                   context.go('/doctors');
                 case 2:
                   context.go('/patients');
+                case 3:
+                  context.go('/settings');
               }
             },
             leading: Padding(
@@ -51,9 +54,10 @@ class AdminShell extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'HealthOS',
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.label.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 11,
                     ),
                   ),
                 ],
@@ -89,6 +93,11 @@ class AdminShell extends ConsumerWidget {
                 icon: Icon(Icons.people_outlined),
                 selectedIcon: Icon(Icons.people),
                 label: Text('Patients'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: Text('Settings'),
               ),
             ],
           ),

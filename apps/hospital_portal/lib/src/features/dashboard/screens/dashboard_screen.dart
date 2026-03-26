@@ -1,14 +1,111 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_client/supabase_client.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../widgets/stats_card.dart';
+
+final dashboardStatsProvider =
+    FutureProvider<Map<String, int>>((ref) async {
+  final doctorRepo = DoctorRepository();
+  final patientRepo = PatientRepository();
+  final reportRepo = LabReportRepository();
+
+  final results = await Future.wait([
+    doctorRepo.search('', limit: 200),
+    patientRepo.search('', limit: 200),
+    reportRepo.getAll(limit: 200),
+  ]);
+
+  final doctors = results[0] as List<Doctor>;
+  final patients = results[1] as List<Patient>;
+  final reports = results[2] as List<LabReport>;
+
+  final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+  final recentReports = reports
+      .where((r) => r.createdAt != null && r.createdAt!.isAfter(weekAgo))
+      .length;
+
+  return {
+    'doctors': doctors.length,
+    'patients': patients.length,
+    'reports_week': recentReports,
+    'total_reports': reports.length,
+  };
+});
+
+final recentActivityProvider =
+    FutureProvider<List<_DashboardActivity>>((ref) async {
+  final reportRepo = LabReportRepository();
+  final patientRepo = PatientRepository();
+
+  final reports = await reportRepo.getAll(limit: 5);
+  final patients = await patientRepo.search('', limit: 5);
+
+  final activities = <_DashboardActivity>[];
+
+  for (final report in reports) {
+    activities.add(_DashboardActivity(
+      icon: Icons.science,
+      title: 'Lab report: ${report.reportType}',
+      subtitle: 'Status: ${report.status ?? 'pending'}',
+      time: report.createdAt != null
+          ? _formatTimeAgo(report.createdAt!)
+          : 'Recently',
+      timestamp: report.createdAt ?? DateTime.now(),
+    ));
+  }
+
+  for (final patient in patients.take(3)) {
+    activities.add(_DashboardActivity(
+      icon: Icons.person_add,
+      title: 'Patient: ${patient.fullName ?? 'Unknown'}',
+      subtitle: patient.healthId,
+      time: patient.createdAt != null
+          ? _formatTimeAgo(patient.createdAt!)
+          : 'Recently',
+      timestamp: patient.createdAt ?? DateTime.now(),
+    ));
+  }
+
+  activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+  return activities.take(5).toList();
+});
+
+String _formatTimeAgo(DateTime dateTime) {
+  final diff = DateTime.now().difference(dateTime);
+  if (diff.inMinutes < 1) return 'Just now';
+  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+  if (diff.inHours < 24) return '${diff.inHours} hr ago';
+  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+}
+
+class _DashboardActivity {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String time;
+  final DateTime timestamp;
+
+  const _DashboardActivity({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.timestamp,
+  });
+}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
+    final activityAsync = ref.watch(recentActivityProvider);
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
@@ -25,149 +122,132 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth > 900
-                    ? 4
-                    : constraints.maxWidth > 600
-                        ? 2
-                        : 1;
-                return GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: AppSpacing.md,
-                  mainAxisSpacing: AppSpacing.md,
-                  childAspectRatio: 1.6,
-                  children: const [
-                    StatsCard(
-                      icon: Icons.people,
-                      value: '1,284',
-                      label: 'Total Patients',
-                      trend: '+12%',
-                      trendPositive: true,
-                      iconColor: Colors.blue,
-                      iconBackgroundColor: Color(0xFFE3F2FD),
-                    ),
-                    StatsCard(
-                      icon: Icons.medical_services,
-                      value: '47',
-                      label: 'Total Doctors',
-                      trend: '+3',
-                      trendPositive: true,
-                      iconColor: Colors.teal,
-                      iconBackgroundColor: Color(0xFFE0F2F1),
-                    ),
-                    StatsCard(
-                      icon: Icons.science,
-                      value: '328',
-                      label: 'Reports This Week',
-                      trend: '+8%',
-                      trendPositive: true,
-                      iconColor: Colors.orange,
-                      iconBackgroundColor: Color(0xFFFFF3E0),
-                    ),
-                    StatsCard(
-                      icon: Icons.event_available,
-                      value: '62',
-                      label: 'Active Visits',
-                      trend: '-5%',
-                      trendPositive: false,
-                      iconColor: Colors.purple,
-                      iconBackgroundColor: Color(0xFFF3E5F5),
-                    ),
-                  ],
+            statsAsync.when(
+              loading: () => const Center(child: HosLoading()),
+              error: (e, _) => HosError(
+                message: e.toString(),
+                onRetry: () => ref.invalidate(dashboardStatsProvider),
+              ),
+              data: (stats) {
+                final patientCount = stats['patients'] ?? 0;
+                final doctorCount = stats['doctors'] ?? 0;
+                final reportsWeek = stats['reports_week'] ?? 0;
+                final totalReports = stats['total_reports'] ?? 0;
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final crossAxisCount = constraints.maxWidth > 900
+                        ? 4
+                        : constraints.maxWidth > 600
+                            ? 2
+                            : 1;
+                    return GridView.count(
+                      crossAxisCount: crossAxisCount,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisSpacing: AppSpacing.md,
+                      childAspectRatio: 1.6,
+                      children: [
+                        StatsCard(
+                          icon: Icons.people,
+                          value: patientCount.toString(),
+                          label: 'Total Patients',
+                          trend: null,
+                          trendPositive: true,
+                          iconColor: Colors.blue,
+                          iconBackgroundColor: const Color(0xFFE3F2FD),
+                        ),
+                        StatsCard(
+                          icon: Icons.medical_services,
+                          value: doctorCount.toString(),
+                          label: 'Total Doctors',
+                          trend: null,
+                          trendPositive: true,
+                          iconColor: Colors.teal,
+                          iconBackgroundColor: const Color(0xFFE0F2F1),
+                        ),
+                        StatsCard(
+                          icon: Icons.science,
+                          value: reportsWeek.toString(),
+                          label: 'Reports This Week',
+                          trend: null,
+                          trendPositive: true,
+                          iconColor: Colors.orange,
+                          iconBackgroundColor: const Color(0xFFFFF3E0),
+                        ),
+                        StatsCard(
+                          icon: Icons.description,
+                          value: totalReports.toString(),
+                          label: 'Total Reports',
+                          trend: null,
+                          trendPositive: true,
+                          iconColor: Colors.purple,
+                          iconBackgroundColor: const Color(0xFFF3E5F5),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
             const SizedBox(height: AppSpacing.xl),
             Text('Recent Activity', style: AppTypography.h3),
             const SizedBox(height: AppSpacing.md),
-            HosCard(
-              child: ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 5,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final activities = [
-                    _ActivityItem(
-                      icon: Icons.person_add,
-                      title: 'New patient registered',
-                      subtitle: 'Rahul Sharma - HID-20260315-001',
-                      time: '5 min ago',
-                    ),
-                    _ActivityItem(
-                      icon: Icons.science,
-                      title: 'Lab report uploaded',
-                      subtitle: 'CBC Report for Priya Patel',
-                      time: '12 min ago',
-                    ),
-                    _ActivityItem(
-                      icon: Icons.calendar_today,
-                      title: 'Appointment completed',
-                      subtitle: 'Dr. Kumar with Ankit Singh',
-                      time: '30 min ago',
-                    ),
-                    _ActivityItem(
-                      icon: Icons.medical_services,
-                      title: 'New doctor onboarded',
-                      subtitle: 'Dr. Meera Reddy - Dermatology',
-                      time: '1 hr ago',
-                    ),
-                    _ActivityItem(
-                      icon: Icons.verified,
-                      title: 'Report verified',
-                      subtitle: 'Lipid Panel for Suresh Gupta',
-                      time: '2 hrs ago',
-                    ),
-                  ];
-                  final activity = activities[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor:
-                          AppColors.primary.withValues(alpha: 0.1),
-                      child: Icon(
-                        activity.icon,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(activity.title,
-                        style: AppTypography.bodyMedium),
-                    subtitle: Text(
-                      activity.subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    trailing: Text(
-                      activity.time,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  );
-                },
+            activityAsync.when(
+              loading: () => const Center(child: HosLoading()),
+              error: (e, _) => HosError(
+                message: e.toString(),
+                onRetry: () => ref.invalidate(recentActivityProvider),
               ),
+              data: (activities) {
+                if (activities.isEmpty) {
+                  return const HosEmptyState(
+                    message: 'No recent activity.',
+                    icon: Icons.history,
+                  );
+                }
+                return HosCard(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: activities.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final activity = activities[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              AppColors.primary.withValues(alpha: 0.1),
+                          child: Icon(
+                            activity.icon,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(activity.title,
+                            style: AppTypography.bodyMedium),
+                        subtitle: Text(
+                          activity.subtitle,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        trailing: Text(
+                          activity.time,
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
           ],
         ),
       ),
     );
   }
-}
-
-class _ActivityItem {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String time;
-
-  const _ActivityItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.time,
-  });
 }
