@@ -9,8 +9,10 @@ import '../../../providers/patient_provider.dart';
 final _aiServiceProvider = Provider<AiService>((ref) {
   final client = SupabaseClientInitializer.client;
   return AiService(
-    supabaseUrl: 'https://jeantydukopukfvydixl.supabase.co',
-    supabaseAnonKey: '',
+    supabaseUrl: const String.fromEnvironment('SUPABASE_URL',
+        defaultValue: 'https://jeantydukopukfvydixl.supabase.co'),
+    supabaseAnonKey: const String.fromEnvironment('SUPABASE_ANON_KEY',
+        defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplYW50eWR1a29wdWtmdnlkaXhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODUxMzAsImV4cCI6MjA4OTE2MTEzMH0.TdZAU3iN5OPT9NmlhtISBme4GnKjd7lEG1vG4YH9byw'),
     accessToken: client.auth.currentSession?.accessToken,
   );
 });
@@ -74,10 +76,18 @@ class _SymptomCheckerScreenState extends ConsumerState<SymptomCheckerScreen> {
         replyBuffer.writeln();
       }
       if (response.whatToDo.isNotEmpty) {
-        replyBuffer.writeln('**What to do:** ${response.whatToDo}\n');
+        replyBuffer.writeln('**What to do:**');
+        for (final item in response.whatToDo) {
+          replyBuffer.writeln('• $item');
+        }
+        replyBuffer.writeln();
       }
       if (response.whatToAvoid.isNotEmpty) {
-        replyBuffer.writeln('**What to avoid:** ${response.whatToAvoid}\n');
+        replyBuffer.writeln('**What to avoid:**');
+        for (final item in response.whatToAvoid) {
+          replyBuffer.writeln('• $item');
+        }
+        replyBuffer.writeln();
       }
       if (response.whenToSeekHelp.isNotEmpty) {
         replyBuffer.writeln('**Seek help if:** ${response.whenToSeekHelp}\n');
@@ -199,6 +209,51 @@ class _ChatBubble extends StatelessWidget {
 
   final _ChatMessage message;
 
+  Color _triageColor(String level) {
+    switch (level.toLowerCase()) {
+      case 'emergency':
+        return AppColors.error;
+      case 'see_doctor':
+      case 'see doctor':
+        return AppColors.warning;
+      case 'home_care':
+      case 'home care':
+        return AppColors.success;
+      default:
+        return AppColors.info;
+    }
+  }
+
+  IconData _triageIcon(String level) {
+    switch (level.toLowerCase()) {
+      case 'emergency':
+        return Icons.emergency;
+      case 'see_doctor':
+      case 'see doctor':
+        return Icons.local_hospital;
+      case 'home_care':
+      case 'home care':
+        return Icons.home;
+      default:
+        return Icons.info;
+    }
+  }
+
+  String _triageLabel(String level) {
+    switch (level.toLowerCase()) {
+      case 'emergency':
+        return 'Emergency';
+      case 'see_doctor':
+      case 'see doctor':
+        return 'See a Doctor';
+      case 'home_care':
+      case 'home care':
+        return 'Home Care';
+      default:
+        return level;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -215,11 +270,45 @@ class _ChatBubble extends StatelessWidget {
               : AppColors.background,
           borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
         ),
-        child: Text(
-          message.text,
-          style: AppTypography.bodyMedium.copyWith(
-            color: message.isUser ? AppColors.white : AppColors.textPrimary,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (message.triageLevel != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+                decoration: BoxDecoration(
+                  color: _triageColor(message.triageLevel!).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _triageIcon(message.triageLevel!),
+                      size: 16,
+                      color: _triageColor(message.triageLevel!),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _triageLabel(message.triageLevel!),
+                      style: AppTypography.caption.copyWith(
+                        color: _triageColor(message.triageLevel!),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            Text(
+              message.text,
+              style: AppTypography.bodyMedium.copyWith(
+                color: message.isUser ? AppColors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

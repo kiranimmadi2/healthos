@@ -10,8 +10,13 @@ import '../features/records/screens/reports_list_screen.dart';
 import '../features/records/screens/report_detail_screen.dart';
 import '../features/symptoms/screens/symptom_checker_screen.dart';
 import '../features/access/screens/access_grant_screen.dart';
+import '../features/access/screens/grant_doctor_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
+import '../features/profile/screens/profile_edit_screen.dart';
 import '../features/qr/screens/qr_display_screen.dart';
+import '../features/notifications/screens/notifications_screen.dart';
+import '../features/appointments/screens/appointments_screen.dart';
+import '../features/appointments/screens/book_appointment_screen.dart';
 import '../providers/auth_provider.dart';
 import 'app_shell.dart';
 
@@ -28,6 +33,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '/auth';
       }
       if (isAuthenticated && isAuthRoute) {
+        // Allow authenticated users to access /auth/setup (profile creation)
+        if (state.matchedLocation == '/auth/setup') {
+          return null;
+        }
         return '/home';
       }
       return null;
@@ -80,14 +89,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/access',
             builder: (context, state) => const AccessGrantScreen(),
+            routes: [
+              GoRoute(
+                path: 'grant',
+                builder: (context, state) => const GrantDoctorScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                builder: (context, state) => const ProfileEditScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/qr',
             builder: (context, state) => const QrDisplayScreen(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/appointments',
+            builder: (context, state) => const AppointmentsScreen(),
+            routes: [
+              GoRoute(
+                path: 'book',
+                builder: (context, state) => const BookAppointmentScreen(),
+              ),
+            ],
           ),
         ],
       ),

@@ -54,10 +54,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       final repo = ref.read(patientRepositoryProvider);
       final healthId = HealthIdGenerator.generate();
 
+      final currentUser = ref.read(authServiceProvider).currentUser;
       await repo.create({
         'auth_id': userId,
         'health_id': healthId,
-        'phone': ref.read(authServiceProvider).currentUser?.phone ?? '',
+        'phone': currentUser?.phone,
+        'email': currentUser?.email,
         'full_name': _nameController.text.trim(),
         'gender': _selectedGender,
         'blood_group': _selectedBloodGroup,

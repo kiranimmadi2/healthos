@@ -27,9 +27,15 @@ class QuickActionsGrid extends StatelessWidget {
         onTap: () => context.go('/access'),
       ),
       _QuickAction(
+        icon: Icons.calendar_month_outlined,
+        label: 'Appointments',
+        color: AppColors.info,
+        onTap: () => context.go('/appointments'),
+      ),
+      _QuickAction(
         icon: Icons.qr_code_2,
         label: 'My QR Code',
-        color: AppColors.info,
+        color: const Color(0xFF7C4DFF),
         onTap: () => context.go('/qr'),
       ),
     ];
@@ -38,10 +44,10 @@ class QuickActionsGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: 3,
         crossAxisSpacing: AppSpacing.sm,
         mainAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 1.6,
+        childAspectRatio: 1.0,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) => actions[index],
