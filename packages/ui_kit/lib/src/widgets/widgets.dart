@@ -7,4 +7,5 @@ export 'hos_health_id_badge.dart';
 export 'hos_loading.dart';
 export 'hos_otp_field.dart';
 export 'hos_qr_code.dart';
+export 'hos_status_chip.dart';
 export 'hos_text_field.dart';
