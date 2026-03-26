@@ -9,6 +9,15 @@ serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Verify authentication
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization header' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   try {
     const { patient_id } = await req.json();
 
@@ -30,33 +39,37 @@ serve(async (req: Request) => {
       throw new Error(`Failed to fetch patient: ${patientError.message}`);
     }
 
-    // Fetch all visits
+    // Fetch recent visits
     const { data: visits } = await supabaseAdmin
       .from('visits')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('visit_date', { ascending: false });
+      .order('visited_at', { ascending: false })
+      .limit(50);
 
-    // Fetch all lab reports
+    // Fetch recent lab reports
     const { data: reports } = await supabaseAdmin
       .from('lab_reports')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-    // Fetch all prescriptions
+    // Fetch recent prescriptions
     const { data: prescriptions } = await supabaseAdmin
       .from('prescriptions')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50);
 
-    // Fetch all biomarkers
+    // Fetch recent biomarkers
     const { data: biomarkers } = await supabaseAdmin
       .from('biomarkers')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('recorded_at', { ascending: false });
+      .order('recorded_at', { ascending: false })
+      .limit(50);
 
     // Build comprehensive patient context
     const patientContext = `
@@ -66,19 +79,19 @@ Patient Demographics:
 - Gender: ${patient.gender || 'N/A'}
 - Blood Group: ${patient.blood_group || 'N/A'}
 - Known Allergies: ${patient.allergies || 'None reported'}
-- Existing Conditions: ${patient.conditions || 'None reported'}
+- Existing Conditions: ${patient.chronic_conditions?.join(', ') || 'None reported'}
 
 Visit History (${visits?.length || 0} visits):
-${visits?.length ? visits.map((v: any) => `- ${v.visit_date}: Reason: ${v.reason || 'General'} | Diagnosis: ${v.diagnosis || 'N/A'} | Notes: ${v.notes || 'N/A'}`).join('\n') : 'No visits recorded'}
+${visits?.length ? visits.map((v: any) => `- ${v.visited_at}: Complaint: ${v.chief_complaint || 'General'} | Diagnosis: ${v.diagnosis || 'N/A'} | Notes: ${v.notes || 'N/A'}`).join('\n') : 'No visits recorded'}
 
 Lab Reports (${reports?.length || 0} reports):
 ${reports?.length ? reports.map((r: any) => `- ${r.created_at}: ${r.report_type} | Status: ${r.status} | Notes: ${r.notes || 'N/A'}`).join('\n') : 'No reports recorded'}
 
 Prescriptions (${prescriptions?.length || 0} prescriptions):
-${prescriptions?.length ? prescriptions.map((p: any) => `- ${p.medication_name}: ${p.dosage} | Frequency: ${p.frequency} | Status: ${p.status || 'active'}`).join('\n') : 'No prescriptions recorded'}
+${prescriptions?.length ? prescriptions.map((p: any) => `- ${p.issued_at}: ${(p.medications || []).map((m: any) => `${m.name} ${m.dose} (${m.frequency})`).join(', ')} | Notes: ${p.notes || 'N/A'}`).join('\n') : 'No prescriptions recorded'}
 
 Biomarkers (${biomarkers?.length || 0} readings):
-${biomarkers?.length ? biomarkers.map((b: any) => `- ${b.name}: ${b.value} ${b.unit} (Ref: ${b.reference_min ?? '?'}-${b.reference_max ?? '?'}) | ${b.recorded_at}`).join('\n') : 'No biomarkers recorded'}
+${biomarkers?.length ? biomarkers.map((b: any) => `- ${b.name}: ${b.value} ${b.unit} (Ref: ${b.normal_min ?? '?'}-${b.normal_max ?? '?'}) ${b.is_abnormal ? '[ABNORMAL]' : ''} | ${b.recorded_at}`).join('\n') : 'No biomarkers recorded'}
     `.trim();
 
     // Call Claude for summary generation

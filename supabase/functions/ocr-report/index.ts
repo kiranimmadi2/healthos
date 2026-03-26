@@ -9,6 +9,15 @@ serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Verify authentication
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization header' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   try {
     const { report_url, patient_id, report_id } = await req.json();
 
@@ -111,9 +120,8 @@ Respond ONLY with valid JSON in this exact format:
         name: b.name,
         value: b.value,
         unit: b.unit,
-        reference_min: b.reference_min,
-        reference_max: b.reference_max,
-        status: b.status,
+        normal_min: b.reference_min,
+        normal_max: b.reference_max,
         recorded_at: extractedData.report_date || new Date().toISOString(),
       }));
 
@@ -133,7 +141,6 @@ Respond ONLY with valid JSON in this exact format:
         status: 'ready',
         report_type: extractedData.report_type || null,
         lab_name: extractedData.lab_name || null,
-        processed_at: new Date().toISOString(),
       })
       .eq('id', report_id);
 

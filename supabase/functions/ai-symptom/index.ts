@@ -9,6 +9,15 @@ serve(async (req: Request) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Verify authentication
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization header' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
+  }
+
   try {
     const { patient_id, symptoms } = await req.json();
 
@@ -43,7 +52,7 @@ serve(async (req: Request) => {
       .from('visits')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('visit_date', { ascending: false })
+      .order('visited_at', { ascending: false })
       .limit(5);
 
     // Build patient context for Claude
@@ -54,13 +63,13 @@ Patient Demographics:
 - Gender: ${patient.gender || 'N/A'}
 - Blood Group: ${patient.blood_group || 'N/A'}
 - Known Allergies: ${patient.allergies || 'None reported'}
-- Existing Conditions: ${patient.conditions || 'None reported'}
+- Existing Conditions: ${patient.chronic_conditions?.join(', ') || 'None reported'}
 
 Recent Lab Reports (last 5):
 ${recentReports?.length ? recentReports.map((r: any) => `- ${r.report_type}: ${r.status} (${r.created_at})`).join('\n') : 'No recent reports'}
 
 Recent Visits (last 5):
-${recentVisits?.length ? recentVisits.map((v: any) => `- ${v.visit_date}: ${v.reason || 'General'} - ${v.diagnosis || 'Pending'}`).join('\n') : 'No recent visits'}
+${recentVisits?.length ? recentVisits.map((v: any) => `- ${v.visited_at}: ${v.chief_complaint || 'General'} - ${v.diagnosis || 'Pending'}`).join('\n') : 'No recent visits'}
     `.trim();
 
     // Call Claude for symptom analysis
@@ -82,7 +91,7 @@ ${Array.isArray(symptoms) ? symptoms.join(', ') : symptoms}
 Respond ONLY with valid JSON in this exact format:
 {
   "recommendations": ["list of actionable recommendations"],
-  "triage_level": "low | medium | high | emergency",
+  "triage_level": "home_care | see_doctor | emergency",
   "what_to_do": ["list of things the patient should do"],
   "what_to_avoid": ["list of things the patient should avoid"],
   "when_to_seek_help": "description of warning signs that require immediate medical attention"
@@ -101,7 +110,7 @@ Respond ONLY with valid JSON in this exact format:
       // If Claude didn't return valid JSON, wrap the response
       structuredResponse = {
         recommendations: [responseText],
-        triage_level: 'medium',
+        triage_level: 'see_doctor',
         what_to_do: ['Consult a healthcare professional for proper evaluation'],
         what_to_avoid: ['Self-medicating without professional guidance'],
         when_to_seek_help: 'If symptoms worsen or new symptoms appear, seek immediate medical attention.',
@@ -113,7 +122,7 @@ Respond ONLY with valid JSON in this exact format:
       .from('symptom_sessions')
       .insert({
         patient_id,
-        symptoms: Array.isArray(symptoms) ? symptoms : [symptoms],
+        symptoms_input: Array.isArray(symptoms) ? symptoms.join(', ') : symptoms,
         ai_response: structuredResponse,
         triage_level: structuredResponse.triage_level,
         created_at: new Date().toISOString(),
