@@ -53,6 +53,40 @@ class AiService {
     );
   }
 
+  /// Streams the raw response from the ai-symptom Edge Function as
+  /// Server-Sent Event (SSE) / chunked text fragments.
+  ///
+  /// Each emitted [String] is one chunk of the HTTP response body as it
+  /// arrives over the wire.  The caller is responsible for accumulating
+  /// and parsing the final JSON once the stream closes.
+  ///
+  /// The existing [checkSymptoms] method is left unchanged for callers
+  /// that prefer a single-shot Future-based API.
+  Stream<String> checkSymptomsStream(SymptomRequest request) async* {
+    final client = http.Client();
+    try {
+      final httpRequest = http.Request(
+        'POST',
+        Uri.parse('$supabaseUrl/functions/v1/ai-symptom'),
+      );
+      httpRequest.headers.addAll(_headers);
+      httpRequest.body = jsonEncode(request.toJson());
+
+      final streamed = await client.send(httpRequest);
+
+      if (streamed.statusCode != 200) {
+        final body = await streamed.stream.bytesToString();
+        throw Exception('Symptom check failed (${streamed.statusCode}): $body');
+      }
+
+      await for (final chunk in streamed.stream.transform(utf8.decoder)) {
+        yield chunk;
+      }
+    } finally {
+      client.close();
+    }
+  }
+
   Future<Map<String, dynamic>> processLabReport({
     required String reportUrl,
     required String patientId,
