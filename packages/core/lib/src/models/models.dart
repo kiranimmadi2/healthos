@@ -1,9 +1,12 @@
 export 'access_grant.dart';
+export 'app_notification.dart';
+export 'appointment.dart';
 export 'biomarker.dart';
 export 'doctor.dart';
 export 'hospital.dart';
 export 'lab_report.dart';
 export 'patient.dart';
+export 'patient_embedding.dart';
 export 'prescription.dart';
 export 'symptom_session.dart';
 export 'visit.dart';

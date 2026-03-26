@@ -11,6 +11,8 @@ class SupabaseTables {
   static const String prescriptions = 'prescriptions';
   static const String symptomSessions = 'symptom_sessions';
   static const String patientEmbeddings = 'patient_embeddings';
+  static const String notifications = 'notifications';
+  static const String appointments = 'appointments';
 }
 
 class SupabaseBuckets {
