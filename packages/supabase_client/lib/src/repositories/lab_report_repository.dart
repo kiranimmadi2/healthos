@@ -56,6 +56,21 @@ class LabReportRepository {
     return LabReport.fromJson(response);
   }
 
+  Future<List<LabReport>> getAll({
+    int limit = 50,
+    int offset = 0,
+    String? status,
+  }) async {
+    var query = _client.from(SupabaseTables.labReports).select();
+    if (status != null) {
+      query = query.eq('status', status);
+    }
+    final response = await query
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+    return response.map((e) => LabReport.fromJson(e)).toList();
+  }
+
   Future<List<String>> getReportTypes(String patientId) async {
     final response = await _client
         .from(SupabaseTables.labReports)
