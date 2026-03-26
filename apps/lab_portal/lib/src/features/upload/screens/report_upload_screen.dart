@@ -1,9 +1,11 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import '../../../providers/repository_providers.dart';
 import '../providers/upload_provider.dart';
 import '../widgets/upload_dropzone.dart';
 
@@ -20,6 +22,9 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
   String? _selectedReportType;
   String? _selectedFileName;
   PlatformFile? _selectedFile;
+  Patient? _verifiedPatient;
+  bool _isVerifying = false;
+  String? _verifyError;
 
   static const _reportTypes = [
     'Complete Blood Count (CBC)',
@@ -53,6 +58,31 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
         _selectedFile = result.files.first;
         _selectedFileName = result.files.first.name;
       });
+    }
+  }
+
+  Future<void> _verifyPatient() async {
+    final healthId = _healthIdController.text.trim();
+    if (healthId.isEmpty) return;
+
+    setState(() {
+      _isVerifying = true;
+      _verifyError = null;
+      _verifiedPatient = null;
+    });
+
+    try {
+      final repo = ref.read(patientRepoProvider);
+      final patient = await repo.getByHealthId(healthId);
+      if (patient != null) {
+        setState(() => _verifiedPatient = patient);
+      } else {
+        setState(() => _verifyError = 'No patient found with this Health ID');
+      }
+    } catch (e) {
+      setState(() => _verifyError = 'Lookup failed: ${e.toString()}');
+    } finally {
+      setState(() => _isVerifying = false);
     }
   }
 
@@ -188,7 +218,82 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                         label: 'Patient Health ID',
                         hint: 'HID-20260101-001',
                         prefixIcon: Icons.badge_outlined,
+                        onSubmitted: (_) => _verifyPatient(),
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isVerifying ? null : _verifyPatient,
+                          icon: _isVerifying
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.verified_user_outlined, size: 18),
+                          label: Text(_isVerifying ? 'Verifying...' : 'Verify Patient'),
+                        ),
+                      ),
+                      if (_verifiedPatient != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _verifiedPatient!.fullName ?? 'Unknown',
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _verifiedPatient!.healthId,
+                                      style: AppTypography.caption.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontFamily: 'monospace',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (_verifyError != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  _verifyError!,
+                                  style: AppTypography.bodySmall.copyWith(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                       Text('Report Type', style: AppTypography.h3),
                       const SizedBox(height: AppSpacing.md),

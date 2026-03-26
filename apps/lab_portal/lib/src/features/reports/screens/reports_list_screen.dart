@@ -1,7 +1,23 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
+
+import '../../../providers/repository_providers.dart';
+
+final reportsProvider = FutureProvider<List<LabReport>>((ref) {
+  final repo = ref.read(labReportRepoProvider);
+  return repo.getAll();
+});
+
+/// Looks up a patient name by ID; caches per patient.
+final patientNameProvider =
+    FutureProvider.family<String, String>((ref, patientId) async {
+  final repo = ref.read(patientRepoProvider);
+  final patient = await repo.getById(patientId);
+  return patient?.fullName ?? 'Unknown';
+});
 
 class ReportsListScreen extends ConsumerStatefulWidget {
   const ReportsListScreen({super.key});
@@ -22,81 +38,40 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     super.dispose();
   }
 
-  // Sample data - will be replaced with Supabase queries
-  static const _reports = [
-    _ReportRow(
-      id: 'RPT-001',
-      patientName: 'Rahul Sharma',
-      healthId: 'HID-20260101-001',
-      reportType: 'Complete Blood Count (CBC)',
-      uploadedAt: '2026-03-15 10:30',
-      status: 'Verified',
-    ),
-    _ReportRow(
-      id: 'RPT-002',
-      patientName: 'Priya Patel',
-      healthId: 'HID-20260102-002',
-      reportType: 'Lipid Panel',
-      uploadedAt: '2026-03-15 09:15',
-      status: 'Pending Review',
-    ),
-    _ReportRow(
-      id: 'RPT-003',
-      patientName: 'Ankit Singh',
-      healthId: 'HID-20260103-003',
-      reportType: 'Thyroid Panel',
-      uploadedAt: '2026-03-14 16:45',
-      status: 'Processing',
-    ),
-    _ReportRow(
-      id: 'RPT-004',
-      patientName: 'Suresh Gupta',
-      healthId: 'HID-20260104-004',
-      reportType: 'Liver Function Test (LFT)',
-      uploadedAt: '2026-03-14 14:20',
-      status: 'Verified',
-    ),
-    _ReportRow(
-      id: 'RPT-005',
-      patientName: 'Kavita Desai',
-      healthId: 'HID-20260105-005',
-      reportType: 'HbA1c',
-      uploadedAt: '2026-03-14 11:00',
-      status: 'Pending Review',
-    ),
-    _ReportRow(
-      id: 'RPT-006',
-      patientName: 'Deepak Joshi',
-      healthId: 'HID-20260106-006',
-      reportType: 'Kidney Function Test (KFT)',
-      uploadedAt: '2026-03-13 15:30',
-      status: 'Failed',
-    ),
-  ];
-
-  List<_ReportRow> get _filteredReports {
-    var filtered = _reports.toList();
-
-    if (_statusFilter != 'All') {
-      filtered =
-          filtered.where((r) => r.status == _statusFilter).toList();
+  String _formatStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Pending Review';
+      case 'ready':
+        return 'Verified';
+      case 'processing':
+        return 'Processing';
+      case 'failed':
+        return 'Failed';
+      default:
+        return status;
     }
+  }
 
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
-      filtered = filtered
-          .where((r) =>
-              r.patientName.toLowerCase().contains(query) ||
-              r.healthId.toLowerCase().contains(query) ||
-              r.reportType.toLowerCase().contains(query))
-          .toList();
+  String _dbStatus(String uiStatus) {
+    switch (uiStatus) {
+      case 'Pending Review':
+        return 'pending';
+      case 'Verified':
+        return 'ready';
+      case 'Processing':
+        return 'processing';
+      case 'Failed':
+        return 'failed';
+      default:
+        return uiStatus.toLowerCase();
     }
-
-    return filtered;
   }
 
   @override
   Widget build(BuildContext context) {
+    final reportsAsync = ref.watch(reportsProvider);
+
     return Scaffold(
       body: Padding(
         padding: AppSpacing.screenPadding,
@@ -158,61 +133,131 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             Expanded(
-              child: HosCard(
-                child: SingleChildScrollView(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(
-                        AppColors.surface,
+              child: reportsAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (error, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 48, color: Colors.red.shade300),
+                      const SizedBox(height: AppSpacing.md),
+                      Text('Failed to load reports: $error',
+                          style: AppTypography.bodyMedium),
+                      const SizedBox(height: AppSpacing.md),
+                      OutlinedButton(
+                        onPressed: () =>
+                            ref.invalidate(reportsProvider),
+                        child: const Text('Retry'),
                       ),
-                      columns: const [
-                        DataColumn(label: Text('Report ID')),
-                        DataColumn(label: Text('Patient')),
-                        DataColumn(label: Text('Health ID')),
-                        DataColumn(label: Text('Type')),
-                        DataColumn(label: Text('Uploaded')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Actions')),
-                      ],
-                      rows: _filteredReports.map((report) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(
-                              report.id,
-                              style: AppTypography.bodySmall.copyWith(
-                                fontFamily: 'monospace',
-                              ),
-                            )),
-                            DataCell(Text(report.patientName)),
-                            DataCell(Text(
-                              report.healthId,
-                              style: AppTypography.bodySmall.copyWith(
-                                fontFamily: 'monospace',
-                                color: AppColors.primary,
-                              ),
-                            )),
-                            DataCell(Text(report.reportType)),
-                            DataCell(Text(report.uploadedAt)),
-                            DataCell(
-                                _ReportStatusChip(status: report.status)),
-                            DataCell(
-                              IconButton(
-                                icon: const Icon(
-                                    Icons.rate_review_outlined,
-                                    size: 18),
-                                onPressed: () {
-                                  context.go('/reports/${report.id}');
-                                },
-                                tooltip: 'Review',
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                    ],
                   ),
                 ),
+                data: (reports) {
+                  var filtered = reports.toList();
+
+                  // Apply status filter
+                  if (_statusFilter != 'All') {
+                    final dbStatus = _dbStatus(_statusFilter);
+                    filtered = filtered
+                        .where((r) =>
+                            r.status.toLowerCase() == dbStatus)
+                        .toList();
+                  }
+
+                  // Apply search filter
+                  if (_searchQuery.isNotEmpty) {
+                    final query = _searchQuery.toLowerCase();
+                    filtered = filtered
+                        .where((r) =>
+                            r.reportType
+                                .toLowerCase()
+                                .contains(query) ||
+                            r.patientId
+                                .toLowerCase()
+                                .contains(query) ||
+                            (r.labName ?? '')
+                                .toLowerCase()
+                                .contains(query))
+                        .toList();
+                  }
+
+                  if (filtered.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No reports found.',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return HosCard(
+                    child: SingleChildScrollView(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(
+                            AppColors.surface,
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('Report ID')),
+                            DataColumn(label: Text('Patient')),
+                            DataColumn(label: Text('Type')),
+                            DataColumn(label: Text('Lab')),
+                            DataColumn(label: Text('Uploaded')),
+                            DataColumn(label: Text('Status')),
+                            DataColumn(label: Text('Actions')),
+                          ],
+                          rows: filtered.map((report) {
+                            final displayStatus =
+                                _formatStatus(report.status);
+                            final createdAt = report.createdAt != null
+                                ? '${report.createdAt!.year}-${report.createdAt!.month.toString().padLeft(2, '0')}-${report.createdAt!.day.toString().padLeft(2, '0')} ${report.createdAt!.hour.toString().padLeft(2, '0')}:${report.createdAt!.minute.toString().padLeft(2, '0')}'
+                                : '—';
+
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(
+                                  report.id.length > 8
+                                      ? report.id.substring(0, 8)
+                                      : report.id,
+                                  style:
+                                      AppTypography.bodySmall.copyWith(
+                                    fontFamily: 'monospace',
+                                  ),
+                                )),
+                                DataCell(
+                                    _PatientNameCell(
+                                        patientId: report.patientId)),
+                                DataCell(Text(report.reportType)),
+                                DataCell(
+                                    Text(report.labName ?? '—')),
+                                DataCell(Text(createdAt)),
+                                DataCell(_ReportStatusChip(
+                                    status: displayStatus)),
+                                DataCell(
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.rate_review_outlined,
+                                        size: 18),
+                                    onPressed: () {
+                                      context.go(
+                                          '/reports/${report.id}');
+                                    },
+                                    tooltip: 'Review',
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -222,22 +267,28 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
   }
 }
 
-class _ReportRow {
-  final String id;
-  final String patientName;
-  final String healthId;
-  final String reportType;
-  final String uploadedAt;
-  final String status;
+class _PatientNameCell extends ConsumerWidget {
+  const _PatientNameCell({required this.patientId});
 
-  const _ReportRow({
-    required this.id,
-    required this.patientName,
-    required this.healthId,
-    required this.reportType,
-    required this.uploadedAt,
-    required this.status,
-  });
+  final String patientId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nameAsync = ref.watch(patientNameProvider(patientId));
+    return nameAsync.when(
+      data: (name) => Text(name),
+      loading: () => const SizedBox(
+        width: 80,
+        child: LinearProgressIndicator(minHeight: 2),
+      ),
+      error: (_, _) => Text(
+        patientId.length > 8 ? patientId.substring(0, 8) : patientId,
+        style: AppTypography.bodySmall.copyWith(
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
 }
 
 class _ReportStatusChip extends StatelessWidget {
