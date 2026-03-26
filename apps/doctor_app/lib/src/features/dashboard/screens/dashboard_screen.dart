@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../layout/master_detail_layout.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/doctor_provider.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../../patients/screens/patient_detail_screen.dart';
 import '../../patients/screens/patient_list_screen.dart';
 
@@ -48,13 +48,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ],
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () async {
-              final authService = ref.read(authServiceProvider);
-              await authService.signOut();
+          Consumer(
+            builder: (context, ref, child) {
+              final countAsync = ref.watch(doctorUnreadCountProvider);
+              final count = countAsync.valueOrNull ?? 0;
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: count > 0,
+                  label: Text('$count'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+                onPressed: () => context.go('/notifications'),
+              );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outlined),
+            tooltip: 'Profile',
+            onPressed: () => context.go('/profile'),
           ),
         ],
       ),

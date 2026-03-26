@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +21,7 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
   final _chiefComplaintController = TextEditingController();
   final _diagnosisController = TextEditingController();
   final _notesController = TextEditingController();
+  TriageLevel? _triageLevel;
   bool _isLoading = false;
 
   @override
@@ -50,6 +52,8 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
         'notes': _notesController.text.trim().isEmpty
             ? null
             : _notesController.text.trim(),
+        if (_triageLevel != null)
+          'triage_level': _triageLevel!.jsonValue,
       });
 
       if (mounted) {
@@ -109,6 +113,39 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    DropdownButtonFormField<TriageLevel>(
+                      decoration: const InputDecoration(
+                        labelText: 'Triage Level',
+                        prefixIcon: Icon(Icons.priority_high),
+                      ),
+                      value: _triageLevel,
+                      items: TriageLevel.values.map((level) {
+                        final color = level == TriageLevel.emergency
+                            ? AppColors.error
+                            : level == TriageLevel.seeDoctor
+                                ? AppColors.warning
+                                : AppColors.success;
+                        return DropdownMenuItem(
+                          value: level,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(level.displayName),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _triageLevel = value),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     HosTextField(
