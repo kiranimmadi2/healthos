@@ -26,8 +26,21 @@ class SupabaseBuckets {
 class SupabaseFunctions {
   SupabaseFunctions._();
 
+  // Legacy function names (kept for backward compatibility)
   static const String aiSymptom = 'ai-symptom';
   static const String aiSummary = 'ai-summary';
   static const String ocrReport = 'ocr-report';
   static const String sendNotification = 'notifications';
+}
+
+/// Microservice edge function names and route helpers.
+class HealthOSServices {
+  HealthOSServices._();
+
+  // Service function names
+  static const String patientService = 'patient-service';
+  static const String clinicalService = 'clinical-service';
+  static const String appointmentService = 'appointment-service';
+  static const String aiService = 'ai-service';
+  static const String notificationService = 'notification-service';
 }
