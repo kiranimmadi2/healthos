@@ -5,8 +5,6 @@ packages:
   - packages/*
 
 command:
-  bootstrap:
-    usePubspecOverrides: true
   version:
     branch: main
 

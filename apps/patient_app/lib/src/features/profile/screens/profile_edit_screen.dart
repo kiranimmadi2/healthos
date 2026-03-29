@@ -146,7 +146,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     labelText: 'Gender',
                     prefixIcon: Icon(Icons.wc),
                   ),
-                  initialValue: _selectedGender,
+                  value: _selectedGender,
                   items: const [
                     DropdownMenuItem(value: 'male', child: Text('Male')),
                     DropdownMenuItem(value: 'female', child: Text('Female')),
@@ -160,7 +160,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     labelText: 'Blood Group',
                     prefixIcon: Icon(Icons.bloodtype),
                   ),
-                  initialValue: _selectedBloodGroup,
+                  value: _selectedBloodGroup,
                   items: _bloodGroups
                       .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))
                       .toList(),

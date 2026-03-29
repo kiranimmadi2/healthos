@@ -30,8 +30,7 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           Consumer(
             builder: (context, ref, child) {
-              final countAsync = ref.watch(unreadNotificationCountProvider);
-              final count = countAsync.valueOrNull ?? 0;
+              final count = ref.watch(unreadNotificationCountProvider);
               return IconButton(
                 icon: Badge(
                   isLabelVisible: count > 0,

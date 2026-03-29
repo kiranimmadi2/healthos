@@ -33,14 +33,19 @@ class AccessGrantScreen extends ConsumerWidget {
               onAction: () => context.push('/access/grant'),
             );
           }
-          return ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: grants.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final grant = grants[index];
-              return _GrantCard(grant: grant);
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(activeGrantsProvider);
             },
+            child: ListView.separated(
+              padding: AppSpacing.screenPadding,
+              itemCount: grants.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final grant = grants[index];
+                return _GrantCard(grant: grant);
+              },
+            ),
           );
         },
         loading: () => const HosLoading(),
@@ -68,7 +73,7 @@ class _GrantCard extends ConsumerWidget {
           doctorAsync.when(
             data: (doctor) => HosAvatar(name: doctor?.fullName, radius: 20),
             loading: () => HosAvatar(name: 'Dr', radius: 20),
-            error: (_, __) => HosAvatar(name: 'Dr', radius: 20),
+            error: (_, _) => HosAvatar(name: 'Dr', radius: 20),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -80,8 +85,8 @@ class _GrantCard extends ConsumerWidget {
                     'Dr. ${doctor?.fullName ?? 'Unknown'}',
                     style: AppTypography.label,
                   ),
-                  loading: () => const Text('Loading...', style: AppTypography.caption),
-                  error: (_, __) => Text(
+                  loading: () => Text('Loading...', style: AppTypography.caption),
+                  error: (_, _) => Text(
                     'Doctor ID: ${grant.doctorId.substring(0, 8)}...',
                     style: AppTypography.label,
                   ),
@@ -92,7 +97,7 @@ class _GrantCard extends ConsumerWidget {
                     style: AppTypography.caption,
                   ),
                   loading: () => const SizedBox.shrink(),
-                  error: (_, __) => Text(
+                  error: (_, _) => Text(
                     'Access: ${grant.accessLevel}',
                     style: AppTypography.caption,
                   ),

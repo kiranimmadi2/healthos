@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../providers/auth_provider.dart';
+import '../../../providers/hospital_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hospitalAsync = ref.watch(currentHospitalProvider);
+    final authUser = ref.watch(authStateProvider).valueOrNull;
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
@@ -26,37 +30,175 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.xl),
 
-            // ── Hospital Profile Card ──
-            Text('Hospital Profile', style: AppTypography.h3),
+            // ── Admin Profile Card ──
+            Text('Admin Profile', style: AppTypography.h3),
             const SizedBox(height: AppSpacing.md),
             HosCard(
-              child: Column(
+              child: Row(
                 children: [
-                  _SettingsRow(
-                    icon: Icons.local_hospital_outlined,
-                    label: 'Hospital Name',
-                    value: 'Configured via Supabase',
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    child: Text(
+                      _initials(authUser?.email),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                  const Divider(height: AppSpacing.lg),
-                  _SettingsRow(
-                    icon: Icons.location_on_outlined,
-                    label: 'Address',
-                    value: '--',
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _SettingsRow(
-                    icon: Icons.phone_outlined,
-                    label: 'Phone',
-                    value: '--',
-                  ),
-                  const Divider(height: AppSpacing.lg),
-                  _SettingsRow(
-                    icon: Icons.email_outlined,
-                    label: 'Email',
-                    value: '--',
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          authUser?.userMetadata?['full_name'] as String? ??
+                              'Hospital Administrator',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          authUser?.email ?? '--',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        if (authUser?.lastSignInAt != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            'Last sign-in: ${_formatDate(authUser!.lastSignInAt!)}',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // ── Hospital Profile Card ──
+            Text('Hospital Profile', style: AppTypography.h3),
+            const SizedBox(height: AppSpacing.md),
+            hospitalAsync.when(
+              loading: () => const HosCard(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.lg),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              ),
+              error: (error, _) => HosCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    children: [
+                      Icon(Icons.error_outline,
+                          color: Colors.red.shade400, size: 32),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Failed to load hospital data',
+                        style: AppTypography.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        error.toString(),
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(currentHospitalProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              data: (hospital) {
+                if (hospital == null) {
+                  return HosCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        children: [
+                          Icon(Icons.info_outline,
+                              color: Colors.orange.shade400, size: 32),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'No hospital profile found',
+                            style: AppTypography.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            'Please contact support to link your account to a hospital.',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final address = hospital.address;
+                final addressStr = address != null
+                    ? [
+                        address['street'],
+                        address['city'],
+                        address['state'],
+                        address['zip'],
+                      ].where((s) => s != null && s.toString().isNotEmpty).join(', ')
+                    : '--';
+
+                return HosCard(
+                  child: Column(
+                    children: [
+                      _SettingsRow(
+                        icon: Icons.local_hospital_outlined,
+                        label: 'Hospital Name',
+                        value: hospital.name,
+                      ),
+                      const Divider(height: AppSpacing.lg),
+                      _SettingsRow(
+                        icon: Icons.location_on_outlined,
+                        label: 'Address',
+                        value: addressStr,
+                      ),
+                      const Divider(height: AppSpacing.lg),
+                      _SettingsRow(
+                        icon: Icons.phone_outlined,
+                        label: 'Phone',
+                        value: hospital.phone ?? '--',
+                      ),
+                      const Divider(height: AppSpacing.lg),
+                      _SettingsRow(
+                        icon: Icons.email_outlined,
+                        label: 'Email',
+                        value: hospital.email ?? '--',
+                      ),
+                      const Divider(height: AppSpacing.lg),
+                      _SettingsRow(
+                        icon: Icons.badge_outlined,
+                        label: 'License Number',
+                        value: hospital.license ?? '--',
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.xl),
 
@@ -168,6 +310,24 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _initials(String? email) {
+    if (email == null || email.isEmpty) return '?';
+    final parts = email.split('@').first.split(RegExp(r'[._]'));
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return email[0].toUpperCase();
+  }
+
+  String _formatDate(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate);
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return isoDate;
+    }
   }
 }
 

@@ -71,8 +71,8 @@ class AdminShell extends ConsumerWidget {
                   child: IconButton(
                     icon: const Icon(Icons.logout_rounded),
                     tooltip: 'Sign Out',
-                    onPressed: () {
-                      ref.read(authServiceProvider).signOut();
+                    onPressed: () async {
+                      await ref.read(authServiceProvider).signOut();
                     },
                   ),
                 ),

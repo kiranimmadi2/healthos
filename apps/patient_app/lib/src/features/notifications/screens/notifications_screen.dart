@@ -39,27 +39,32 @@ class NotificationsScreen extends ConsumerWidget {
               icon: Icons.notifications_none,
             );
           }
-          return ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: notifications.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return NotificationTile(
-                notification: notification,
-                onTap: () async {
-                  if (notification.readAt == null) {
-                    final repo = ref.read(notificationRepoProvider);
-                    await repo.markAsRead(notification.id);
-                    ref.invalidate(patientNotificationsProvider);
-                    ref.invalidate(unreadNotificationCountProvider);
-                  }
-                  if (notification.actionRoute != null && context.mounted) {
-                    context.go(notification.actionRoute!);
-                  }
-                },
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(patientNotificationsProvider);
             },
+            child: ListView.separated(
+              padding: AppSpacing.screenPadding,
+              itemCount: notifications.length,
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return NotificationTile(
+                  notification: notification,
+                  onTap: () async {
+                    if (notification.readAt == null) {
+                      final repo = ref.read(notificationRepoProvider);
+                      await repo.markAsRead(notification.id);
+                      ref.invalidate(patientNotificationsProvider);
+                      ref.invalidate(unreadNotificationCountProvider);
+                    }
+                    if (notification.actionRoute != null && context.mounted) {
+                      context.go(notification.actionRoute!);
+                    }
+                  },
+                );
+              },
+            ),
           );
         },
         loading: () => const HosLoading(),

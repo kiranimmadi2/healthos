@@ -14,6 +14,7 @@ import '../features/appointments/screens/appointments_screen.dart';
 import '../features/appointments/screens/create_appointment_screen.dart';
 import '../features/notifications/screens/notifications_screen.dart';
 import '../providers/auth_provider.dart';
+import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -37,61 +38,66 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/auth',
         builder: (context, state) => const DoctorLoginScreen(),
       ),
-      GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: '/patients',
-        builder: (context, state) => const PatientListScreen(),
-      ),
-      GoRoute(
-        path: '/patients/:id',
-        builder: (context, state) {
-          final patientId = state.pathParameters['id']!;
-          return PatientDetailScreen(patientId: patientId);
-        },
+      ShellRoute(
+        builder: (context, state, child) => DoctorAppShell(child: child),
         routes: [
           GoRoute(
-            path: 'visit/create',
-            builder: (context, state) {
-              final patientId = state.pathParameters['id']!;
-              return CreateVisitScreen(patientId: patientId);
-            },
+            path: '/dashboard',
+            builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
-            path: 'prescription/create',
-            builder: (context, state) {
-              final patientId = state.pathParameters['id']!;
-              return CreatePrescriptionScreen(patientId: patientId);
-            },
+            path: '/patients',
+            builder: (context, state) => const PatientListScreen(),
           ),
           GoRoute(
-            path: 'ai-summary',
+            path: '/patients/:id',
             builder: (context, state) {
               final patientId = state.pathParameters['id']!;
-              return AiSummaryScreen(patientId: patientId);
+              return PatientDetailScreen(patientId: patientId);
             },
+            routes: [
+              GoRoute(
+                path: 'visit/create',
+                builder: (context, state) {
+                  final patientId = state.pathParameters['id']!;
+                  return CreateVisitScreen(patientId: patientId);
+                },
+              ),
+              GoRoute(
+                path: 'prescription/create',
+                builder: (context, state) {
+                  final patientId = state.pathParameters['id']!;
+                  return CreatePrescriptionScreen(patientId: patientId);
+                },
+              ),
+              GoRoute(
+                path: 'ai-summary',
+                builder: (context, state) {
+                  final patientId = state.pathParameters['id']!;
+                  return AiSummaryScreen(patientId: patientId);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const DoctorProfileScreen(),
+          ),
+          GoRoute(
+            path: '/appointments',
+            builder: (context, state) => const DoctorAppointmentsScreen(),
+            routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) => const CreateAppointmentScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const DoctorNotificationsScreen(),
           ),
         ],
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const DoctorProfileScreen(),
-      ),
-      GoRoute(
-        path: '/appointments',
-        builder: (context, state) => const DoctorAppointmentsScreen(),
-        routes: [
-          GoRoute(
-            path: 'create',
-            builder: (context, state) => const CreateAppointmentScreen(),
-          ),
-        ],
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const DoctorNotificationsScreen(),
       ),
     ],
   );

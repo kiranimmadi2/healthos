@@ -29,7 +29,6 @@ healthos/
 │   ├── functions/         # Deno Edge Functions
 │   └── seed.sql           # Development test data
 ├── .github/workflows/     # CI/CD pipelines
-└── docker-compose.yml     # Local development
 ```
 
 ## Getting Started
@@ -39,7 +38,6 @@ healthos/
 - Flutter SDK 3.24+
 - Dart SDK 3.2+
 - Melos (`dart pub global activate melos`)
-- Docker (for local Supabase)
 - Supabase CLI
 
 ### Setup

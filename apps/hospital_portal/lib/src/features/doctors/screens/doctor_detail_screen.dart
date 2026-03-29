@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_client/supabase_client.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import 'doctors_list_screen.dart';
+
 /// Fetches a single doctor by ID.
 final doctorDetailProvider =
     FutureProvider.family<Doctor?, String>((ref, doctorId) async {
@@ -31,13 +33,52 @@ final doctorPatientsProvider =
   return patients;
 });
 
-class DoctorDetailScreen extends ConsumerWidget {
+class DoctorDetailScreen extends ConsumerStatefulWidget {
   const DoctorDetailScreen({super.key, required this.doctorId});
 
   final String doctorId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DoctorDetailScreen> createState() =>
+      _DoctorDetailScreenState();
+}
+
+class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
+  bool _isVerifying = false;
+
+  Future<void> _verifyDoctor() async {
+    setState(() => _isVerifying = true);
+    try {
+      final repo = DoctorRepository();
+      await repo.update(widget.doctorId, {'verified': true});
+      // Invalidate both detail and list providers to refresh UI
+      ref.invalidate(doctorDetailProvider(widget.doctorId));
+      ref.invalidate(allDoctorsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Doctor verified successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to verify doctor: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final doctorId = widget.doctorId;
     final doctorAsync = ref.watch(doctorDetailProvider(doctorId));
     final patientsAsync = ref.watch(doctorPatientsProvider(doctorId));
 
@@ -101,16 +142,37 @@ class DoctorDetailScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 const SizedBox(height: AppSpacing.sm),
-                                HosStatusChip(
-                                  label: doctor.verified
-                                      ? 'Verified'
-                                      : 'Unverified',
-                                  color: doctor.verified
-                                      ? Colors.green
-                                      : Colors.orange,
-                                  icon: doctor.verified
-                                      ? Icons.verified
-                                      : Icons.pending_outlined,
+                                Row(
+                                  children: [
+                                    HosStatusChip(
+                                      label: doctor.verified
+                                          ? 'Verified'
+                                          : 'Unverified',
+                                      color: doctor.verified
+                                          ? Colors.green
+                                          : Colors.orange,
+                                      icon: doctor.verified
+                                          ? Icons.verified
+                                          : Icons.pending_outlined,
+                                    ),
+                                    if (!doctor.verified) ...[
+                                      const SizedBox(width: AppSpacing.sm),
+                                      _isVerifying
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child:
+                                                  CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : HosButton(
+                                              label: 'Verify Doctor',
+                                              onPressed: _verifyDoctor,
+                                              icon: Icons.verified_outlined,
+                                            ),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),

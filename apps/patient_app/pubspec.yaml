@@ -4,7 +4,7 @@ publish_to: none
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.8.0
 
 resolution: workspace
 
@@ -15,13 +15,9 @@ dependencies:
 
   # Shared packages
   core:
-    path: ../../packages/core
   ui_kit:
-    path: ../../packages/ui_kit
   supabase_client:
-    path: ../../packages/supabase_client
   ai_client:
-    path: ../../packages/ai_client
 
   # State management
   flutter_riverpod: ^2.5.1

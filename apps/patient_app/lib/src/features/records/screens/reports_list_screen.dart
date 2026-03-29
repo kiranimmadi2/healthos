@@ -100,7 +100,11 @@ class ReportsListScreen extends ConsumerWidget {
                         message: 'No lab reports found',
                         icon: Icons.science_outlined,
                       )
-                    : ListView.separated(
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          ref.invalidate(patientReportsProvider);
+                        },
+                        child: ListView.separated(
                         padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md),
                         itemCount: filtered.length,
@@ -151,6 +155,7 @@ class ReportsListScreen extends ConsumerWidget {
                           );
                         },
                       ),
+                    ),
               ),
             ],
           );

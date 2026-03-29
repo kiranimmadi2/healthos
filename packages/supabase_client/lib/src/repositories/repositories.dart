@@ -1,4 +1,5 @@
 export 'access_grant_repository.dart';
+export 'hospital_repository.dart';
 export 'appointment_repository.dart';
 export 'biomarker_repository.dart';
 export 'doctor_repository.dart';

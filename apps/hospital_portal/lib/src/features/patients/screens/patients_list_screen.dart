@@ -13,6 +13,14 @@ final allPatientsProvider = FutureProvider<List<Patient>>((ref) {
   return repo.search('', limit: 200);
 });
 
+/// Fetches the most recent visit for a given patient.
+final lastVisitProvider =
+    FutureProvider.family<Visit?, String>((ref, patientId) async {
+  final repo = VisitRepository();
+  final visits = await repo.getByPatientId(patientId, limit: 1);
+  return visits.isNotEmpty ? visits.first : null;
+});
+
 class PatientsListScreen extends ConsumerStatefulWidget {
   const PatientsListScreen({super.key});
 
@@ -153,7 +161,8 @@ class _PatientsListScreenState extends ConsumerState<PatientsListScreen> {
                                 DataCell(
                                     Text(_computeAge(patient.dateOfBirth))),
                                 DataCell(Text(patient.gender ?? 'N/A')),
-                                DataCell(Text('N/A')),
+                                DataCell(_LastVisitCell(
+                                    patientId: patient.id)),
                                 DataCell(
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -186,6 +195,39 @@ class _PatientsListScreenState extends ConsumerState<PatientsListScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline widget that asynchronously displays the last visit date for a patient.
+class _LastVisitCell extends ConsumerWidget {
+  const _LastVisitCell({required this.patientId});
+
+  final String patientId;
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final visitAsync = ref.watch(lastVisitProvider(patientId));
+    return visitAsync.when(
+      loading: () => const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+      error: (_, __) => Text(
+        'Error',
+        style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+      ),
+      data: (visit) => Text(
+        visit != null ? _formatDate(visit.visitedAt) : 'No visits',
+        style: AppTypography.bodySmall.copyWith(
+          color: visit != null ? AppColors.textPrimary : AppColors.textSecondary,
         ),
       ),
     );

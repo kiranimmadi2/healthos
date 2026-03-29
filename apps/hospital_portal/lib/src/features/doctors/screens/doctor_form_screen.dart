@@ -205,6 +205,10 @@ class _DoctorFormScreenState extends ConsumerState<DoctorFormScreen> {
                   hint: 'Enter phone number',
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    return Validators.validatePhone(value);
+                  },
                 ),
                 const SizedBox(height: AppSpacing.md),
                 HosTextField(
@@ -213,6 +217,10 @@ class _DoctorFormScreenState extends ConsumerState<DoctorFormScreen> {
                   hint: 'Enter email address',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    return Validators.validateEmail(value);
+                  },
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 HosButton(

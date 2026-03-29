@@ -50,8 +50,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
           Consumer(
             builder: (context, ref, child) {
-              final countAsync = ref.watch(doctorUnreadCountProvider);
-              final count = countAsync.valueOrNull ?? 0;
+              final count = ref.watch(doctorUnreadCountProvider);
               return IconButton(
                 icon: Badge(
                   isLabelVisible: count > 0,

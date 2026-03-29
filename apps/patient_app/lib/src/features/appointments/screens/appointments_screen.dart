@@ -53,12 +53,17 @@ class _UpcomingTab extends ConsumerWidget {
             icon: Icons.calendar_today,
           );
         }
-        return ListView.separated(
-          padding: AppSpacing.screenPadding,
-          itemCount: appointments.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) => AppointmentCard(
-            appointment: appointments[index],
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(upcomingAppointmentsProvider);
+          },
+          child: ListView.separated(
+            padding: AppSpacing.screenPadding,
+            itemCount: appointments.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) => AppointmentCard(
+              appointment: appointments[index],
+            ),
           ),
         );
       },
@@ -86,12 +91,17 @@ class _AllTab extends ConsumerWidget {
             icon: Icons.calendar_today,
           );
         }
-        return ListView.separated(
-          padding: AppSpacing.screenPadding,
-          itemCount: appointments.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) => AppointmentCard(
-            appointment: appointments[index],
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(allAppointmentsProvider);
+          },
+          child: ListView.separated(
+            padding: AppSpacing.screenPadding,
+            itemCount: appointments.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) => AppointmentCard(
+              appointment: appointments[index],
+            ),
           ),
         );
       },

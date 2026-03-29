@@ -184,13 +184,9 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                   }
 
                   if (filtered.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'No reports found.',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
+                    return const HosEmptyState(
+                      message: 'No reports found.',
+                      icon: Icons.science_outlined,
                     );
                   }
 

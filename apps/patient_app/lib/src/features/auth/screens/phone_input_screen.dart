@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -95,15 +96,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                     hint: 'you@example.com',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: Validators.validateEmail,
                     onSubmitted: (_) => _sendOtp(),
                   )
                 else
@@ -113,12 +106,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                     hint: '+91 98765 43210',
                     prefixIcon: Icons.phone,
                     keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Phone number is required';
-                      }
-                      return null;
-                    },
+                    validator: Validators.validatePhone,
                     onSubmitted: (_) => _sendOtp(),
                   ),
                 const SizedBox(height: AppSpacing.lg),

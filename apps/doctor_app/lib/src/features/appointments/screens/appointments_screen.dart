@@ -72,11 +72,16 @@ class _DoctorAppointmentsScreenState extends ConsumerState<DoctorAppointmentsScr
                     icon: Icons.calendar_today,
                   );
                 }
-                return ListView.separated(
-                  padding: AppSpacing.screenPadding,
-                  itemCount: appointments.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) => DoctorAppointmentCard(appointment: appointments[index]),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(doctorAppointmentsForDateProvider(_selectedDate));
+                  },
+                  child: ListView.separated(
+                    padding: AppSpacing.screenPadding,
+                    itemCount: appointments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) => DoctorAppointmentCard(appointment: appointments[index]),
+                  ),
                 );
               },
               loading: () => const HosLoading(),

@@ -107,7 +107,7 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
                           ],
                           rows: filtered.map((doctor) {
                             final status =
-                                doctor.verified ? 'Active' : 'Inactive';
+                                doctor.verified ? 'Verified' : 'Unverified';
                             return DataRow(
                               cells: [
                                 DataCell(
@@ -184,15 +184,17 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color;
+    IconData icon;
     switch (status) {
-      case 'Active':
+      case 'Verified':
         color = Colors.green;
-      case 'On Leave':
+        icon = Icons.verified;
+      case 'Unverified':
         color = Colors.orange;
-      case 'Inactive':
-        color = Colors.red;
+        icon = Icons.pending_outlined;
       default:
         color = Colors.grey;
+        icon = Icons.help_outline;
     }
 
     return Container(
@@ -204,12 +206,19 @@ class _StatusChip extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        status,
-        style: AppTypography.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            status,
+            style: AppTypography.caption.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -51,7 +51,7 @@ class LabShell extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     'HealthOS Lab',
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.caption.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -67,8 +67,8 @@ class LabShell extends ConsumerWidget {
                   child: IconButton(
                     icon: const Icon(Icons.logout_rounded),
                     tooltip: 'Sign Out',
-                    onPressed: () {
-                      ref.read(authServiceProvider).signOut();
+                    onPressed: () async {
+                      await ref.read(authServiceProvider).signOut();
                     },
                   ),
                 ),

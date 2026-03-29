@@ -69,19 +69,27 @@ class UploadNotifier extends StateNotifier<UploadState> {
         uploadedUrl: url,
       );
 
-      // Trigger OCR processing via Supabase Edge Function
+      // Create a lab_report record before invoking OCR
       final client = SupabaseClientInitializer.client;
-      final response = await client.functions.invoke(
-        'process-lab-report',
+      final insertResult = await client.from('lab_reports').insert({
+        'patient_id': patientId,
+        'report_type': reportType,
+        'report_date': DateTime.now().toIso8601String(),
+        'file_url': url,
+        'status': 'processing',
+      }).select('id').single();
+
+      final reportId = insertResult['id'] as String;
+
+      // Trigger OCR processing via Supabase Edge Function
+      await client.functions.invoke(
+        'ocr-report',
         body: {
+          'report_url': url,
           'patient_id': patientId,
-          'file_url': url,
-          'report_type': reportType,
-          'file_name': fileName,
+          'report_id': reportId,
         },
       );
-
-      final reportId = response.data?['report_id'] as String?;
 
       state = UploadState(
         isUploading: false,

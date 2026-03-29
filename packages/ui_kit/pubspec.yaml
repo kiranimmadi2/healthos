@@ -4,7 +4,7 @@ version: 0.0.1
 publish_to: none
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.8.0
   flutter: ">=1.17.0"
 
 resolution: workspace
@@ -13,7 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
   core:
-    path: ../core
   fl_chart: ^0.68.0
   qr_flutter: ^4.1.0
   cached_network_image: ^3.3.1

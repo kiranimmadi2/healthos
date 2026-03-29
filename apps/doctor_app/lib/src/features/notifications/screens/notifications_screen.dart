@@ -57,58 +57,63 @@ class DoctorNotificationsScreen extends ConsumerWidget {
               icon: Icons.notifications_none,
             );
           }
-          return ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: notifications.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final n = notifications[index];
-              final isUnread = n.readAt == null;
-              return HosCard(
-                onTap: () async {
-                  if (isUnread) {
-                    final repo = ref.read(notificationRepoProvider);
-                    await repo.markAsRead(n.id);
-                    ref.invalidate(doctorNotificationsProvider);
-                    ref.invalidate(doctorUnreadCountProvider);
-                  }
-                  if (n.actionRoute != null && context.mounted) {
-                    context.go(n.actionRoute!);
-                  }
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: _typeColor(n.type).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
-                      ),
-                      child: Icon(_typeIcon(n.type), color: _typeColor(n.type), size: 20),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(n.title, style: AppTypography.label.copyWith(
-                            fontWeight: isUnread ? FontWeight.w700 : FontWeight.w500,
-                          )),
-                          Text(n.body, style: AppTypography.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
-                          if (n.createdAt != null)
-                            Text(AppDateUtils.formatDate(n.createdAt!), style: AppTypography.caption.copyWith(color: AppColors.textTertiary)),
-                        ],
-                      ),
-                    ),
-                    if (isUnread)
-                      Container(
-                        width: 8, height: 8,
-                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                      ),
-                  ],
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(doctorNotificationsProvider);
             },
+            child: ListView.separated(
+              padding: AppSpacing.screenPadding,
+              itemCount: notifications.length,
+              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final n = notifications[index];
+                final isUnread = n.readAt == null;
+                return HosCard(
+                  onTap: () async {
+                    if (isUnread) {
+                      final repo = ref.read(notificationRepoProvider);
+                      await repo.markAsRead(n.id);
+                      ref.invalidate(doctorNotificationsProvider);
+                      ref.invalidate(doctorUnreadCountProvider);
+                    }
+                    if (n.actionRoute != null && context.mounted) {
+                      context.go(n.actionRoute!);
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: _typeColor(n.type).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
+                        ),
+                        child: Icon(_typeIcon(n.type), color: _typeColor(n.type), size: 20),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(n.title, style: AppTypography.label.copyWith(
+                              fontWeight: isUnread ? FontWeight.w700 : FontWeight.w500,
+                            )),
+                            Text(n.body, style: AppTypography.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
+                            if (n.createdAt != null)
+                              Text(AppDateUtils.formatDate(n.createdAt!), style: AppTypography.caption.copyWith(color: AppColors.textTertiary)),
+                          ],
+                        ),
+                      ),
+                      if (isUnread)
+                        Container(
+                          width: 8, height: 8,
+                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           );
         },
         loading: () => const HosLoading(),
