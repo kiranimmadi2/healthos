@@ -6,7 +6,7 @@ AI-powered unified health platform with patient, doctor, hospital, and lab porta
 
 - **Frontend:** Flutter (Dart) — Riverpod + GoRouter
 - **Backend:** Supabase (PostgreSQL, Edge Functions, Auth, Storage, Realtime)
-- **AI:** Claude API (Anthropic) via Edge Functions
+- **AI:** Gemini API (Google) via Edge Functions
 - **Push Notifications:** Firebase Cloud Messaging
 - **Monorepo:** Melos
 

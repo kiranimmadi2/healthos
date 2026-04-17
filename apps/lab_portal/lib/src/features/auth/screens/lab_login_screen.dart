@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_kit/ui_kit.dart';
@@ -53,7 +54,11 @@ class _LabLoginScreenState extends ConsumerState<LabLoginScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithGoogle();
+      
+      // On web we use the current dynamically generated origin limit.
+      final String? redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
+
+      await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

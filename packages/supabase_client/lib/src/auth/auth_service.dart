@@ -70,8 +70,11 @@ class AuthService {
     await _auth.signOut();
   }
 
-  Future<void> signInWithGoogle() async {
-    await _handleAuth(() => _auth.signInWithOAuth(OAuthProvider.google));
+  Future<void> signInWithGoogle({String? redirectTo}) async {
+    await _handleAuth(() => _auth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: redirectTo,
+        ));
   }
 
   Future<void> resetPassword(String email) async {

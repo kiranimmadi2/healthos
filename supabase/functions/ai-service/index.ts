@@ -18,7 +18,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { Router } from '../_shared/router.ts';
 import { createServiceHandler, requireAuth, json, errorResponse } from '../_shared/middleware.ts';
 import { supabaseAdmin } from '../_shared/supabase-client.ts';
-import { anthropic } from '../_shared/anthropic-client.ts';
+import { genAI } from '../_shared/gemini-client.ts';
 
 const router = new Router();
 
@@ -91,13 +91,7 @@ Recent Visits (last 5):
 ${recentVisits?.length ? recentVisits.map((v: any) => `- ${v.visited_at}: ${v.chief_complaint || 'General'} - ${v.diagnosis || 'Pending'}`).join('\n') : 'No recent visits'}
   `.trim();
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a medical AI assistant helping with symptom assessment. You do NOT diagnose — you help patients understand their symptoms and guide them on next steps.
+  const prompt = `You are a medical AI assistant helping with symptom assessment. You do NOT diagnose — you help patients understand their symptoms and guide them on next steps.
 
 Given the following patient context and reported symptoms, provide a structured assessment.
 
@@ -109,16 +103,19 @@ ${Array.isArray(body.symptoms) ? body.symptoms.join(', ') : body.symptoms}
 Respond ONLY with valid JSON in this exact format:
 {
   "recommendations": ["list of actionable recommendations"],
-  "triage_level": "home_care | see_doctor | emergency",
+  "triage_level": "see_doctor",
   "what_to_do": ["list of things the patient should do"],
   "what_to_avoid": ["list of things the patient should avoid"],
   "when_to_seek_help": "description of warning signs that require immediate medical attention"
-}`,
-      },
-    ],
+}`;
+
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
   const structuredResponse = parseJsonResponse(responseText, {
     recommendations: [responseText],
     triage_level: 'see_doctor',
@@ -194,13 +191,7 @@ Biomarkers (${biomarkers.data?.length || 0} readings):
 ${biomarkers.data?.length ? biomarkers.data.map((b: any) => `- ${b.name}: ${b.value} ${b.unit} (Ref: ${b.normal_min ?? '?'}-${b.normal_max ?? '?'}) ${b.is_abnormal ? '[ABNORMAL]' : ''} | ${b.recorded_at}`).join('\n') : 'No biomarkers recorded'}
   `.trim();
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a medical AI assistant generating a comprehensive patient health summary for healthcare providers.
+  const prompt = `You are a medical AI assistant generating a comprehensive patient health summary for healthcare providers.
 
 Analyze the following patient data and provide a structured summary.
 
@@ -212,12 +203,15 @@ Respond ONLY with valid JSON in this exact format:
   "key_findings": ["list of important clinical findings from their data"],
   "risk_factors": ["list of identified risk factors based on demographics, history, and biomarkers"],
   "recommendations": ["list of recommended next steps, screenings, or lifestyle changes"]
-}`,
-      },
-    ],
+}`;
+
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
   const structuredResponse = parseJsonResponse(responseText, {
     summary: responseText,
     key_findings: [],
@@ -259,20 +253,7 @@ router.post('/ocr', requireAuth(async (ctx) => {
   else if (extension === 'webp') mediaType = 'image/webp';
   else if (extension === 'gif') mediaType = 'image/gif';
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64Image },
-          },
-          {
-            type: 'text',
-            text: `You are a medical lab report OCR assistant. Extract ALL biomarker/test values from this lab report image.
+  const prompt = `You are a medical lab report OCR assistant. Extract ALL biomarker/test values from this lab report image.
 
 For each biomarker found, extract:
 - name: The test/biomarker name (e.g., "Hemoglobin", "Blood Glucose", "TSH")
@@ -297,14 +278,22 @@ Respond ONLY with valid JSON in this exact format:
       "status": "normal"
     }
   ]
-}`,
-          },
-        ],
-      },
-    ],
+}`;
+
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-pro',
+    generationConfig: { responseMimeType: "application/json" }
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const imagePart = {
+    inlineData: {
+      data: base64Image,
+      mimeType: mediaType
+    }
+  };
+
+  const result = await model.generateContent([prompt, imagePart]);
+  const responseText = result.response.text();
   let extractedData;
   try {
     extractedData = JSON.parse(responseText);

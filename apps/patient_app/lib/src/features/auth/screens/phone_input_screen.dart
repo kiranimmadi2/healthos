@@ -1,4 +1,5 @@
 import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -65,7 +66,15 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithGoogle();
+      
+      // Redirect URL for Google Sign-In
+      // Mobile: io.supabase.healthos://login-callback
+      // Web: Current origin
+      final String? redirectTo = kIsWeb 
+          ? Uri.base.origin // Ensure we redirect back back to current flutter web local port
+          : 'io.supabase.healthos://login-callback';
+
+      await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

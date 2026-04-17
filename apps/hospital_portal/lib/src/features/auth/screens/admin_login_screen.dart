@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_kit/ui_kit.dart';
@@ -53,7 +54,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithGoogle();
+      
+      // On web, we use the current origin dynamically,
+      // and explicit is safer in a multi-app environment.
+      final String? redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
+      
+      await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
