@@ -18,6 +18,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _useEmail = true;
 
   @override
@@ -56,6 +57,23 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -130,6 +148,27 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      child: Text(
+                        'OR',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                HosButton(
+                  label: 'Sign in with Google',
+                  onPressed: _signInWithGoogle,
+                  isLoading: _isGoogleLoading,
+                  isOutlined: true,
                 ),
                 const Spacer(flex: 2),
                 Center(

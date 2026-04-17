@@ -24,12 +24,12 @@ class HosButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final child = isLoading
-        ? const SizedBox(
+        ? SizedBox(
             height: 20,
             width: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: AppColors.white,
+              color: isOutlined ? AppColors.primary : AppColors.white,
             ),
           )
         : Row(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,11 +14,17 @@ import '../layout/admin_shell.dart';
 import '../providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final refreshNotifier = ValueNotifier<int>(0);
+  
+  ref.listen(authStateProvider, (_, __) {
+    refreshNotifier.value++;
+  });
 
   return GoRouter(
+    refreshListenable: refreshNotifier,
     initialLocation: '/login',
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final isAuthenticated = authState.valueOrNull != null;
       final isLoginRoute = state.matchedLocation == '/login';
 

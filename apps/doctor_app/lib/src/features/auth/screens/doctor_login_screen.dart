@@ -16,6 +16,7 @@ class _DoctorLoginScreenState extends ConsumerState<DoctorLoginScreen> {
   final _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _otpSent = false;
   String _phone = '';
 
@@ -74,6 +75,23 @@ class _DoctorLoginScreenState extends ConsumerState<DoctorLoginScreen> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +124,7 @@ class _DoctorLoginScreenState extends ConsumerState<DoctorLoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Sign in with your registered phone number to access your patient dashboard.',
+                      'Sign in with your registered phone number to access your doctor dashboard.',
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -173,6 +191,27 @@ class _DoctorLoginScreenState extends ConsumerState<DoctorLoginScreen> {
                         ),
                       ),
                     ],
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                          child: Text(
+                            'OR',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    HosButton(
+                      label: 'Sign in with Google',
+                      onPressed: _signInWithGoogle,
+                      isLoading: _isGoogleLoading,
+                      isOutlined: true,
+                    ),
                     const Spacer(flex: 2),
                     Center(
                       child: Text(
