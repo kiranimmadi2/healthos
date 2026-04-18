@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,10 @@ import '../features/qr/screens/qr_display_screen.dart';
 import '../features/notifications/screens/notifications_screen.dart';
 import '../features/appointments/screens/appointments_screen.dart';
 import '../features/appointments/screens/book_appointment_screen.dart';
+import '../features/family/screens/family_hub_screen.dart';
+import '../features/family/screens/add_family_member_screen.dart';
+import '../features/family/screens/family_member_detail_screen.dart';
+import '../features/family/screens/edit_family_member_screen.dart';
 import '../providers/auth_provider.dart';
 import '../providers/patient_provider.dart';
 import 'app_shell.dart';
@@ -24,8 +29,14 @@ import 'app_shell.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
   
-  ref.listen(authStateProvider, (prev, next) => refreshNotifier.value++);
-  ref.listen(patientProfileStateProvider, (prev, next) => refreshNotifier.value++);
+  ref.listen(authStateProvider, (prev, next) {
+    debugPrint('[Router] authStateProvider changed → ${next.valueOrNull?.id}');
+    refreshNotifier.value++;
+  });
+  ref.listen(patientProfileStateProvider, (prev, next) {
+    debugPrint('[Router] patientProfileStateProvider changed → $prev → $next');
+    refreshNotifier.value++;
+  });
 
   return GoRouter(
     refreshListenable: refreshNotifier,
@@ -33,17 +44,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = ref.read(authStateProvider).valueOrNull != null;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
+      final profileState = ref.read(patientProfileStateProvider);
+
+      debugPrint('[Router] redirect — location=${state.matchedLocation} '
+          'isAuth=$isAuthenticated isAuthRoute=$isAuthRoute profileState=$profileState');
 
       if (!isAuthenticated && !isAuthRoute) return '/auth';
 
       if (isAuthenticated) {
-        final profileState = ref.read(patientProfileStateProvider);
-        // Still loading patient — stay put and wait for next refresh
-        if (profileState == PatientProfileState.loading) return null;
-        // No profile yet (new user, incl. Google sign-in) → setup
-        if (profileState == PatientProfileState.missing) return '/auth/setup';
-        // Profile exists — leave auth routes
-        if (isAuthRoute) return '/home';
+        if (profileState == PatientProfileState.loading) {
+          debugPrint('[Router] → staying (profile loading)');
+          return null;
+        }
+        if (profileState == PatientProfileState.missing) {
+          debugPrint('[Router] → /auth/setup (no profile)');
+          return '/auth/setup';
+        }
+        if (isAuthRoute) {
+          debugPrint('[Router] → /home (profile exists, leaving auth)');
+          return '/home';
+        }
       }
       return null;
     },
@@ -109,6 +129,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'edit',
                 builder: (context, state) => const ProfileEditScreen(),
+              ),
+              GoRoute(
+                path: 'family',
+                builder: (context, state) => const FamilyHubScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'add',
+                    builder: (context, state) => const AddFamilyMemberScreen(),
+                  ),
+                  GoRoute(
+                    path: ':memberId',
+                    builder: (context, state) => FamilyMemberDetailScreen(
+                      memberId: state.pathParameters['memberId']!,
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) => EditFamilyMemberScreen(
+                          memberId: state.pathParameters['memberId']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

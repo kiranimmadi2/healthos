@@ -45,8 +45,8 @@ void main() {
 
       expect(response.recommendations, isEmpty);
       expect(response.triageLevel, isNull);
-      expect(response.whatToDo, isNull);
-      expect(response.whatToAvoid, isNull);
+      expect(response.whatToDo, isEmpty);
+      expect(response.whatToAvoid, isEmpty);
       expect(response.whenToSeekHelp, isNull);
     });
 
@@ -58,11 +58,11 @@ void main() {
 
       final updated = response.copyWith(
         triageLevel: 'medium',
-        whatToDo: 'Visit a doctor',
+        whatToDo: ['Visit a doctor'],
       );
 
       expect(updated.triageLevel, 'medium');
-      expect(updated.whatToDo, 'Visit a doctor');
+      expect(updated.whatToDo, ['Visit a doctor']);
       expect(updated.recommendations, ['Rest']);
     });
 

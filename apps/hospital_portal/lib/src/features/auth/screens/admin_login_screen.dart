@@ -57,7 +57,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       
       // On web, we use the current origin dynamically,
       // and explicit is safer in a multi-app environment.
-      final String? redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
+      final String redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
       
       await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {

@@ -56,7 +56,7 @@ class _LabLoginScreenState extends ConsumerState<LabLoginScreen> {
       final authService = ref.read(authServiceProvider);
       
       // On web we use the current dynamically generated origin limit.
-      final String? redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
+      final String redirectTo = kIsWeb ? Uri.base.origin : 'io.supabase.healthos://login-callback';
 
       await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {

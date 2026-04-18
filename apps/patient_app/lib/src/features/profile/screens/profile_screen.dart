@@ -85,12 +85,56 @@ class ProfileScreen extends ConsumerWidget {
                     label: 'Conditions',
                     value: patient.chronicConditions.join(', '),
                   ),
+                const SizedBox(height: AppSpacing.xl),
+                _SectionTile(
+                  icon: Icons.family_restroom,
+                  label: 'Family & Dependents',
+                  subtitle: 'Manage family members and dependents',
+                  onTap: () => context.push('/profile/family'),
+                ),
               ],
             ),
           );
         },
         loading: () => const HosLoading(),
         error: (error, _) => HosError(message: error.toString()),
+      ),
+    );
+  }
+}
+
+class _SectionTile extends StatelessWidget {
+  const _SectionTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return HosCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                Text(subtitle, style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.textTertiary),
+        ],
       ),
     );
   }

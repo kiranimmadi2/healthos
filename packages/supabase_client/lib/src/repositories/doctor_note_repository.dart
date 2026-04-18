@@ -2,8 +2,9 @@ import 'package:core/core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../client_initializer.dart';
+import 'repository_logger.dart';
 
-class DoctorNoteRepository {
+class DoctorNoteRepository with RepositoryLogger {
   SupabaseClient get _client => SupabaseClientInitializer.client;
 
   Future<List<DoctorNote>> getByPatientId(
@@ -11,41 +12,51 @@ class DoctorNoteRepository {
     bool includePrivate = true,
     int limit = 50,
     int offset = 0,
-  }) async {
-    var query = _client
-        .from(SupabaseTables.doctorNotes)
-        .select()
-        .eq('patient_id', patientId);
-    if (!includePrivate) query = query.eq('is_private', false);
-    final response = await query
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
-    return response.map((e) => DoctorNote.fromJson(e)).toList();
-  }
+  }) =>
+      loggedOp(
+        'getByPatientId(patientId=$patientId, includePrivate=$includePrivate)',
+        () async {
+          var query = _client
+              .from(SupabaseTables.doctorNotes)
+              .select()
+              .eq('patient_id', patientId);
+          if (!includePrivate) query = query.eq('is_private', false);
+          final response = await query
+              .order('created_at', ascending: false)
+              .range(offset, offset + limit - 1);
+          return response.map((e) => DoctorNote.fromJson(e)).toList();
+        },
+      );
 
-  Future<DoctorNote> create(Map<String, dynamic> data) async {
-    final response = await _client
-        .from(SupabaseTables.doctorNotes)
-        .insert(data)
-        .select()
-        .single();
-    return DoctorNote.fromJson(response);
-  }
+  Future<DoctorNote> create(Map<String, dynamic> data) => loggedOp(
+        'create',
+        () async {
+          final response = await _client
+              .from(SupabaseTables.doctorNotes)
+              .insert(data)
+              .select()
+              .single();
+          return DoctorNote.fromJson(response);
+        },
+      );
 
-  Future<DoctorNote> update(String id, Map<String, dynamic> data) async {
-    final response = await _client
-        .from(SupabaseTables.doctorNotes)
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
-    return DoctorNote.fromJson(response);
-  }
+  Future<DoctorNote> update(String id, Map<String, dynamic> data) => loggedOp(
+        'update(id=$id)',
+        () async {
+          final response = await _client
+              .from(SupabaseTables.doctorNotes)
+              .update(data)
+              .eq('id', id)
+              .select()
+              .single();
+          return DoctorNote.fromJson(response);
+        },
+      );
 
-  Future<void> delete(String id) async {
-    await _client
-        .from(SupabaseTables.doctorNotes)
-        .delete()
-        .eq('id', id);
-  }
+  Future<void> delete(String id) => loggedOp(
+        'delete(id=$id)',
+        () async {
+          await _client.from(SupabaseTables.doctorNotes).delete().eq('id', id);
+        },
+      );
 }

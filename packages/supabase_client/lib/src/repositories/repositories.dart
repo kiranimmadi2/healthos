@@ -1,3 +1,4 @@
+export 'repository_logger.dart';
 export 'access_grant_repository.dart';
 export 'doctor_note_repository.dart';
 export 'family_member_repository.dart';

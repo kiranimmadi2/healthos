@@ -21,14 +21,16 @@ class LabShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _currentIndex(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isExtended = MediaQuery.of(context).size.width > 1200;
 
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            extended: MediaQuery.of(context).size.width > 1200,
+            extended: isExtended,
             selectedIndex: selectedIndex,
-            backgroundColor: AppColors.surface,
+            backgroundColor: colorScheme.surface,
             onDestinationSelected: (index) {
               switch (index) {
                 case 0:
@@ -43,19 +45,29 @@ class LabShell extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.biotech_rounded,
-                    size: 32,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'HealthOS Lab',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.biotech_rounded,
+                      size: 22,
+                      color: colorScheme.primary,
                     ),
                   ),
+                  if (isExtended) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'HealthOS Lab',
+                      style: AppTypography.caption.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -67,6 +79,7 @@ class LabShell extends ConsumerWidget {
                   child: IconButton(
                     icon: const Icon(Icons.logout_rounded),
                     tooltip: 'Sign Out',
+                    color: AppColors.textTertiary,
                     onPressed: () async {
                       await ref.read(authServiceProvider).signOut();
                     },
@@ -77,22 +90,26 @@ class LabShell extends ConsumerWidget {
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.upload_file_outlined),
-                selectedIcon: Icon(Icons.upload_file),
+                selectedIcon: Icon(Icons.upload_file_rounded),
                 label: Text('Upload'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.science_outlined),
-                selectedIcon: Icon(Icons.science),
+                selectedIcon: Icon(Icons.science_rounded),
                 label: Text('Reports'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_search_outlined),
-                selectedIcon: Icon(Icons.person_search),
+                selectedIcon: Icon(Icons.person_search_rounded),
                 label: Text('Patients'),
               ),
             ],
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+          VerticalDivider(
+            thickness: 1,
+            width: 1,
+            color: Theme.of(context).dividerColor,
+          ),
           Expanded(child: child),
         ],
       ),

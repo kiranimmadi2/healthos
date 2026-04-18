@@ -175,7 +175,7 @@ class _CreateAppointmentScreenState extends ConsumerState<CreateAppointmentScree
                           padding: EdgeInsets.all(AppSpacing.sm),
                           child: LinearProgressIndicator(),
                         ),
-                        error: (_, __) => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
                       ),
                   ],
 

@@ -79,7 +79,7 @@ class _DoctorAppointmentsScreenState extends ConsumerState<DoctorAppointmentsScr
                   child: ListView.separated(
                     padding: AppSpacing.screenPadding,
                     itemCount: appointments.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) => DoctorAppointmentCard(appointment: appointments[index]),
                   ),
                 );

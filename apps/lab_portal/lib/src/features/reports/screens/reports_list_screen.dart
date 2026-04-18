@@ -141,7 +141,7 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.error_outline,
-                          size: 48, color: Colors.red.shade300),
+                          size: 48, color: AppColors.error),
                       const SizedBox(height: AppSpacing.md),
                       Text('Failed to load reports: $error',
                           style: AppTypography.bodyMedium),
@@ -298,19 +298,19 @@ class _ReportStatusChip extends StatelessWidget {
     IconData icon;
     switch (status) {
       case 'Verified':
-        color = Colors.green;
+        color = AppColors.success;
         icon = Icons.check_circle_outline;
       case 'Pending Review':
-        color = Colors.orange;
+        color = AppColors.warning;
         icon = Icons.pending_outlined;
       case 'Processing':
-        color = Colors.blue;
+        color = AppColors.primary;
         icon = Icons.hourglass_top;
       case 'Failed':
-        color = Colors.red;
+        color = AppColors.error;
         icon = Icons.error_outline;
       default:
-        color = Colors.grey;
+        color = AppColors.disabled;
         icon = Icons.help_outline;
     }
 

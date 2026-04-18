@@ -73,7 +73,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         'auth_id': userId,
         'health_id': healthId,
         'phone': currentUser?.phone,
-        'email': currentUser?.email,
         'full_name': _nameController.text.trim(),
         'gender': _selectedGender,
         'blood_group': _selectedBloodGroup,
@@ -145,7 +144,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     labelText: 'Gender',
                     prefixIcon: Icon(Icons.wc),
                   ),
-                  value: _selectedGender,
+                  initialValue: _selectedGender,
                   items: const [
                     DropdownMenuItem(value: 'male', child: Text('Male')),
                     DropdownMenuItem(value: 'female', child: Text('Female')),
@@ -159,7 +158,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     labelText: 'Blood Group',
                     prefixIcon: Icon(Icons.bloodtype),
                   ),
-                  value: _selectedBloodGroup,
+                  initialValue: _selectedBloodGroup,
                   items: _bloodGroups
                       .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))
                       .toList(),

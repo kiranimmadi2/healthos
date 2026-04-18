@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import '../../../providers/family_provider.dart';
 import '../../../providers/patient_provider.dart';
 import '../../access/providers/access_provider.dart';
 import '../providers/appointments_provider.dart';
@@ -60,6 +61,8 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
       final patient = await ref.read(currentPatientProvider.future);
       if (patient == null) throw Exception('Profile not found');
 
+      final bookingMember = ref.read(selectedBookingMemberProvider);
+
       final scheduledAt = DateTime(
         _selectedDate!.year,
         _selectedDate!.month,
@@ -70,12 +73,14 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
 
       final repo = ref.read(appointmentRepoProvider);
       await repo.create({
-        'patient_id': patient.id,
+        'patient_id': bookingMember == null ? patient.id : patient.id,
         'doctor_id': _selectedDoctor!.id,
         'scheduled_at': scheduledAt.toIso8601String(),
         'reason': _reasonController.text.trim().isEmpty
             ? null
             : _reasonController.text.trim(),
+        if (bookingMember != null) 'booked_by_patient_id': patient.id,
+        if (bookingMember != null) 'booked_for_member_id': bookingMember.id,
       });
 
       ref.invalidate(upcomingAppointmentsProvider);
@@ -107,6 +112,11 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // For whom?
+            _BookingForSelector(),
+
+            const SizedBox(height: AppSpacing.lg),
+
             // Step 1: Select Doctor
             Text('Select Doctor', style: AppTypography.h4),
             const SizedBox(height: AppSpacing.sm),
@@ -247,6 +257,60 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BookingForSelector extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final familyAsync = ref.watch(familyMembersProvider);
+    final selected = ref.watch(selectedBookingMemberProvider);
+
+    return familyAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (members) {
+        if (members.isEmpty) return const SizedBox.shrink();
+
+        final options = <FamilyMember?>[null, ...members];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Who is this for?', style: AppTypography.h4),
+            const SizedBox(height: AppSpacing.sm),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: options.map((member) {
+                  final isSelected = member?.id == selected?.id;
+                  final label = member == null ? 'Myself' : member.fullName.split(' ').first;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: ChoiceChip(
+                      label: Text(label),
+                      selected: isSelected,
+                      onSelected: (_) => ref.read(selectedBookingMemberProvider.notifier).state = member,
+                      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+                      avatar: member == null
+                          ? const Icon(Icons.person, size: 16)
+                          : CircleAvatar(
+                              radius: 8,
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                              child: Text(
+                                label[0].toUpperCase(),
+                                style: const TextStyle(fontSize: 8),
+                              ),
+                            ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

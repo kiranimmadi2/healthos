@@ -53,7 +53,7 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Reject'),
           ),
         ],
@@ -72,7 +72,7 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Report rejected.'),
-            backgroundColor: Colors.orange,
+            backgroundColor: AppColors.warning,
           ),
         );
         context.go('/reports');
@@ -99,7 +99,7 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Report verified and saved successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         context.go('/reports');
@@ -270,15 +270,16 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isNormal
-                                      ? Colors.green.withValues(alpha: 0.1)
-                                      : Colors.red.withValues(alpha: 0.1),
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : AppColors.error.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   biomarker.statusLabel,
                                   style: AppTypography.caption.copyWith(
-                                    color:
-                                        isNormal ? Colors.green : Colors.red,
+                                    color: isNormal
+                                        ? AppColors.success
+                                        : AppColors.error,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -312,8 +313,8 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
                       : const Icon(Icons.cancel_outlined, size: 18),
                   label: Text(_isRejecting ? 'Rejecting...' : 'Reject'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),

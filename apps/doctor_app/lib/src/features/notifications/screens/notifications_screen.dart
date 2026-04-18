@@ -64,7 +64,7 @@ class DoctorNotificationsScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: AppSpacing.screenPadding,
               itemCount: notifications.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final n = notifications[index];
                 final isUnread = n.readAt == null;

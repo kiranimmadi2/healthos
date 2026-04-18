@@ -21,6 +21,21 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   bool _useEmail = true;
+  String? _oauthError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      final uri = Uri.base;
+      final error = uri.queryParameters['error'];
+      final desc = uri.queryParameters['error_description'];
+      if (error != null) {
+        _oauthError = desc?.replaceAll('+', ' ') ?? error;
+        debugPrint('[PhoneInput] OAuth error from URL: $_oauthError');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -63,19 +78,19 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isGoogleLoading = true);
+    debugPrint('[GoogleSignIn] button tapped — kIsWeb=$kIsWeb');
 
     try {
       final authService = ref.read(authServiceProvider);
-      
-      // Redirect URL for Google Sign-In
-      // Mobile: io.supabase.healthos://login-callback
-      // Web: Current origin
-      final String? redirectTo = kIsWeb 
-          ? Uri.base.origin // Ensure we redirect back back to current flutter web local port
+      final String redirectTo = kIsWeb
+          ? Uri.base.origin
           : 'io.supabase.healthos://login-callback';
 
+      debugPrint('[GoogleSignIn] calling signInWithGoogle redirectTo=$redirectTo');
       await authService.signInWithGoogle(redirectTo: redirectTo);
-    } catch (e) {
+      debugPrint('[GoogleSignIn] signInWithGoogle returned (no exception)');
+    } catch (e, st) {
+      debugPrint('[GoogleSignIn] ERROR: $e\n$st');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -97,6 +112,35 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_oauthError != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+                      border: Border.all(color: AppColors.error),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            'Sign-in failed: $_oauthError',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _oauthError = null),
+                          child: Icon(Icons.close, color: AppColors.error, size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 const Spacer(),
                 Text('Welcome to', style: AppTypography.bodyLarge),
                 const SizedBox(height: AppSpacing.xs),

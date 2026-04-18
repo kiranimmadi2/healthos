@@ -84,7 +84,7 @@ class DoctorAppointmentCard extends ConsumerWidget {
                     patientAsync.when(
                       data: (patient) => Text(patient?.fullName ?? 'Unknown Patient', style: AppTypography.label),
                       loading: () => Text('Loading...', style: AppTypography.caption),
-                      error: (_, __) => Text('Unknown Patient', style: AppTypography.label),
+                      error: (_, _) => Text('Unknown Patient', style: AppTypography.label),
                     ),
                     if (appointment.reason != null)
                       Text(appointment.reason!, style: AppTypography.caption, maxLines: 1, overflow: TextOverflow.ellipsis),

@@ -32,7 +32,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 : 'HealthOS Doctor',
           ),
           loading: () => const Text('HealthOS Doctor'),
-          error: (_, __) => const Text('HealthOS Doctor'),
+          error: (_, _) => const Text('HealthOS Doctor'),
         ),
         actions: [
           if (doctorAsync.valueOrNull != null) ...[

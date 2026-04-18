@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -71,10 +73,15 @@ class AuthService {
   }
 
   Future<void> signInWithGoogle({String? redirectTo}) async {
-    await _handleAuth(() => _auth.signInWithOAuth(
-          OAuthProvider.google,
-          redirectTo: redirectTo,
-        ));
+    debugPrint('[AuthService] signInWithGoogle called — redirectTo: $redirectTo');
+    await _handleAuth(() async {
+      final result = await _auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: redirectTo,
+      );
+      debugPrint('[AuthService] signInWithOAuth returned: $result');
+      return result;
+    });
   }
 
   Future<void> resetPassword(String email) async {
@@ -86,6 +93,7 @@ class AuthService {
     try {
       return await action();
     } on AuthException catch (e) {
+      debugPrint('[AuthService] AuthException: ${e.message} (status: ${e.statusCode})');
       throw Exception(_mapAuthError(e));
     } on SocketException catch (_) {
       throw Exception(

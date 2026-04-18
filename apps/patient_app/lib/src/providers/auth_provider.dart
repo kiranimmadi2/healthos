@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_client/supabase_client.dart';
 
@@ -5,7 +6,10 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 final authStateProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return authService.onAuthStateChange.map((state) => state.session?.user);
+  return authService.onAuthStateChange.map((state) {
+    debugPrint('[AuthState] event=${state.event.name} userId=${state.session?.user.id}');
+    return state.session?.user;
+  });
 });
 
 final currentUserIdProvider = Provider<String?>((ref) {

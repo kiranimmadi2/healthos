@@ -109,11 +109,11 @@ class AiSummaryScreen extends ConsumerWidget {
                   Container(
                     padding: AppSpacing.cardPadding,
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.08),
+                      color: AppColors.warning.withValues(alpha: 0.08),
                       borderRadius:
                           BorderRadius.circular(AppSpacing.borderRadius),
                       border: Border.all(
-                        color: AppColors.warning.withOpacity(0.3),
+                        color: AppColors.warning.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(

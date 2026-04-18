@@ -2,7 +2,6 @@ import 'package:ai_client/ai_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_client/supabase_client.dart';
 
-import '../../../providers/auth_provider.dart';
 
 /// Provides an [AiService] instance configured with Supabase credentials
 /// and the current user's access token.

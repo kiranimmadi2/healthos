@@ -1,4 +1,3 @@
-import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ui_kit/ui_kit.dart';
@@ -25,9 +24,9 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
   void _loadDoctorData() {
     final doctor = ref.read(currentDoctorProvider).valueOrNull;
     if (doctor != null) {
-      _nameController.text = doctor.fullName ?? '';
+      _nameController.text = doctor.fullName;
       _specializationController.text = doctor.specialization ?? '';
-      _licenseController.text = doctor.licenseNumber ?? '';
+      _licenseController.text = doctor.licenseNumber;
       _emailController.text = doctor.email ?? '';
       _phoneController.text = doctor.phone ?? '';
     }
@@ -122,12 +121,12 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       if (!_isEditing) ...[
-                        Text(doctor.fullName ?? 'Unknown', style: AppTypography.h3),
+                        Text(doctor.fullName, style: AppTypography.h3),
                         const SizedBox(height: AppSpacing.xs),
                         if (doctor.specialization != null)
                           Text(doctor.specialization!, style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
                         const SizedBox(height: AppSpacing.xl),
-                        _InfoRow(icon: Icons.badge, label: 'License', value: doctor.licenseNumber ?? 'Not set'),
+                        _InfoRow(icon: Icons.badge, label: 'License', value: doctor.licenseNumber),
                         _InfoRow(icon: Icons.email, label: 'Email', value: doctor.email ?? 'Not set'),
                         _InfoRow(icon: Icons.phone, label: 'Phone', value: doctor.phone ?? 'Not set'),
                         if (doctor.verified)

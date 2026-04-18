@@ -47,25 +47,27 @@ final recentActivityProvider =
 
   for (final report in reports) {
     activities.add(_DashboardActivity(
-      icon: Icons.science,
+      icon: Icons.science_rounded,
       title: 'Lab report: ${report.reportType}',
-      subtitle: 'Status: ${report.status ?? 'pending'}',
+      subtitle: 'Status: ${report.status}',
       time: report.createdAt != null
           ? _formatTimeAgo(report.createdAt!)
           : 'Recently',
       timestamp: report.createdAt ?? DateTime.now(),
+      color: AppColors.warning,
     ));
   }
 
   for (final patient in patients.take(3)) {
     activities.add(_DashboardActivity(
-      icon: Icons.person_add,
+      icon: Icons.person_add_rounded,
       title: 'Patient: ${patient.fullName ?? 'Unknown'}',
       subtitle: patient.healthId,
       time: patient.createdAt != null
           ? _formatTimeAgo(patient.createdAt!)
           : 'Recently',
       timestamp: patient.createdAt ?? DateTime.now(),
+      color: AppColors.primary,
     ));
   }
 
@@ -88,6 +90,7 @@ class _DashboardActivity {
   final String subtitle;
   final String time;
   final DateTime timestamp;
+  final Color color;
 
   const _DashboardActivity({
     required this.icon,
@@ -95,6 +98,7 @@ class _DashboardActivity {
     required this.subtitle,
     required this.time,
     required this.timestamp,
+    required this.color,
   });
 }
 
@@ -147,43 +151,39 @@ class DashboardScreen extends ConsumerWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisSpacing: AppSpacing.md,
                       mainAxisSpacing: AppSpacing.md,
-                      childAspectRatio: 1.6,
+                      childAspectRatio: 1.8,
                       children: [
                         StatsCard(
-                          icon: Icons.people,
+                          icon: Icons.people_rounded,
                           value: patientCount.toString(),
                           label: 'Total Patients',
-                          trend: null,
-                          trendPositive: true,
-                          iconColor: Colors.blue,
-                          iconBackgroundColor: const Color(0xFFE3F2FD),
+                          iconColor: AppColors.primary,
+                          iconBackgroundColor:
+                              AppColors.primary.withValues(alpha: 0.1),
                         ),
                         StatsCard(
-                          icon: Icons.medical_services,
+                          icon: Icons.medical_services_rounded,
                           value: doctorCount.toString(),
                           label: 'Total Doctors',
-                          trend: null,
-                          trendPositive: true,
-                          iconColor: Colors.teal,
-                          iconBackgroundColor: const Color(0xFFE0F2F1),
+                          iconColor: AppColors.secondary,
+                          iconBackgroundColor:
+                              AppColors.secondary.withValues(alpha: 0.1),
                         ),
                         StatsCard(
-                          icon: Icons.science,
+                          icon: Icons.science_rounded,
                           value: reportsWeek.toString(),
                           label: 'Reports This Week',
-                          trend: null,
-                          trendPositive: true,
-                          iconColor: Colors.orange,
-                          iconBackgroundColor: const Color(0xFFFFF3E0),
+                          iconColor: AppColors.warning,
+                          iconBackgroundColor:
+                              AppColors.warning.withValues(alpha: 0.1),
                         ),
                         StatsCard(
-                          icon: Icons.description,
+                          icon: Icons.description_rounded,
                           value: totalReports.toString(),
                           label: 'Total Reports',
-                          trend: null,
-                          trendPositive: true,
-                          iconColor: Colors.purple,
-                          iconBackgroundColor: const Color(0xFFF3E5F5),
+                          iconColor: AppColors.info,
+                          iconBackgroundColor:
+                              AppColors.info.withValues(alpha: 0.1),
                         ),
                       ],
                     );
@@ -192,7 +192,16 @@ class DashboardScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: AppSpacing.xl),
-            Text('Recent Activity', style: AppTypography.h3),
+            Row(
+              children: [
+                Text('Recent Activity', style: AppTypography.h3),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('View all'),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.md),
             activityAsync.when(
               loading: () => const Center(child: HosLoading()),
@@ -204,7 +213,7 @@ class DashboardScreen extends ConsumerWidget {
                 if (activities.isEmpty) {
                   return const HosEmptyState(
                     message: 'No recent activity.',
-                    icon: Icons.history,
+                    icon: Icons.history_rounded,
                   );
                 }
                 return HosCard(
@@ -212,31 +221,37 @@ class DashboardScreen extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: activities.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final activity = activities[index];
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor:
-                              AppColors.primary.withValues(alpha: 0.1),
+                              activity.color.withValues(alpha: 0.1),
                           child: Icon(
                             activity.icon,
-                            color: AppColors.primary,
-                            size: 20,
+                            color: activity.color,
+                            size: 18,
                           ),
                         ),
-                        title: Text(activity.title,
-                            style: AppTypography.bodyMedium),
+                        title: Text(
+                          activity.title,
+                          style: AppTypography.bodyMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         subtitle: Text(
                           activity.subtitle,
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         trailing: Text(
                           activity.time,
                           style: AppTypography.caption.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       );

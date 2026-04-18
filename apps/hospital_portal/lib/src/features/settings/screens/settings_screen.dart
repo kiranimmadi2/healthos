@@ -107,7 +107,7 @@ class SettingsScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Icon(Icons.error_outline,
-                          color: Colors.red.shade400, size: 32),
+                          color: AppColors.error, size: 32),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Failed to load hospital data',
@@ -139,7 +139,7 @@ class SettingsScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Icon(Icons.info_outline,
-                              color: Colors.orange.shade400, size: 32),
+                              color: AppColors.warning, size: 32),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             'No hospital profile found',
@@ -270,11 +270,11 @@ class SettingsScreen extends ConsumerWidget {
             HosCard(
               padding: EdgeInsets.zero,
               child: ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
+                leading: const Icon(Icons.logout, color: AppColors.error),
                 title: Text(
                   'Sign Out',
                   style: AppTypography.bodyMedium.copyWith(
-                    color: Colors.red,
+                    color: AppColors.error,
                   ),
                 ),
                 onTap: () async {
@@ -293,7 +293,7 @@ class SettingsScreen extends ConsumerWidget {
                           onPressed: () => Navigator.of(ctx).pop(true),
                           child: const Text(
                             'Sign Out',
-                            style: TextStyle(color: Colors.red),
+                            style: TextStyle(color: AppColors.error),
                           ),
                         ),
                       ],

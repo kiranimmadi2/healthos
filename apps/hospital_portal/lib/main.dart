@@ -1,12 +1,42 @@
+import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_client/supabase_client.dart';
 
 import 'app.dart';
 
+/// Riverpod observer — logs every provider error to AppLogger.
+class _ProviderLogger extends ProviderObserver {
+  @override
+  void providerDidFail(
+    ProviderBase<Object?> provider,
+    Object error,
+    StackTrace stackTrace,
+    ProviderContainer container,
+  ) {
+    AppLogger.e('Riverpod[${provider.name ?? provider.runtimeType}]',
+        'provider failed', error, stackTrace);
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Catch uncaught Flutter framework errors (widget build failures, etc.)
+  FlutterError.onError = (details) {
+    AppLogger.e('FlutterError', details.exceptionAsString(),
+        details.exception, details.stack);
+    FlutterError.presentError(details);
+  };
+
+  // Catch uncaught async/platform errors outside the Flutter framework
+  PlatformDispatcher.instance.onError = (error, stack) {
+    AppLogger.e('PlatformDispatcher', 'uncaught error', error, stack);
+    return false;
+  };
+
+  AppLogger.i('main', 'initializing Supabase');
   await SupabaseClientInitializer.initialize(
     url: const String.fromEnvironment('SUPABASE_URL',
         defaultValue: 'https://gmozpsolmfwrihktdeqh.supabase.co'),
@@ -18,18 +48,21 @@ void main() async {
   try {
     final session = SupabaseClientInitializer.client.auth.currentSession;
     if (session != null && session.isExpired) {
+      AppLogger.w('main', 'session expired — signing out');
       await SupabaseClientInitializer.client.auth.signOut();
     }
-  } catch (_) {
-    // If session check fails, clear it to prevent crash loops
+  } catch (e, st) {
+    AppLogger.e('main', 'session check failed — forcing signOut', e, st);
     try {
       await SupabaseClientInitializer.client.auth.signOut();
     } catch (_) {}
   }
 
+  AppLogger.i('main', 'starting HospitalPortal');
   runApp(
-    const ProviderScope(
-      child: HealthOSHospitalPortal(),
+    ProviderScope(
+      observers: [_ProviderLogger()],
+      child: const HealthOSHospitalPortal(),
     ),
   );
 }

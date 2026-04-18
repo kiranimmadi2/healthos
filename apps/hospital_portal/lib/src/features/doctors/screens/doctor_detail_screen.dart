@@ -58,7 +58,7 @@ class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Doctor verified successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       }
@@ -67,7 +67,7 @@ class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to verify doctor: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -149,8 +149,8 @@ class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
                                           ? 'Verified'
                                           : 'Unverified',
                                       color: doctor.verified
-                                          ? Colors.green
-                                          : Colors.orange,
+                                          ? AppColors.success
+                                          : AppColors.warning,
                                       icon: doctor.verified
                                           ? Icons.verified
                                           : Icons.pending_outlined,

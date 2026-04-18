@@ -6,6 +6,7 @@ import 'package:ui_kit/ui_kit.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
 import '../../notifications/providers/notifications_provider.dart';
+import '../widgets/family_health_card.dart';
 import '../widgets/health_id_card.dart';
 import '../widgets/quick_actions_grid.dart';
 import '../widgets/recent_activity_list.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
             style: AppTypography.h4,
           ),
           loading: () => const Text('HealthOS'),
-          error: (_, __) => const Text('HealthOS'),
+          error: (_, _) => const Text('HealthOS'),
         ),
         actions: [
           Consumer(
@@ -66,6 +67,8 @@ class HomeScreen extends ConsumerWidget {
                 Text('Quick Actions', style: AppTypography.h4),
                 const SizedBox(height: AppSpacing.sm),
                 const QuickActionsGrid(),
+                const SizedBox(height: AppSpacing.lg),
+                const FamilyHealthCard(),
                 const SizedBox(height: AppSpacing.lg),
                 Text('Recent Activity', style: AppTypography.h4),
                 const SizedBox(height: AppSpacing.sm),

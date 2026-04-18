@@ -220,7 +220,7 @@ class _LastVisitCell extends ConsumerWidget {
         height: 16,
         child: CircularProgressIndicator(strokeWidth: 2),
       ),
-      error: (_, __) => Text(
+      error: (_, _) => Text(
         'Error',
         style: AppTypography.bodySmall.copyWith(color: AppColors.error),
       ),

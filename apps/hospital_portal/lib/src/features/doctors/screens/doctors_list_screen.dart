@@ -187,13 +187,13 @@ class _StatusChip extends StatelessWidget {
     IconData icon;
     switch (status) {
       case 'Verified':
-        color = Colors.green;
+        color = AppColors.success;
         icon = Icons.verified;
       case 'Unverified':
-        color = Colors.orange;
+        color = AppColors.warning;
         icon = Icons.pending_outlined;
       default:
-        color = Colors.grey;
+        color = AppColors.disabled;
         icon = Icons.help_outline;
     }
 

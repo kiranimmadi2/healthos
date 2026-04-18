@@ -50,6 +50,7 @@ pubspec.lock
 .env.staging
 .env.production
 *.env
+.mcp.json
 
 # Supabase
 supabase/.branches

@@ -108,7 +108,7 @@ class ReportsListScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const SizedBox(height: AppSpacing.sm),
                         itemBuilder: (context, index) {
                           final report = filtered[index];

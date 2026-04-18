@@ -82,12 +82,9 @@ class _DoctorLoginScreenState extends ConsumerState<DoctorLoginScreen> {
     try {
       final authService = ref.read(authServiceProvider);
 
-      // Redirect URL for Google Sign-In
-      // Mobile: io.supabase.healthos://login-callback
-      // Web: Current origin
-      final String? redirectTo = kIsWeb 
-          ? Uri.base.origin // Ensure we redirect back to current flutter web local port
-          : 'io.supabase.healthos://login-callback';
+      final String redirectTo = kIsWeb
+          ? Uri.base.origin
+          : 'com.healthos.doctorapp://login-callback';
 
       await authService.signInWithGoogle(redirectTo: redirectTo);
     } catch (e) {

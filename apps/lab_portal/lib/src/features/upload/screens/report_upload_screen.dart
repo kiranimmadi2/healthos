@@ -126,7 +126,7 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Report uploaded and OCR processing started!'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
       // Navigate to the review screen
@@ -240,13 +240,13 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              const Icon(Icons.check_circle, color: AppColors.success, size: 20),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Column(
@@ -277,17 +277,17 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.1),
+                            color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                              const Icon(Icons.error_outline, color: AppColors.error, size: 20),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
                                   _verifyError!,
-                                  style: AppTypography.bodySmall.copyWith(color: Colors.red),
+                                  style: AppTypography.bodySmall.copyWith(color: AppColors.error),
                                 ),
                               ),
                             ],
@@ -298,6 +298,7 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                       Text('Report Type', style: AppTypography.h3),
                       const SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<String>(
+                        // ignore: deprecated_member_use
                         value: _selectedReportType,
                         decoration: InputDecoration(
                           labelText: 'Select report type',
