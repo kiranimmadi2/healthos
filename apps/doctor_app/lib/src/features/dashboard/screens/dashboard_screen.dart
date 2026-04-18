@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../layout/master_detail_layout.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/doctor_provider.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../../patients/screens/patient_detail_screen.dart';
 import '../../patients/screens/patient_list_screen.dart';
 
@@ -32,7 +32,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 : 'HealthOS Doctor',
           ),
           loading: () => const Text('HealthOS Doctor'),
-          error: (_, __) => const Text('HealthOS Doctor'),
+          error: (_, _) => const Text('HealthOS Doctor'),
         ),
         actions: [
           if (doctorAsync.valueOrNull != null) ...[
@@ -48,14 +48,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ],
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign out',
-            onPressed: () async {
-              final authService = ref.read(authServiceProvider);
-              await authService.signOut();
+          Consumer(
+            builder: (context, ref, child) {
+              final count = ref.watch(doctorUnreadCountProvider);
+              return HosIconButton(
+                icon: HosIcons.notifications,
+                badgeCount: count,
+                tooltip: 'Notifications',
+                onPressed: () => context.go('/notifications'),
+              );
             },
           ),
+          HosIconButton(
+            icon: HosIcons.profile,
+            tooltip: 'Profile',
+            onPressed: () => context.go('/profile'),
+          ),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: MasterDetailLayout(
@@ -83,31 +92,10 @@ class _EmptyDetailPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.person_search_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Select a patient',
-            style: AppTypography.h3.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Choose a patient from the list to view their details.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
-            ),
-          ),
-        ],
-      ),
+    return const HosEmptyState(
+      icon: HosIcons.patients,
+      title: 'Select a patient',
+      message: 'Choose a patient from the list to view their details.',
     );
   }
 }

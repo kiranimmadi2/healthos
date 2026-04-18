@@ -1,3 +1,5 @@
+import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +19,23 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   final _phoneController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _useEmail = true;
+  String? _oauthError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      final uri = Uri.base;
+      final error = uri.queryParameters['error'];
+      final desc = uri.queryParameters['error_description'];
+      if (error != null) {
+        _oauthError = desc?.replaceAll('+', ' ') ?? error;
+        debugPrint('[PhoneInput] OAuth error from URL: $_oauthError');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -58,6 +76,31 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+    debugPrint('[GoogleSignIn] button tapped — kIsWeb=$kIsWeb');
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      final String redirectTo = kIsWeb
+          ? Uri.base.origin
+          : 'io.supabase.healthos://login-callback';
+
+      debugPrint('[GoogleSignIn] calling signInWithGoogle redirectTo=$redirectTo');
+      await authService.signInWithGoogle(redirectTo: redirectTo);
+      debugPrint('[GoogleSignIn] signInWithGoogle returned (no exception)');
+    } catch (e, st) {
+      debugPrint('[GoogleSignIn] ERROR: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,6 +112,35 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_oauthError != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+                      border: Border.all(color: AppColors.error),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            'Sign-in failed: $_oauthError',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _oauthError = null),
+                          child: Icon(Icons.close, color: AppColors.error, size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 const Spacer(),
                 Text('Welcome to', style: AppTypography.bodyLarge),
                 const SizedBox(height: AppSpacing.xs),
@@ -95,15 +167,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                     hint: 'you@example.com',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Enter a valid email';
-                      }
-                      return null;
-                    },
+                    validator: Validators.validateEmail,
                     onSubmitted: (_) => _sendOtp(),
                   )
                 else
@@ -113,12 +177,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                     hint: '+91 98765 43210',
                     prefixIcon: Icons.phone,
                     keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Phone number is required';
-                      }
-                      return null;
-                    },
+                    validator: Validators.validatePhone,
                     onSubmitted: (_) => _sendOtp(),
                   ),
                 const SizedBox(height: AppSpacing.lg),
@@ -142,6 +201,27 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      child: Text(
+                        'OR',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                HosButton(
+                  label: 'Sign in with Google',
+                  onPressed: _signInWithGoogle,
+                  isLoading: _isGoogleLoading,
+                  isOutlined: true,
                 ),
                 const Spacer(flex: 2),
                 Center(

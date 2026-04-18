@@ -23,8 +23,8 @@ class SymptomResponse with _$SymptomResponse {
   const factory SymptomResponse({
     @Default([]) List<String> recommendations,
     @JsonKey(name: 'triage_level') String? triageLevel,
-    @JsonKey(name: 'what_to_do') String? whatToDo,
-    @JsonKey(name: 'what_to_avoid') String? whatToAvoid,
+    @Default([]) @JsonKey(name: 'what_to_do') List<String> whatToDo,
+    @Default([]) @JsonKey(name: 'what_to_avoid') List<String> whatToAvoid,
     @JsonKey(name: 'when_to_seek_help') String? whenToSeekHelp,
   }) = _SymptomResponse;
 

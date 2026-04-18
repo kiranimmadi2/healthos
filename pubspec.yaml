@@ -3,10 +3,10 @@ description: HealthOS - AI-powered unified health platform
 publish_to: none
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.8.0
 
 dev_dependencies:
-  melos: ^7.4.0
+  melos: ^6.1.0
 
 workspace:
   - apps/patient_app

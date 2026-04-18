@@ -1,6 +1,17 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_client/supabase_client.dart';
 import 'package:ui_kit/ui_kit.dart';
+
+final doctorRepositoryProvider =
+    Provider<DoctorRepository>((ref) => DoctorRepository());
+
+final allDoctorsProvider = FutureProvider<List<Doctor>>((ref) {
+  final repo = ref.read(doctorRepositoryProvider);
+  return repo.search('', limit: 200);
+});
 
 class DoctorsListScreen extends ConsumerStatefulWidget {
   const DoctorsListScreen({super.key});
@@ -19,64 +30,20 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
     super.dispose();
   }
 
-  // Sample data - will be replaced with Supabase queries
-  static const _doctors = [
-    _DoctorRow(
-      name: 'Dr. Anil Kumar',
-      specialization: 'Cardiology',
-      email: 'anil.kumar@hospital.com',
-      status: 'Active',
-    ),
-    _DoctorRow(
-      name: 'Dr. Meera Reddy',
-      specialization: 'Dermatology',
-      email: 'meera.reddy@hospital.com',
-      status: 'Active',
-    ),
-    _DoctorRow(
-      name: 'Dr. Sanjay Gupta',
-      specialization: 'Orthopedics',
-      email: 'sanjay.gupta@hospital.com',
-      status: 'Active',
-    ),
-    _DoctorRow(
-      name: 'Dr. Priya Nair',
-      specialization: 'Pediatrics',
-      email: 'priya.nair@hospital.com',
-      status: 'On Leave',
-    ),
-    _DoctorRow(
-      name: 'Dr. Rajesh Sharma',
-      specialization: 'General Medicine',
-      email: 'rajesh.sharma@hospital.com',
-      status: 'Active',
-    ),
-    _DoctorRow(
-      name: 'Dr. Lakshmi Iyer',
-      specialization: 'Neurology',
-      email: 'lakshmi.iyer@hospital.com',
-      status: 'Active',
-    ),
-    _DoctorRow(
-      name: 'Dr. Vikram Singh',
-      specialization: 'Ophthalmology',
-      email: 'vikram.singh@hospital.com',
-      status: 'Inactive',
-    ),
-  ];
-
-  List<_DoctorRow> get _filteredDoctors {
-    if (_searchQuery.isEmpty) return _doctors;
+  List<Doctor> _filterDoctors(List<Doctor> doctors) {
+    if (_searchQuery.isEmpty) return doctors;
     final query = _searchQuery.toLowerCase();
-    return _doctors
+    return doctors
         .where((d) =>
-            d.name.toLowerCase().contains(query) ||
-            d.specialization.toLowerCase().contains(query))
+            d.fullName.toLowerCase().contains(query) ||
+            (d.specialization?.toLowerCase().contains(query) ?? false))
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final doctorsAsync = ref.watch(allDoctorsProvider);
+
     return Scaffold(
       body: Padding(
         padding: AppSpacing.screenPadding,
@@ -90,9 +57,7 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
                 Text('Doctors', style: AppTypography.h1),
                 HosButton(
                   label: 'Add Doctor',
-                  onPressed: () {
-                    // TODO: Navigate to add doctor form
-                  },
+                  onPressed: () => context.push('/doctors/add'),
                   icon: Icons.add,
                 ),
               ],
@@ -111,78 +76,97 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
             Expanded(
-              child: HosCard(
-                child: SingleChildScrollView(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(
-                        AppColors.surface,
-                      ),
-                      columns: const [
-                        DataColumn(label: Text('Name')),
-                        DataColumn(label: Text('Specialization')),
-                        DataColumn(label: Text('Email')),
-                        DataColumn(label: Text('Status')),
-                        DataColumn(label: Text('Actions')),
-                      ],
-                      rows: _filteredDoctors.map((doctor) {
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: AppColors.primary
-                                        .withValues(alpha: 0.1),
-                                    child: Text(
-                                      doctor.name
-                                          .split(' ')
-                                          .last[0]
-                                          .toUpperCase(),
-                                      style:
-                                          AppTypography.labelSmall.copyWith(
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Text(doctor.name,
-                                      style: AppTypography.bodyMedium),
-                                ],
-                              ),
-                            ),
-                            DataCell(Text(doctor.specialization)),
-                            DataCell(Text(doctor.email)),
-                            DataCell(_StatusChip(status: doctor.status)),
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit_outlined,
-                                        size: 18),
-                                    onPressed: () {},
-                                    tooltip: 'Edit',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.visibility_outlined,
-                                        size: 18),
-                                    onPressed: () {},
-                                    tooltip: 'View',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
+              child: doctorsAsync.when(
+                loading: () => const Center(child: HosLoading()),
+                error: (e, _) => HosError(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(allDoctorsProvider),
                 ),
+                data: (doctors) {
+                  final filtered = _filterDoctors(doctors);
+                  if (filtered.isEmpty) {
+                    return const HosEmptyState(
+                      message: 'No doctors found.',
+                      icon: Icons.medical_services_outlined,
+                    );
+                  }
+                  return HosCard(
+                    child: SingleChildScrollView(
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(
+                            AppColors.surface,
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('Name')),
+                            DataColumn(label: Text('Specialization')),
+                            DataColumn(label: Text('Email')),
+                            DataColumn(label: Text('Status')),
+                            DataColumn(label: Text('Actions')),
+                          ],
+                          rows: filtered.map((doctor) {
+                            final status =
+                                doctor.verified ? 'Verified' : 'Unverified';
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 16,
+                                        backgroundColor: AppColors.primary
+                                            .withValues(alpha: 0.1),
+                                        child: Text(
+                                          doctor.fullName
+                                              .split(' ')
+                                              .last[0]
+                                              .toUpperCase(),
+                                          style: AppTypography.caption
+                                              .copyWith(
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Text(doctor.fullName,
+                                          style: AppTypography.bodyMedium),
+                                    ],
+                                  ),
+                                ),
+                                DataCell(Text(
+                                    doctor.specialization ?? 'N/A')),
+                                DataCell(Text(doctor.email ?? 'N/A')),
+                                DataCell(_StatusChip(status: status)),
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.edit_outlined,
+                                            size: 18),
+                                        onPressed: () => context.push('/doctors/${doctor.id}/edit'),
+                                        tooltip: 'Edit',
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.visibility_outlined,
+                                            size: 18),
+                                        onPressed: () => context.push('/doctors/${doctor.id}'),
+                                        tooltip: 'View',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -190,20 +174,6 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
       ),
     );
   }
-}
-
-class _DoctorRow {
-  final String name;
-  final String specialization;
-  final String email;
-  final String status;
-
-  const _DoctorRow({
-    required this.name,
-    required this.specialization,
-    required this.email,
-    required this.status,
-  });
 }
 
 class _StatusChip extends StatelessWidget {
@@ -214,15 +184,17 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color;
+    IconData icon;
     switch (status) {
-      case 'Active':
-        color = Colors.green;
-      case 'On Leave':
-        color = Colors.orange;
-      case 'Inactive':
-        color = Colors.red;
+      case 'Verified':
+        color = AppColors.success;
+        icon = Icons.verified;
+      case 'Unverified':
+        color = AppColors.warning;
+        icon = Icons.pending_outlined;
       default:
-        color = Colors.grey;
+        color = AppColors.disabled;
+        icon = Icons.help_outline;
     }
 
     return Container(
@@ -234,12 +206,19 @@ class _StatusChip extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        status,
-        style: AppTypography.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            status,
+            style: AppTypography.caption.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

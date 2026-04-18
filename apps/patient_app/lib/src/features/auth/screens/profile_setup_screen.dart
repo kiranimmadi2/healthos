@@ -25,6 +25,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   static const _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill name from Google OAuth metadata when available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authServiceProvider).currentUser;
+      final googleName = user?.userMetadata?['full_name'] as String?
+          ?? user?.userMetadata?['name'] as String?;
+      if (googleName != null && _nameController.text.isEmpty) {
+        _nameController.text = googleName;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
@@ -54,10 +68,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       final repo = ref.read(patientRepositoryProvider);
       final healthId = HealthIdGenerator.generate();
 
+      final currentUser = ref.read(authServiceProvider).currentUser;
       await repo.create({
         'auth_id': userId,
         'health_id': healthId,
-        'phone': ref.read(authServiceProvider).currentUser?.phone ?? '',
+        'phone': currentUser?.phone,
         'full_name': _nameController.text.trim(),
         'gender': _selectedGender,
         'blood_group': _selectedBloodGroup,
@@ -129,7 +144,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     labelText: 'Gender',
                     prefixIcon: Icon(Icons.wc),
                   ),
-                  value: _selectedGender,
+                  initialValue: _selectedGender,
                   items: const [
                     DropdownMenuItem(value: 'male', child: Text('Male')),
                     DropdownMenuItem(value: 'female', child: Text('Female')),
@@ -143,7 +158,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     labelText: 'Blood Group',
                     prefixIcon: Icon(Icons.bloodtype),
                   ),
-                  value: _selectedBloodGroup,
+                  initialValue: _selectedBloodGroup,
                   items: _bloodGroups
                       .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))
                       .toList(),

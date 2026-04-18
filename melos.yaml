@@ -6,7 +6,7 @@ packages:
 
 command:
   bootstrap:
-    usePubspecOverrides: true
+    usePubspecOverrides: false
   version:
     branch: main
 

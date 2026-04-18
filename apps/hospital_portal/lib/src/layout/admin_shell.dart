@@ -15,20 +15,23 @@ class AdminShell extends ConsumerWidget {
     if (location.startsWith('/dashboard')) return 0;
     if (location.startsWith('/doctors')) return 1;
     if (location.startsWith('/patients')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _currentIndex(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isExtended = MediaQuery.of(context).size.width > 1200;
 
     return Scaffold(
       body: Row(
         children: [
           NavigationRail(
-            extended: MediaQuery.of(context).size.width > 1200,
+            extended: isExtended,
             selectedIndex: selectedIndex,
-            backgroundColor: AppColors.surface,
+            backgroundColor: colorScheme.surface,
             onDestinationSelected: (index) {
               switch (index) {
                 case 0:
@@ -37,25 +40,38 @@ class AdminShell extends ConsumerWidget {
                   context.go('/doctors');
                 case 2:
                   context.go('/patients');
+                case 3:
+                  context.go('/settings');
               }
             },
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.local_hospital_rounded,
-                    size: 32,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'HealthOS',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.local_hospital_rounded,
+                      size: 22,
+                      color: colorScheme.primary,
                     ),
                   ),
+                  if (isExtended) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'HealthOS',
+                      style: AppTypography.label.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -67,8 +83,9 @@ class AdminShell extends ConsumerWidget {
                   child: IconButton(
                     icon: const Icon(Icons.logout_rounded),
                     tooltip: 'Sign Out',
-                    onPressed: () {
-                      ref.read(authServiceProvider).signOut();
+                    color: AppColors.textTertiary,
+                    onPressed: () async {
+                      await ref.read(authServiceProvider).signOut();
                     },
                   ),
                 ),
@@ -77,22 +94,31 @@ class AdminShell extends ConsumerWidget {
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard),
+                selectedIcon: Icon(Icons.dashboard_rounded),
                 label: Text('Dashboard'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.medical_services_outlined),
-                selectedIcon: Icon(Icons.medical_services),
+                selectedIcon: Icon(Icons.medical_services_rounded),
                 label: Text('Doctors'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.people_outlined),
-                selectedIcon: Icon(Icons.people),
+                selectedIcon: Icon(Icons.people_rounded),
                 label: Text('Patients'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings_rounded),
+                label: Text('Settings'),
               ),
             ],
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+          VerticalDivider(
+            thickness: 1,
+            width: 1,
+            color: Theme.of(context).dividerColor,
+          ),
           Expanded(child: child),
         ],
       ),

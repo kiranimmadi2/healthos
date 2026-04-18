@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_client/supabase_client.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthState, User;
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 

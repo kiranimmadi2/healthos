@@ -23,26 +23,31 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveIconColor = iconColor ?? AppColors.primary;
+    final effectiveIconBg = iconBackgroundColor ??
+        AppColors.primary.withValues(alpha: 0.1);
+
     return HosCard(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: iconBackgroundColor ??
-                        AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: effectiveIconBg,
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
-                    size: 24,
-                    color: iconColor ?? AppColors.primary,
+                    size: 20,
+                    color: effectiveIconColor,
                   ),
                 ),
                 if (trend != null)
@@ -53,8 +58,8 @@ class StatsCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: trendPositive
-                          ? Colors.green.withValues(alpha: 0.1)
-                          : Colors.red.withValues(alpha: 0.1),
+                          ? AppColors.success.withValues(alpha: 0.1)
+                          : AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -62,19 +67,20 @@ class StatsCard extends StatelessWidget {
                       children: [
                         Icon(
                           trendPositive
-                              ? Icons.trending_up
-                              : Icons.trending_down,
-                          size: 14,
-                          color:
-                              trendPositive ? Colors.green : Colors.red,
+                              ? Icons.trending_up_rounded
+                              : Icons.trending_down_rounded,
+                          size: 12,
+                          color: trendPositive
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 3),
                         Text(
                           trend!,
                           style: AppTypography.caption.copyWith(
                             color: trendPositive
-                                ? Colors.green
-                                : Colors.red,
+                                ? AppColors.success
+                                : AppColors.error,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -83,17 +89,21 @@ class StatsCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               value,
               style: AppTypography.h2,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: 2),
             Text(
               label,
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textSecondary,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

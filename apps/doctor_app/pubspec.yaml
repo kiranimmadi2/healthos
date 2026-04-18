@@ -4,7 +4,7 @@ publish_to: none
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.8.0
 
 resolution: workspace
 
@@ -12,16 +12,14 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
 
   # Shared packages
   core:
-    path: ../../packages/core
   ui_kit:
-    path: ../../packages/ui_kit
   supabase_client:
-    path: ../../packages/supabase_client
   ai_client:
-    path: ../../packages/ai_client
 
   # State management
   flutter_riverpod: ^2.5.1
@@ -36,6 +34,7 @@ dependencies:
   # Utilities
   fpdart: ^1.1.0
   mobile_scanner: ^5.1.1
+  supabase_flutter: ^2.12.4
 
 dev_dependencies:
   flutter_test:

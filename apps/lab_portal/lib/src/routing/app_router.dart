@@ -11,11 +11,15 @@ import '../layout/lab_shell.dart';
 import '../providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final refreshNotifier = ValueNotifier<int>(0);
+  
+  ref.listen(authStateProvider, (prev, next) => refreshNotifier.value++);
 
   return GoRouter(
+    refreshListenable: refreshNotifier,
     initialLocation: '/login',
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final isAuthenticated = authState.valueOrNull != null;
       final isLoginRoute = state.matchedLocation == '/login';
 

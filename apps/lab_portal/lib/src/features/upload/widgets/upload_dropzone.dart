@@ -73,7 +73,7 @@ class _UploadDropzoneState extends State<UploadDropzone> {
                   Icon(
                     Icons.check_circle_outline,
                     size: 48,
-                    color: Colors.green,
+                    color: AppColors.success,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(

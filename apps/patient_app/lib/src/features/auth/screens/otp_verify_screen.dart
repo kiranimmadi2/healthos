@@ -36,6 +36,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       if (!mounted) return;
 
       final patient = await ref.read(currentPatientProvider.future);
+      if (!mounted) return;
       if (patient == null) {
         context.go('/auth/setup');
       } else {

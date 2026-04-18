@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 import '../../../providers/patient_provider.dart';
@@ -50,7 +51,10 @@ class QrDisplayScreen extends ConsumerWidget {
                     icon: Icons.share,
                     isOutlined: true,
                     onPressed: () {
-                      // TODO: Share health ID via share_plus
+                      Share.share(
+                        'My HealthOS Health ID: ${patient.healthId}\nhealthos://patient/${patient.healthId}',
+                        subject: 'My Health ID',
+                      );
                     },
                   ),
                 ],

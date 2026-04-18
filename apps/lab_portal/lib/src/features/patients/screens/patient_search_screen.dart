@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:core/core.dart';
 import 'package:ui_kit/ui_kit.dart';
+
+import '../../../providers/repository_providers.dart';
 
 class PatientSearchScreen extends ConsumerStatefulWidget {
   const PatientSearchScreen({super.key});
@@ -13,7 +17,7 @@ class PatientSearchScreen extends ConsumerStatefulWidget {
 class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
   final _searchController = TextEditingController();
   bool _isSearching = false;
-  _PatientResult? _searchResult;
+  Patient? _searchResult;
   String? _errorMessage;
 
   @override
@@ -33,25 +37,24 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
     });
 
     try {
-      // TODO: Replace with actual Supabase query
-      await Future.delayed(const Duration(milliseconds: 800));
+      final repo = ref.read(patientRepoProvider);
 
-      // Simulated search result
-      if (query.toUpperCase().contains('HID')) {
+      Patient? patient;
+      if (query.toUpperCase().startsWith('HOS-') ||
+          query.toUpperCase().startsWith('HID')) {
+        patient = await repo.getByHealthId(query);
+      } else {
+        final results = await repo.search(query, limit: 1);
+        patient = results.isNotEmpty ? results.first : null;
+      }
+
+      if (patient != null) {
         setState(() {
-          _searchResult = _PatientResult(
-            name: 'Rahul Sharma',
-            healthId: query.toUpperCase(),
-            age: '32',
-            gender: 'Male',
-            phone: '+91 98765 43210',
-            lastVisit: '2026-03-14',
-            reportsCount: 12,
-          );
+          _searchResult = patient;
         });
       } else {
         setState(() {
-          _errorMessage = 'No patient found with Health ID "$query"';
+          _errorMessage = 'No patient found for "$query"';
         });
       }
     } catch (e) {
@@ -61,6 +64,17 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
     } finally {
       setState(() => _isSearching = false);
     }
+  }
+
+  String _calculateAge(DateTime? dob) {
+    if (dob == null) return 'N/A';
+    final now = DateTime.now();
+    int age = now.year - dob.year;
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
+      age--;
+    }
+    return '$age';
   }
 
   @override
@@ -88,7 +102,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                   child: HosTextField(
                     controller: _searchController,
                     label: 'Health ID',
-                    hint: 'Enter Health ID (e.g., HID-20260101-001)',
+                    hint: 'Enter Health ID (e.g., HOS-2026-ABCD) or name',
                     prefixIcon: Icons.search,
                     onSubmitted: (_) => _searchPatient(),
                   ),
@@ -136,7 +150,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                             backgroundColor:
                                 AppColors.primary.withValues(alpha: 0.1),
                             child: Text(
-                              _searchResult!.name[0].toUpperCase(),
+                              (_searchResult!.fullName ?? 'U')[0].toUpperCase(),
                               style: AppTypography.h2.copyWith(
                                 color: AppColors.primary,
                               ),
@@ -146,8 +160,10 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(_searchResult!.name,
-                                  style: AppTypography.h3),
+                              Text(
+                                _searchResult!.fullName ?? 'Unknown',
+                                style: AppTypography.h3,
+                              ),
                               Text(
                                 _searchResult!.healthId,
                                 style: AppTypography.bodySmall.copyWith(
@@ -163,23 +179,23 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                       Row(
                         children: [
                           _DetailItem(
-                              label: 'Age', value: _searchResult!.age),
+                            label: 'Age',
+                            value: _calculateAge(_searchResult!.dateOfBirth),
+                          ),
                           const SizedBox(width: AppSpacing.xl),
                           _DetailItem(
-                              label: 'Gender',
-                              value: _searchResult!.gender),
+                            label: 'Gender',
+                            value: _searchResult!.gender ?? 'N/A',
+                          ),
                           const SizedBox(width: AppSpacing.xl),
                           _DetailItem(
-                              label: 'Phone',
-                              value: _searchResult!.phone),
+                            label: 'Phone',
+                            value: _searchResult!.phone,
+                          ),
                           const SizedBox(width: AppSpacing.xl),
                           _DetailItem(
-                              label: 'Last Visit',
-                              value: _searchResult!.lastVisit),
-                          const SizedBox(width: AppSpacing.xl),
-                          _DetailItem(
-                            label: 'Total Reports',
-                            value: _searchResult!.reportsCount.toString(),
+                            label: 'Blood Group',
+                            value: _searchResult!.bloodGroup ?? 'N/A',
                           ),
                         ],
                       ),
@@ -187,7 +203,7 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
                       HosButton(
                         label: 'Upload Report for This Patient',
                         onPressed: () {
-                          // TODO: Navigate to upload with pre-filled patient ID
+                          context.go('/upload');
                         },
                         icon: Icons.upload_file,
                       ),
@@ -226,26 +242,6 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
       ),
     );
   }
-}
-
-class _PatientResult {
-  final String name;
-  final String healthId;
-  final String age;
-  final String gender;
-  final String phone;
-  final String lastVisit;
-  final int reportsCount;
-
-  const _PatientResult({
-    required this.name,
-    required this.healthId,
-    required this.age,
-    required this.gender,
-    required this.phone,
-    required this.lastVisit,
-    required this.reportsCount,
-  });
 }
 
 class _DetailItem extends StatelessWidget {
