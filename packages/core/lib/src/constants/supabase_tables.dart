@@ -13,6 +13,9 @@ class SupabaseTables {
   static const String patientEmbeddings = 'patient_embeddings';
   static const String notifications = 'notifications';
   static const String appointments = 'appointments';
+  static const String familyMembers = 'family_members';
+  static const String visitVitals = 'visit_vitals';
+  static const String doctorNotes = 'doctor_notes';
 }
 
 class SupabaseBuckets {
@@ -43,4 +46,5 @@ class HealthOSServices {
   static const String appointmentService = 'appointment-service';
   static const String aiService = 'ai-service';
   static const String notificationService = 'notification-service';
+  static const String familyService = 'family-service';
 }

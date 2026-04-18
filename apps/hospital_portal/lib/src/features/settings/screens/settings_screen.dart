@@ -5,6 +5,12 @@ import 'package:ui_kit/ui_kit.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/hospital_provider.dart';
 
+void _showComingSoon(BuildContext context, String feature) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('$feature — coming soon')),
+  );
+}
+
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -221,9 +227,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     trailing:
                         const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    onTap: () {
-                      // TODO: Navigate to admin account management
-                    },
+                    onTap: () => _showComingSoon(context, 'Admin Account Management'),
                   ),
                   const Divider(height: 1),
                   ListTile(
@@ -238,9 +242,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     trailing:
                         const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    onTap: () {
-                      // TODO: Navigate to user management
-                    },
+                    onTap: () => _showComingSoon(context, 'User Management'),
                   ),
                   const Divider(height: 1),
                   ListTile(
@@ -255,9 +257,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     trailing:
                         const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                    onTap: () {
-                      // TODO: Navigate to configuration
-                    },
+                    onTap: () => _showComingSoon(context, 'Configuration'),
                   ),
                 ],
               ),

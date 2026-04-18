@@ -22,7 +22,128 @@ import { Router } from '../_shared/router.ts';
 import { createServiceHandler, requireAuth, json, errorResponse } from '../_shared/middleware.ts';
 import { supabaseAdmin } from '../_shared/supabase-client.ts';
 
+async function getFcmAccessToken(): Promise<string | null> {
+  const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON');
+  if (!serviceAccountJson) return null;
+
+  let serviceAccount: { client_email: string; private_key: string; project_id: string };
+  try {
+    serviceAccount = JSON.parse(serviceAccountJson);
+  } catch {
+    console.error('[notification-service] Invalid FIREBASE_SERVICE_ACCOUNT_JSON');
+    return null;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = btoa(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }));
+
+  const signingInput = `${header}.${payload}`;
+  const pemKey = serviceAccount.private_key.replace(/\\n/g, '\n');
+  const binaryKey = pemKey
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s/g, '');
+  const keyBuffer = Uint8Array.from(atob(binaryKey), c => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8', keyBuffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['sign'],
+  );
+  const signatureBuffer = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey,
+    new TextEncoder().encode(signingInput),
+  );
+  const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+  const jwt = `${signingInput}.${signature}`;
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+  if (!tokenRes.ok) return null;
+  const { access_token } = await tokenRes.json();
+  return access_token as string;
+}
+
+async function sendFcmPush(fcmToken: string, title: string, body: string, data?: Record<string, string>): Promise<void> {
+  const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON');
+  if (!serviceAccountJson) return;
+
+  let projectId: string;
+  try {
+    projectId = JSON.parse(serviceAccountJson).project_id;
+  } catch {
+    return;
+  }
+
+  const accessToken = await getFcmAccessToken();
+  if (!accessToken) return;
+
+  await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      message: {
+        token: fcmToken,
+        notification: { title, body },
+        data: data ?? {},
+      },
+    }),
+  });
+}
+
+async function dispatchPush(userId: string | null | undefined, title: string, body: string, metadata?: Record<string, unknown>): Promise<void> {
+  if (!userId) return;
+
+  const data = metadata ? Object.fromEntries(
+    Object.entries(metadata).map(([k, v]) => [k, String(v)])
+  ) : undefined;
+
+  const { data: patient } = await supabaseAdmin
+    .from('patients').select('fcm_token').eq('id', userId).maybeSingle();
+  if (patient?.fcm_token) {
+    await sendFcmPush(patient.fcm_token, title, body, data);
+    return;
+  }
+
+  const { data: doctor } = await supabaseAdmin
+    .from('doctors').select('fcm_token').eq('id', userId).maybeSingle();
+  if (doctor?.fcm_token) {
+    await sendFcmPush(doctor.fcm_token, title, body, data);
+  }
+}
+
 const router = new Router();
+
+// ─── Register FCM Token ─────────────────────────────────────
+
+router.put('/notifications/fcm-token', requireAuth(async (ctx) => {
+  const body = await ctx.body<{ user_id: string; role: 'patient' | 'doctor'; fcm_token: string }>();
+  if (!body.user_id || !body.role || !body.fcm_token) {
+    return errorResponse('user_id, role, and fcm_token are required');
+  }
+
+  const table = body.role === 'patient' ? 'patients' : 'doctors';
+  const { error } = await supabaseAdmin
+    .from(table)
+    .update({ fcm_token: body.fcm_token })
+    .eq('id', body.user_id);
+
+  if (error) return errorResponse(error.message, 422);
+  return json({ success: true });
+}));
 
 // ─── Query Notifications ────────────────────────────────────
 
@@ -109,20 +230,8 @@ router.post('/notifications', requireAuth(async (ctx) => {
 
   if (error) return errorResponse(error.message, 422);
 
-  // TODO: Dispatch push notification via FCM/Expo
-  // This is where you'd integrate with:
-  // - Firebase Cloud Messaging (FCM) for Android
-  // - Apple Push Notification Service (APNs) via FCM
-  // - Expo Push Notifications for React Native
-  // - OneSignal as unified provider
-  //
-  // Example FCM integration:
-  // const fcmToken = await getUserFcmToken(body.patient_id || body.doctor_id);
-  // if (fcmToken) {
-  //   await sendFcmNotification(fcmToken, body.title, body.body, body.metadata);
-  // }
-
-  console.log(`[notification-service] Sent: "${body.title}" to ${body.patient_id || body.doctor_id}`);
+  const recipientId = (body.patient_id || body.doctor_id) as string | undefined;
+  await dispatchPush(recipientId, body.title as string, body.body as string, body.metadata as Record<string, unknown> | undefined);
 
   return json(data, 201);
 }));

@@ -11,3 +11,4 @@ final authStateProvider = StreamProvider<User?>((ref) {
 final currentUserIdProvider = Provider<String?>((ref) {
   return ref.watch(authStateProvider).valueOrNull?.id;
 });
+

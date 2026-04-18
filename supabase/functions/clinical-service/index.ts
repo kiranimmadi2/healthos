@@ -287,6 +287,141 @@ router.post('/prescriptions', requireAuth(async (ctx) => {
   return json(data, 201);
 }));
 
+// ─── Visit Vitals ───────────────────────────────────────────
+
+router.post('/vitals', requireAuth(async (ctx) => {
+  const body = await ctx.body<Record<string, unknown>>();
+  if (!body.visit_id || !body.patient_id) {
+    return errorResponse('visit_id and patient_id are required');
+  }
+  const { data, error } = await supabaseAdmin
+    .from('visit_vitals')
+    .insert({
+      visit_id: body.visit_id,
+      patient_id: body.patient_id,
+      bp_systolic: body.bp_systolic ?? null,
+      bp_diastolic: body.bp_diastolic ?? null,
+      heart_rate: body.heart_rate ?? null,
+      temperature_c: body.temperature_c ?? null,
+      weight_kg: body.weight_kg ?? null,
+      height_cm: body.height_cm ?? null,
+      spo2_percent: body.spo2_percent ?? null,
+      recorded_by: ctx.userId,
+    })
+    .select()
+    .single();
+  if (error) return errorResponse(error.message, 422);
+  return json(data, 201);
+}));
+
+router.get('/vitals/visit/:visitId', requireAuth(async (ctx) => {
+  const { data, error } = await supabaseAdmin
+    .from('visit_vitals')
+    .select()
+    .eq('visit_id', ctx.params.visitId)
+    .maybeSingle();
+  if (error) return errorResponse(error.message, 500);
+  return json(data);
+}));
+
+router.get('/vitals/patient/:patientId', requireAuth(async (ctx) => {
+  const limit = parseInt(ctx.query.get('limit') || '20');
+  const offset = parseInt(ctx.query.get('offset') || '0');
+  const { data, error } = await supabaseAdmin
+    .from('visit_vitals')
+    .select()
+    .eq('patient_id', ctx.params.patientId)
+    .order('recorded_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) return errorResponse(error.message, 500);
+  return json(data);
+}));
+
+// ─── Doctor Notes ────────────────────────────────────────────
+
+router.get('/notes/patient/:patientId', requireAuth(async (ctx) => {
+  const includePrivate = ctx.query.get('include_private') !== 'false';
+  const limit = parseInt(ctx.query.get('limit') || '50');
+  const offset = parseInt(ctx.query.get('offset') || '0');
+
+  let query = supabaseAdmin
+    .from('doctor_notes')
+    .select()
+    .eq('patient_id', ctx.params.patientId);
+  if (!includePrivate) query = query.eq('is_private', false);
+
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) return errorResponse(error.message, 500);
+  return json(data);
+}));
+
+router.post('/notes', requireAuth(async (ctx) => {
+  const body = await ctx.body<Record<string, unknown>>();
+  if (!body.patient_id || !body.content) {
+    return errorResponse('patient_id and content are required');
+  }
+  const { data, error } = await supabaseAdmin
+    .from('doctor_notes')
+    .insert({
+      patient_id: body.patient_id,
+      doctor_id: body.doctor_id ?? ctx.userId,
+      content: body.content,
+      is_private: body.is_private ?? true,
+    })
+    .select()
+    .single();
+  if (error) return errorResponse(error.message, 422);
+  return json(data, 201);
+}));
+
+router.put('/notes/:id', requireAuth(async (ctx) => {
+  const body = await ctx.body<Record<string, unknown>>();
+  const { data, error } = await supabaseAdmin
+    .from('doctor_notes')
+    .update({ content: body.content, is_private: body.is_private })
+    .eq('id', ctx.params.id)
+    .select()
+    .single();
+  if (error) return errorResponse(error.message, 422);
+  return json(data);
+}));
+
+router.delete('/notes/:id', requireAuth(async (ctx) => {
+  const { error } = await supabaseAdmin
+    .from('doctor_notes')
+    .delete()
+    .eq('id', ctx.params.id);
+  if (error) return errorResponse(error.message, 422);
+  return json({ success: true });
+}));
+
+// ─── Patient Medical History (doctor-editable fields only) ───
+
+router.patch('/patients/:id/medical-history', requireAuth(async (ctx) => {
+  const body = await ctx.body<Record<string, unknown>>();
+
+  // Only allow updating clinical fields — not personal demographics
+  const allowed: Record<string, unknown> = {};
+  if (body.allergies !== undefined) allowed['allergies'] = body.allergies;
+  if (body.chronic_conditions !== undefined) allowed['chronic_conditions'] = body.chronic_conditions;
+  if (body.emergency_contact !== undefined) allowed['emergency_contact'] = body.emergency_contact;
+
+  if (Object.keys(allowed).length === 0) {
+    return errorResponse('No editable fields provided');
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('patients')
+    .update(allowed)
+    .eq('id', ctx.params.id)
+    .select()
+    .single();
+  if (error) return errorResponse(error.message, 422);
+  return json(data);
+}));
+
 // ─── Start service ──────────────────────────────────────────
 
 serve(createServiceHandler(router));

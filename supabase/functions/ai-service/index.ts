@@ -298,7 +298,7 @@ Respond ONLY with valid JSON in this exact format:
   try {
     extractedData = JSON.parse(responseText);
   } catch {
-    return errorResponse('Failed to parse OCR response from Claude', 500);
+    return errorResponse('Failed to parse OCR response from Gemini', 500);
   }
 
   // Insert biomarkers into database

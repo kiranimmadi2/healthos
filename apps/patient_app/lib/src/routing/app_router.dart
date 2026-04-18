@@ -18,32 +18,32 @@ import '../features/notifications/screens/notifications_screen.dart';
 import '../features/appointments/screens/appointments_screen.dart';
 import '../features/appointments/screens/book_appointment_screen.dart';
 import '../providers/auth_provider.dart';
+import '../providers/patient_provider.dart';
 import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
   
-  ref.listen(authStateProvider, (_, __) {
-    refreshNotifier.value++;
-  });
+  ref.listen(authStateProvider, (prev, next) => refreshNotifier.value++);
+  ref.listen(patientProfileStateProvider, (prev, next) => refreshNotifier.value++);
 
   return GoRouter(
     refreshListenable: refreshNotifier,
     initialLocation: '/auth',
     redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
-      final isAuthenticated = authState.valueOrNull != null;
+      final isAuthenticated = ref.read(authStateProvider).valueOrNull != null;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
 
-      if (!isAuthenticated && !isAuthRoute) {
-        return '/auth';
-      }
-      if (isAuthenticated && isAuthRoute) {
-        // Allow authenticated users to access /auth/setup (profile creation)
-        if (state.matchedLocation == '/auth/setup') {
-          return null;
-        }
-        return '/home';
+      if (!isAuthenticated && !isAuthRoute) return '/auth';
+
+      if (isAuthenticated) {
+        final profileState = ref.read(patientProfileStateProvider);
+        // Still loading patient — stay put and wait for next refresh
+        if (profileState == PatientProfileState.loading) return null;
+        // No profile yet (new user, incl. Google sign-in) → setup
+        if (profileState == PatientProfileState.missing) return '/auth/setup';
+        // Profile exists — leave auth routes
+        if (isAuthRoute) return '/home';
       }
       return null;
     },

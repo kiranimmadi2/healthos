@@ -16,9 +16,7 @@ import '../providers/auth_provider.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
   
-  ref.listen(authStateProvider, (_, __) {
-    refreshNotifier.value++;
-  });
+  ref.listen(authStateProvider, (prev, next) => refreshNotifier.value++);
 
   return GoRouter(
     refreshListenable: refreshNotifier,

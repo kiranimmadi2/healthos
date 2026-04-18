@@ -25,6 +25,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   static const _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill name from Google OAuth metadata when available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(authServiceProvider).currentUser;
+      final googleName = user?.userMetadata?['full_name'] as String?
+          ?? user?.userMetadata?['name'] as String?;
+      if (googleName != null && _nameController.text.isEmpty) {
+        _nameController.text = googleName;
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
