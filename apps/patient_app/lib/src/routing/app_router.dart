@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ui_kit/ui_kit.dart';
 
 import '../features/auth/screens/phone_input_screen.dart';
 import '../features/auth/screens/otp_verify_screen.dart';
@@ -18,10 +18,16 @@ import '../features/qr/screens/qr_display_screen.dart';
 import '../features/notifications/screens/notifications_screen.dart';
 import '../features/appointments/screens/appointments_screen.dart';
 import '../features/appointments/screens/book_appointment_screen.dart';
+import '../features/documents/screens/documents_list_screen.dart';
+import '../features/documents/screens/upload_document_screen.dart';
 import '../features/family/screens/family_hub_screen.dart';
 import '../features/family/screens/add_family_member_screen.dart';
 import '../features/family/screens/family_member_detail_screen.dart';
 import '../features/family/screens/edit_family_member_screen.dart';
+import '../features/medications/screens/medications_list_screen.dart';
+import '../features/medications/screens/add_medication_schedule_screen.dart';
+import '../features/vaccinations/screens/vaccinations_list_screen.dart';
+import '../features/vaccinations/screens/add_vaccination_screen.dart';
 import '../providers/auth_provider.dart';
 import '../providers/patient_provider.dart';
 import 'app_shell.dart';
@@ -42,6 +48,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshNotifier,
     initialLocation: '/auth',
     redirect: (context, state) {
+      if (kDebugMode && state.matchedLocation == '/design') return null;
       final isAuthenticated = ref.read(authStateProvider).valueOrNull != null;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final profileState = ref.read(patientProfileStateProvider);
@@ -68,6 +75,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      if (kDebugMode)
+        GoRoute(
+          path: '/design',
+          builder: (context, state) => const DesignGallery(),
+        ),
       GoRoute(
         path: '/auth',
         builder: (context, state) => const PhoneInputScreen(),
@@ -171,6 +183,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'book',
                 builder: (context, state) => const BookAppointmentScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/medications',
+            builder: (context, state) => const MedicationsListScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) =>
+                    const AddMedicationScheduleScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/documents',
+            builder: (context, state) => const DocumentsListScreen(),
+            routes: [
+              GoRoute(
+                path: 'upload',
+                builder: (context, state) => const UploadDocumentScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/vaccinations',
+            builder: (context, state) => const VaccinationsListScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) => const AddVaccinationScreen(),
               ),
             ],
           ),

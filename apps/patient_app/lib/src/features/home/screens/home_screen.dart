@@ -5,6 +5,9 @@ import 'package:ui_kit/ui_kit.dart';
 
 import '../../../providers/auth_provider.dart';
 import '../../../providers/patient_provider.dart';
+import '../../appointments/widgets/appointment_card.dart';
+import '../../appointments/providers/appointments_provider.dart';
+import '../../medications/widgets/today_doses_card.dart';
 import '../../notifications/providers/notifications_provider.dart';
 import '../widgets/family_health_card.dart';
 import '../widgets/health_id_card.dart';
@@ -32,20 +35,20 @@ class HomeScreen extends ConsumerWidget {
           Consumer(
             builder: (context, ref, child) {
               final count = ref.watch(unreadNotificationCountProvider);
-              return IconButton(
-                icon: Badge(
-                  isLabelVisible: count > 0,
-                  label: Text('$count'),
-                  child: const Icon(Icons.notifications_outlined),
-                ),
+              return HosIconButton(
+                icon: HosIcons.notifications,
+                badgeCount: count,
                 onPressed: () => context.go('/notifications'),
+                tooltip: 'Notifications',
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.qr_code),
+          HosIconButton(
+            icon: HosIcons.qr,
             onPressed: () => context.go('/qr'),
+            tooltip: 'My health QR',
           ),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: patientAsync.when(
@@ -57,23 +60,34 @@ class HomeScreen extends ConsumerWidget {
             });
             return const HosLoading(message: 'Setting up your profile...');
           }
-          return SingleChildScrollView(
-            padding: AppSpacing.screenPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HealthIdCard(patient: patient),
-                const SizedBox(height: AppSpacing.lg),
-                Text('Quick Actions', style: AppTypography.h4),
-                const SizedBox(height: AppSpacing.sm),
-                const QuickActionsGrid(),
-                const SizedBox(height: AppSpacing.lg),
-                const FamilyHealthCard(),
-                const SizedBox(height: AppSpacing.lg),
-                Text('Recent Activity', style: AppTypography.h4),
-                const SizedBox(height: AppSpacing.sm),
-                const RecentActivityList(),
-              ],
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(currentPatientProvider);
+              ref.invalidate(upcomingAppointmentsProvider);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: AppSpacing.screenPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  HealthIdCard(patient: patient),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Quick Actions', style: AppTypography.h4),
+                  const SizedBox(height: AppSpacing.sm),
+                  const QuickActionsGrid(),
+                  const SizedBox(height: AppSpacing.lg),
+                  const TodayDosesCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  _UpcomingAppointmentSection(),
+                  const SizedBox(height: AppSpacing.lg),
+                  const FamilyHealthCard(),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Recent Activity', style: AppTypography.h4),
+                  const SizedBox(height: AppSpacing.sm),
+                  const RecentActivityList(),
+                ],
+              ),
             ),
           );
         },
@@ -95,6 +109,53 @@ class HomeScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _UpcomingAppointmentSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(upcomingAppointmentsProvider);
+    return async.when(
+      loading: () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Upcoming', style: AppTypography.h4),
+          const SizedBox(height: AppSpacing.sm),
+          const HosSkeletonCard(lines: 2),
+        ],
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        final next = items.first;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Upcoming appointment',
+                      style: AppTypography.h4),
+                ),
+                if (items.length > 1)
+                  HosButton.tertiary(
+                    label: 'See all',
+                    iconRight: HosIcons.forward,
+                    onPressed: () => context.go('/appointments'),
+                    size: HosButtonSize.sm,
+                  ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            AppointmentCard(
+              appointment: next,
+              onTap: () => context.go('/appointments'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

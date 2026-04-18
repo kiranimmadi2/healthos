@@ -17,54 +17,77 @@ class RecentActivityList extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) {
           return const HosCard(
-            child: HosEmptyState(
-              message: 'No recent activity',
-              icon: Icons.history,
+            child: SizedBox(
+              height: 180,
+              child: HosEmptyState(
+                icon: HosIcons.pending,
+                title: 'No recent activity',
+                message: 'Visits, lab results, and appointments will appear here.',
+              ),
             ),
           );
         }
         return Column(
-          children: items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: HosCard(
-              onTap: item.routePath != null
-                  ? () => context.go(item.routePath!)
-                  : null,
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: item.color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
-                    ),
-                    child: Icon(item.icon, color: item.color, size: 20),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          children: items
+              .map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: HosCard(
+                    onTap: item.routePath != null
+                        ? () => context.go(item.routePath!)
+                        : null,
+                    child: Row(
                       children: [
-                        Text(item.title, style: AppTypography.label),
-                        Text(item.subtitle, style: AppTypography.caption),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: item.color.withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.borderRadiusSm),
+                          ),
+                          child: Icon(item.icon, color: item.color, size: 20),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.title, style: AppTypography.label),
+                              const SizedBox(height: 2),
+                              Text(item.subtitle, style: AppTypography.caption),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          AppDateUtils.formatDate(item.date),
+                          style: AppTypography.caption,
+                        ),
+                        if (item.routePath != null) ...[
+                          const SizedBox(width: AppSpacing.xs),
+                          const Icon(
+                            HosIcons.forward,
+                            size: HosIcons.sizeSm,
+                            color: AppColors.textTertiary,
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  Text(
-                    AppDateUtils.formatDate(item.date),
-                    style: AppTypography.caption,
-                  ),
-                  if (item.routePath != null) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    const Icon(Icons.chevron_right, size: 16, color: AppColors.textTertiary),
-                  ],
-                ],
-              ),
-            ),
-          )).toList(),
+                ),
+              )
+              .toList(),
         );
       },
-      loading: () => const HosLoading(),
+      loading: () => Column(
+        children: const [
+          HosSkeletonListTile(),
+          SizedBox(height: AppSpacing.sm),
+          HosSkeletonListTile(),
+          SizedBox(height: AppSpacing.sm),
+          HosSkeletonListTile(),
+        ],
+      ),
       error: (error, _) => HosError(
         message: error.toString(),
         onRetry: () => ref.invalidate(recentActivityProvider),

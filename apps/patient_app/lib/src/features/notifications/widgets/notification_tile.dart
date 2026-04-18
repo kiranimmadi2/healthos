@@ -15,13 +15,15 @@ class NotificationTile extends StatelessWidget {
   IconData get _icon {
     switch (notification.type) {
       case 'report_ready':
-        return Icons.science;
+        return HosIcons.labReport;
       case 'access_granted':
-        return Icons.share;
+        return HosIcons.share;
       case 'appointment_reminder':
-        return Icons.calendar_month;
+        return HosIcons.appointment;
+      case 'medication_reminder':
+        return HosIcons.prescription;
       default:
-        return Icons.notifications;
+        return HosIcons.notifications;
     }
   }
 

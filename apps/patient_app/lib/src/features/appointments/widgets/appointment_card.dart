@@ -95,7 +95,7 @@ class AppointmentCard extends ConsumerWidget {
                   color: AppColors.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
                 ),
-                child: const Icon(Icons.calendar_month, color: AppColors.info, size: 24),
+                child: const Icon(HosIcons.appointment, color: AppColors.info, size: 24),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -134,14 +134,11 @@ class AppointmentCard extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton.icon(
+              child: HosButton.tertiary(
+                label: 'Cancel',
+                icon: HosIcons.close,
                 onPressed: () => _confirmCancel(context, ref),
-                icon: const Icon(Icons.cancel_outlined, size: 18),
-                label: const Text('Cancel'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                ),
+                size: HosButtonSize.sm,
               ),
             ),
           ],

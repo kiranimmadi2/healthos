@@ -16,6 +16,10 @@ class SupabaseTables {
   static const String familyMembers = 'family_members';
   static const String visitVitals = 'visit_vitals';
   static const String doctorNotes = 'doctor_notes';
+  static const String medicationSchedules = 'medication_schedules';
+  static const String medicationLogs = 'medication_logs';
+  static const String patientDocuments = 'patient_documents';
+  static const String vaccinations = 'vaccinations';
 }
 
 class SupabaseBuckets {
@@ -24,6 +28,7 @@ class SupabaseBuckets {
   static const String labReports = 'lab-reports';
   static const String avatars = 'avatars';
   static const String prescriptionImages = 'prescription-images';
+  static const String patientDocuments = 'patient-documents';
 }
 
 class SupabaseFunctions {

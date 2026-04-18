@@ -51,21 +51,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Consumer(
             builder: (context, ref, child) {
               final count = ref.watch(doctorUnreadCountProvider);
-              return IconButton(
-                icon: Badge(
-                  isLabelVisible: count > 0,
-                  label: Text('$count'),
-                  child: const Icon(Icons.notifications_outlined),
-                ),
+              return HosIconButton(
+                icon: HosIcons.notifications,
+                badgeCount: count,
+                tooltip: 'Notifications',
                 onPressed: () => context.go('/notifications'),
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.person_outlined),
+          HosIconButton(
+            icon: HosIcons.profile,
             tooltip: 'Profile',
             onPressed: () => context.go('/profile'),
           ),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: MasterDetailLayout(
@@ -93,31 +92,10 @@ class _EmptyDetailPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.person_search_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Select a patient',
-            style: AppTypography.h3.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Choose a patient from the list to view their details.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
-            ),
-          ),
-        ],
-      ),
+    return const HosEmptyState(
+      icon: HosIcons.patients,
+      title: 'Select a patient',
+      message: 'Choose a patient from the list to view their details.',
     );
   }
 }
