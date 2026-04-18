@@ -33,6 +33,11 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
+        # Non-blocking: the Claude Code GitHub App must be installed on the
+        # repository for this step to succeed. Until it's installed
+        # (https://github.com/apps/claude) this step will fail with 401 —
+        # continue-on-error keeps the workflow green so PR checks don't block.
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
