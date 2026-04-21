@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "stitch": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@_davideast/stitch-mcp",
+        "proxy"
+      ],
+      "env": {
+        "STITCH_API_KEY": "AQ.Ab8RN6LZKrM-s0WeaxWp6IEP31_kaExZJFjgZXv0HuKKPvgouQ"
+      }
+    }
+  }
+}

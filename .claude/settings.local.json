@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"embedding\")"
+      "Bash(xargs grep -l \"embedding\")",
+      "Bash(gh run *)"
     ]
   }
 }
