@@ -27,56 +27,73 @@ class RecentActivityList extends ConsumerWidget {
             ),
           );
         }
-        return Column(
-          children: items
-              .map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: HosCard(
-                    onTap: item.routePath != null
-                        ? () => context.go(item.routePath!)
+        return HosCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (int i = 0; i < items.length; i++) ...[
+                if (i > 0)
+                  Divider(
+                    color: AppColors.divider,
+                    height: 1,
+                    thickness: 1,
+                    indent: 0,
+                    endIndent: 0,
+                  ),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: items[i].routePath != null
+                        ? () => context.go(items[i].routePath!)
                         : null,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: item.color.withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.borderRadiusSm),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: items[i].color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                  AppSpacing.borderRadiusSm),
+                            ),
+                            child: Icon(items[i].icon,
+                                color: items[i].color, size: 18),
                           ),
-                          child: Icon(item.icon, color: item.color, size: 20),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item.title, style: AppTypography.label),
-                              const SizedBox(height: 2),
-                              Text(item.subtitle, style: AppTypography.caption),
-                            ],
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(items[i].title,
+                                    style: AppTypography.label),
+                                const SizedBox(height: 2),
+                                Text(items[i].subtitle,
+                                    style: AppTypography.caption),
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          AppDateUtils.formatDate(item.date),
-                          style: AppTypography.caption,
-                        ),
-                        if (item.routePath != null) ...[
-                          const SizedBox(width: AppSpacing.xs),
-                          const Icon(
-                            HosIcons.forward,
-                            size: HosIcons.sizeSm,
-                            color: AppColors.textTertiary,
+                          Text(
+                            AppDateUtils.formatDate(items[i].date),
+                            style: AppTypography.caption,
                           ),
+                          if (items[i].routePath != null) ...[
+                            const SizedBox(width: AppSpacing.xs),
+                            const Icon(
+                              HosIcons.forward,
+                              size: HosIcons.sizeSm,
+                              color: AppColors.textTertiary,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              )
-              .toList(),
+              ],
+            ],
+          ),
         );
       },
       loading: () => Column(

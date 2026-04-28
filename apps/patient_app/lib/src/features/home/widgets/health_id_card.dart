@@ -51,7 +51,7 @@ class HealthIdCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.qr_code_2, color: AppColors.white),
+                icon: const Icon(HosIcons.qr, color: AppColors.white),
                 onPressed: () => context.go('/qr'),
               ),
             ],

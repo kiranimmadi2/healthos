@@ -82,6 +82,10 @@ class AppointmentCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final doctorAsync = ref.watch(doctorByIdProvider(appointment.doctorId));
+    final dateTime = appointment.scheduledAt;
+    final monthStr = _formatMonth(dateTime.month);
+    final dayStr = dateTime.day.toString().padLeft(2, '0');
+    final weekdayStr = _formatWeekday(dateTime.weekday);
 
     return HosCard(
       onTap: onTap,
@@ -90,12 +94,38 @@ class AppointmentCard extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                width: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.borderRadiusSm),
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
                 ),
-                child: const Icon(HosIcons.appointment, color: AppColors.info, size: 24),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      monthStr,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      dayStr,
+                      style: AppTypography.h3.copyWith(
+                        color: AppColors.primary,
+                        height: 1.05,
+                      ),
+                    ),
+                    Text(
+                      weekdayStr,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -110,24 +140,51 @@ class AppointmentCard extends ConsumerWidget {
                       loading: () => Text('Loading...', style: AppTypography.caption),
                       error: (_, _) => Text('Unknown Doctor', style: AppTypography.label),
                     ),
-                    Text(
-                      AppDateUtils.formatDate(appointment.scheduledAt),
-                      style: AppTypography.caption,
+                    doctorAsync.when(
+                      data: (doctor) {
+                        if (doctor?.specialization != null) {
+                          return Text(
+                            '${doctor!.specialization} · Apollo',
+                            style: AppTypography.caption,
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
                     ),
-                    if (appointment.reason != null)
-                      Text(
-                        appointment.reason!,
-                        style: AppTypography.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
                       ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '● Confirmed',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')} AM',
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-              HosStatusChip(
-                label: appointment.status.toUpperCase(),
-                color: _statusColor(appointment.status),
-              ),
+              Icon(HosIcons.forward, size: 18, color: AppColors.textTertiary),
             ],
           ),
           if (_isCancellable) ...[
@@ -145,5 +202,16 @@ class AppointmentCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _formatMonth(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1].toUpperCase();
+  }
+
+  String _formatWeekday(int weekday) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[weekday - 1];
   }
 }

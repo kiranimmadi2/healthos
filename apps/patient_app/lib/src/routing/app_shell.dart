@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ui_kit/ui_kit.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
@@ -10,8 +11,9 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/reports')) return 1;
-    if (location.startsWith('/symptoms')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/appointments')) return 2;
+    if (location.startsWith('/symptoms')) return 3;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
@@ -28,30 +30,37 @@ class AppShell extends StatelessWidget {
             case 1:
               context.go('/reports');
             case 2:
-              context.go('/symptoms');
+              context.go('/appointments');
             case 3:
+              context.go('/symptoms');
+            case 4:
               context.go('/profile');
           }
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(HosIcons.home),
+            selectedIcon: Icon(HosIcons.home),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.science_outlined),
-            selectedIcon: Icon(Icons.science),
-            label: 'Reports',
+            icon: Icon(HosIcons.reports),
+            selectedIcon: Icon(HosIcons.reports),
+            label: 'Records',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_outlined),
-            selectedIcon: Icon(Icons.chat),
-            label: 'Symptoms',
+            icon: Icon(HosIcons.appointment),
+            selectedIcon: Icon(HosIcons.appointment),
+            label: 'Visits',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outlined),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(HosIcons.ai),
+            selectedIcon: Icon(HosIcons.ai),
+            label: 'Assist',
+          ),
+          NavigationDestination(
+            icon: Icon(HosIcons.profile),
+            selectedIcon: Icon(HosIcons.profile),
             label: 'Profile',
           ),
         ],

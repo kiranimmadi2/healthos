@@ -8,6 +8,7 @@ import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/patients/screens/patient_detail_screen.dart';
 import '../features/visits/screens/create_visit_screen.dart';
 import '../features/prescriptions/screens/create_prescription_screen.dart';
+import '../features/prescriptions/screens/doctor_prescriptions_list_screen.dart';
 import '../features/patients/screens/add_lab_result_screen.dart';
 import '../features/ai_summary/screens/ai_summary_screen.dart';
 import '../features/patients/screens/patient_list_screen.dart';
@@ -125,6 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/notifications',
             builder: (context, state) => const DoctorNotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/prescriptions',
+            builder: (context, state) => const DoctorPrescriptionsListScreen(),
           ),
         ],
       ),
