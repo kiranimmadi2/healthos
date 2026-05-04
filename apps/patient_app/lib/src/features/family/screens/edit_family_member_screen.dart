@@ -117,10 +117,11 @@ class _EditFamilyMemberScreenState extends ConsumerState<EditFamilyMemberScreen>
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Family Member')),
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: HosPageContainer(
+          maxWidth: 720,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<String>(
               decoration: const InputDecoration(labelText: 'Relationship', prefixIcon: Icon(Icons.people)),
@@ -204,7 +205,8 @@ class _EditFamilyMemberScreenState extends ConsumerState<EditFamilyMemberScreen>
               onPressed: _save,
               isLoading: _isLoading,
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

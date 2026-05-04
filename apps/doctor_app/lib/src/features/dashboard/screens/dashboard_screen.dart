@@ -74,7 +74,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           onPatientSelected: (patientId) {
             setState(() => _selectedPatientId = patientId);
             // On narrow screens, navigate to detail page
-            if (MediaQuery.of(context).size.width <= 900) {
+            if (MediaQuery.of(context).size.width <= AppBreakpoints.tablet) {
               context.go('/patients/$patientId');
             }
           },

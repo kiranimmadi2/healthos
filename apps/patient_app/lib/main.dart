@@ -1,10 +1,12 @@
 import 'package:core/core.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_client/supabase_client.dart';
 
 import 'app.dart';
+import 'firebase_options.dart';
 
 /// Riverpod observer — logs every provider error to AppLogger.
 class _ProviderLogger extends ProviderObserver {
@@ -36,15 +38,27 @@ void main() async {
     return false; // let the platform handle it too
   };
 
-  // On web, read OAuth error/success params from redirect-back URL
+  AppLogger.i('main', 'initializing Firebase');
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // On web, handle OAuth redirect back from Google
   if (kIsWeb) {
     final uri = Uri.base;
     AppLogger.d('main', 'startup URL: $uri');
+
+    // Check for OAuth errors
     final error = uri.queryParameters['error'];
     final errorCode = uri.queryParameters['error_code'];
     final errorDesc = uri.queryParameters['error_description'];
     if (error != null) {
       AppLogger.w('main', 'OAUTH ERROR — $error | code=$errorCode | $errorDesc');
+    }
+
+    // Check for tokens in URL fragment (from OAuth redirect)
+    if (uri.fragment.contains('access_token')) {
+      AppLogger.d('main', 'OAuth tokens found in URL fragment, will be auto-recovered by Supabase');
     }
   }
 
@@ -55,20 +69,6 @@ void main() async {
     anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY',
         defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdtb3pwc29sbWZ3cmloa3RkZXFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NjQxMTEsImV4cCI6MjA5MDM0MDExMX0.itV_0F4iuSvepl5cw4SAj52gFy_Vb2lu8QTEu-mhDHs'),
   );
-
-  // Clear any stale auth sessions that can't be refreshed
-  try {
-    final session = SupabaseClientInitializer.client.auth.currentSession;
-    if (session != null && session.isExpired) {
-      AppLogger.w('main', 'session expired — signing out');
-      await SupabaseClientInitializer.client.auth.signOut();
-    }
-  } catch (e, st) {
-    AppLogger.e('main', 'session check failed — forcing signOut', e, st);
-    try {
-      await SupabaseClientInitializer.client.auth.signOut();
-    } catch (_) {}
-  }
 
   AppLogger.i('main', 'starting PatientApp');
   runApp(

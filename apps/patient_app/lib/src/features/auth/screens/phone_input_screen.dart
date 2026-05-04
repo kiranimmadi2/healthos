@@ -28,11 +28,18 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     super.initState();
     if (kIsWeb) {
       final uri = Uri.base;
+
+      // Check for OAuth errors in query params
       final error = uri.queryParameters['error'];
       final desc = uri.queryParameters['error_description'];
       if (error != null) {
         _oauthError = desc?.replaceAll('+', ' ') ?? error;
         debugPrint('[PhoneInput] OAuth error from URL: $_oauthError');
+      }
+
+      // Check for OAuth tokens in fragment (redirect back from Google)
+      if (uri.fragment.contains('access_token')) {
+        debugPrint('[PhoneInput] OAuth tokens detected in URL fragment — session should be auto-recovered');
       }
     }
   }
@@ -105,8 +112,8 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: AppSpacing.screenPadding,
+        child: HosPageContainer(
+          maxWidth: 480,
           child: Form(
             key: _formKey,
             child: Column(

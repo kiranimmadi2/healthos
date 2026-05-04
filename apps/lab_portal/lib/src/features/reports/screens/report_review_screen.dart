@@ -123,10 +123,10 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: HosPageContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
@@ -328,6 +328,7 @@ class _ReportReviewScreenState extends ConsumerState<ReportReviewScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
           ],
+          ),
         ),
       ),
     );

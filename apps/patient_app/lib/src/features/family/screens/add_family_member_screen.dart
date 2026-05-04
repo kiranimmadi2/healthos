@@ -108,8 +108,8 @@ class _AddFamilyMemberScreenState extends ConsumerState<AddFamilyMemberScreen> {
   }
 
   Widget _buildStep1() {
-    return Padding(
-      padding: AppSpacing.screenPadding,
+    return HosPageContainer(
+      maxWidth: 720,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -164,8 +164,9 @@ class _AddFamilyMemberScreenState extends ConsumerState<AddFamilyMemberScreen> {
 
   Widget _buildStep2() {
     return SingleChildScrollView(
-      padding: AppSpacing.screenPadding,
-      child: Column(
+      child: HosPageContainer(
+        maxWidth: 720,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.lg),
@@ -227,15 +228,16 @@ class _AddFamilyMemberScreenState extends ConsumerState<AddFamilyMemberScreen> {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildStep3() {
     final hasPhone = _phoneController.text.trim().isNotEmpty;
-    return Padding(
-      padding: AppSpacing.screenPadding,
+    return HosPageContainer(
+      maxWidth: 720,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -108,10 +108,11 @@ class _AddLabResultScreenState extends ConsumerState<AddLabResultScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Lab Result')),
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: HosPageContainer(
+          maxWidth: 960,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             const SizedBox(height: AppSpacing.md),
 
             // Quick-select common test types
@@ -184,6 +185,7 @@ class _AddLabResultScreenState extends ConsumerState<AddLabResultScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
           ],
+        ),
         ),
       ),
     );

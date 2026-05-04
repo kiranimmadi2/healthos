@@ -57,12 +57,20 @@ class _UpcomingTab extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(upcomingAppointmentsProvider);
           },
-          child: ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: appointments.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) => AppointmentCard(
-              appointment: appointments[index],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppBreakpoints.maxContentWidth,
+              ),
+              child: ListView.separated(
+                padding: AppSpacing.pagePaddingOf(context),
+                itemCount: appointments.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) => AppointmentCard(
+                  appointment: appointments[index],
+                ),
+              ),
             ),
           ),
         );
@@ -95,12 +103,20 @@ class _AllTab extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(allAppointmentsProvider);
           },
-          child: ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: appointments.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) => AppointmentCard(
-              appointment: appointments[index],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppBreakpoints.maxContentWidth,
+              ),
+              child: ListView.separated(
+                padding: AppSpacing.pagePaddingOf(context),
+                itemCount: appointments.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
+                itemBuilder: (context, index) => AppointmentCard(
+                  appointment: appointments[index],
+                ),
+              ),
             ),
           ),
         );

@@ -1,6 +1,4 @@
-library supabase_client;
-
-export 'package:supabase_flutter/supabase_flutter.dart' show AuthState, User;
+export 'package:firebase_auth/firebase_auth.dart' show User;
 
 export 'src/auth/auth_service.dart';
 export 'src/client_initializer.dart';

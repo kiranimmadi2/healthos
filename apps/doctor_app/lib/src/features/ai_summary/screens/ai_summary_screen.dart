@@ -27,13 +27,11 @@ class AiSummaryScreen extends ConsumerWidget {
       ),
       body: summaryAsync.when(
         data: (summary) => SingleChildScrollView(
-          padding: AppSpacing.screenPadding,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          child: HosPageContainer(
+            maxWidth: 960,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                   // Summary header
                   Row(
                     children: [
@@ -137,9 +135,8 @@ class AiSummaryScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                ],
-              ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
             ),
           ),
         ),

@@ -73,8 +73,8 @@ class _ReportsListScreenState extends ConsumerState<ReportsListScreen> {
     final reportsAsync = ref.watch(reportsProvider);
 
     return Scaffold(
-      body: Padding(
-        padding: AppSpacing.screenPadding,
+      body: HosPageContainer(
+        center: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

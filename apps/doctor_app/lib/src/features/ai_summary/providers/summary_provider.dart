@@ -1,13 +1,13 @@
 import 'package:ai_client/ai_client.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_client/supabase_client.dart';
 
 
 /// Provides an [AiService] instance configured with Supabase credentials
-/// and the current user's access token.
-final aiServiceProvider = Provider<AiService>((ref) {
-  final client = SupabaseClientInitializer.client;
-  final accessToken = client.auth.currentSession?.accessToken;
+/// and the current Firebase user's ID token as the access token.
+final aiServiceProvider = FutureProvider<AiService>((ref) async {
+  final firebaseUser = FirebaseAuth.instance.currentUser;
+  final accessToken = await firebaseUser?.getIdToken();
 
   return AiService(
     supabaseUrl: const String.fromEnvironment('SUPABASE_URL',
@@ -22,7 +22,7 @@ final aiServiceProvider = Provider<AiService>((ref) {
 /// Edge Function. Keyed by patient ID so each patient's summary is cached.
 final patientSummaryProvider =
     FutureProvider.family<AiSummaryResponse, String>((ref, patientId) async {
-  final aiService = ref.read(aiServiceProvider);
+  final aiService = await ref.read(aiServiceProvider.future);
   return aiService.getPatientSummary(
     SummaryRequest(patientId: patientId),
   );

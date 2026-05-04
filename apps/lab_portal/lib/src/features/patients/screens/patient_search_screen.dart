@@ -80,8 +80,8 @@ class _PatientSearchScreenState extends ConsumerState<PatientSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: AppSpacing.screenPadding,
+      body: HosPageContainer(
+        center: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

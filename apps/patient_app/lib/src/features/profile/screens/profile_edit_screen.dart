@@ -114,10 +114,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       appBar: AppBar(title: const Text('Edit Profile')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: AppSpacing.screenPadding,
-          child: Form(
-            key: _formKey,
-            child: Column(
+          child: HosPageContainer(
+            maxWidth: 720,
+            child: Form(
+              key: _formKey,
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 HosTextField(
@@ -187,7 +188,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   isLoading: _isLoading,
                   width: double.infinity,
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

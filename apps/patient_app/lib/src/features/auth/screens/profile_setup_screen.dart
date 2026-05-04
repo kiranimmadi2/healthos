@@ -30,9 +30,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     // Pre-fill name from Google OAuth metadata when available
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(authServiceProvider).currentUser;
-      final googleName = user?.userMetadata?['full_name'] as String?
-          ?? user?.userMetadata?['name'] as String?;
-      if (googleName != null && _nameController.text.isEmpty) {
+      final googleName = user?.displayName;
+      if (googleName != null && googleName.isNotEmpty && _nameController.text.isEmpty) {
         _nameController.text = googleName;
       }
     });
@@ -72,7 +71,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       await repo.create({
         'auth_id': userId,
         'health_id': healthId,
-        'phone': currentUser?.phone,
+        'phone': currentUser?.phoneNumber,
         'full_name': _nameController.text.trim(),
         'gender': _selectedGender,
         'blood_group': _selectedBloodGroup,

@@ -73,14 +73,12 @@ class _LabLoginScreenState extends ConsumerState<LabLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 420),
-            padding: AppSpacing.screenPadding,
-            child: Form(
-              key: _formKey,
-              child: Column(
+      body: SingleChildScrollView(
+        child: HosPageContainer(
+          maxWidth: 440,
+          child: Form(
+            key: _formKey,
+            child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -180,7 +178,6 @@ class _LabLoginScreenState extends ConsumerState<LabLoginScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

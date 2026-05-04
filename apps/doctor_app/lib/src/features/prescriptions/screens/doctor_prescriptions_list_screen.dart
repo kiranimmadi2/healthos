@@ -29,7 +29,7 @@ class DoctorPrescriptionsListScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: prescriptions.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) {
               final prescription = prescriptions[index];
               return _PrescriptionListTile(
@@ -81,7 +81,7 @@ class _PrescriptionListTile extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            error: (_, __) => Container(
+            error: (_, _) => Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
@@ -101,7 +101,7 @@ class _PrescriptionListTile extends ConsumerWidget {
                     style: AppTypography.label,
                   ),
                   loading: () => Text('Loading...', style: AppTypography.caption),
-                  error: (_, __) => Text('Unknown', style: AppTypography.label),
+                  error: (_, _) => Text('Unknown', style: AppTypography.label),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -112,7 +112,7 @@ class _PrescriptionListTile extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  AppDateUtils.formatDate(prescription.createdAt),
+                  AppDateUtils.formatDate(prescription.issuedAt),
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textTertiary,
                   ),
@@ -126,15 +126,8 @@ class _PrescriptionListTile extends ConsumerWidget {
     );
   }
 
-  String _formatMedications(List<dynamic>? medications) {
-    if (medications == null || medications.isEmpty) return 'No medications';
-    try {
-      final meds = medications.cast<Map<String, dynamic>>();
-      final names = meds.map((m) => m['name'] as String?).whereType<String>().toList();
-      if (names.isEmpty) return 'No medications';
-      return names.join(', ');
-    } catch (e) {
-      return 'Medications';
-    }
+  String _formatMedications(List<Medication> medications) {
+    if (medications.isEmpty) return 'No medications';
+    return medications.map((m) => m.name).join(', ');
   }
 }

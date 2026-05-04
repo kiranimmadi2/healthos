@@ -45,8 +45,7 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
     final doctorsAsync = ref.watch(allDoctorsProvider);
 
     return Scaffold(
-      body: Padding(
-        padding: AppSpacing.screenPadding,
+      body: HosPageContainer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -54,7 +53,10 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Doctors', style: AppTypography.h1),
+                Text(
+                  'Doctors',
+                  style: AppTypography.responsive(context, AppTypography.h1),
+                ),
                 HosButton(
                   label: 'Add Doctor',
                   onPressed: () => context.push('/doctors/add'),

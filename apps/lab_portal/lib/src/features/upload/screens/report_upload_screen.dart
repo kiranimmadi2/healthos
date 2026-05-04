@@ -141,11 +141,12 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.lg),
+        child: HosPageContainer(
+          maxWidth: 960,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
             Text('Upload Report', style: AppTypography.h1),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -155,13 +156,10 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left column: Upload area
-                Expanded(
-                  flex: 3,
-                  child: Column(
+            HosTwoColumn(
+              primaryFlex: 3,
+              secondaryFlex: 2,
+              primary: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Report File', style: AppTypography.h3),
@@ -202,12 +200,7 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                       ],
                     ],
                   ),
-                ),
-                const SizedBox(width: AppSpacing.xl),
-                // Right column: Patient and report info
-                Expanded(
-                  flex: 2,
-                  child: Column(
+              secondary: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Patient Information',
@@ -335,10 +328,9 @@ class _ReportUploadScreenState extends ConsumerState<ReportUploadScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
             ),
           ],
+          ),
         ),
       ),
     );

@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'patient_embedding.freezed.dart';
 part 'patient_embedding.g.dart';
 
-/// Converts pgvector's string representation (e.g. "[0.1,0.2,0.3]") to List<double>.
+/// Converts pgvector's string representation (e.g. "[0.1,0.2,0.3]") to `List<double>`.
 class VectorConverter implements JsonConverter<List<double>?, dynamic> {
   const VectorConverter();
 

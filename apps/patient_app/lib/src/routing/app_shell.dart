@@ -17,54 +17,36 @@ class AppShell extends StatelessWidget {
     return 0;
   }
 
+  void _onSelect(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go('/home');
+      case 1:
+        context.go('/reports');
+      case 2:
+        context.go('/appointments');
+      case 3:
+        context.go('/symptoms');
+      case 4:
+        context.go('/profile');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex(context),
-        onDestinationSelected: (index) {
-          switch (index) {
-            case 0:
-              context.go('/home');
-            case 1:
-              context.go('/reports');
-            case 2:
-              context.go('/appointments');
-            case 3:
-              context.go('/symptoms');
-            case 4:
-              context.go('/profile');
-          }
-        },
-        destinations: [
-          NavigationDestination(
-            icon: Icon(HosIcons.home),
-            selectedIcon: Icon(HosIcons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(HosIcons.reports),
-            selectedIcon: Icon(HosIcons.reports),
-            label: 'Records',
-          ),
-          NavigationDestination(
-            icon: Icon(HosIcons.appointment),
-            selectedIcon: Icon(HosIcons.appointment),
-            label: 'Visits',
-          ),
-          NavigationDestination(
-            icon: Icon(HosIcons.ai),
-            selectedIcon: Icon(HosIcons.ai),
-            label: 'Assist',
-          ),
-          NavigationDestination(
-            icon: Icon(HosIcons.profile),
-            selectedIcon: Icon(HosIcons.profile),
-            label: 'Profile',
-          ),
-        ],
-      ),
+    return HosNavShell(
+      selectedIndex: _currentIndex(context),
+      onDestinationSelected: (i) => _onSelect(context, i),
+      brandIcon: Icons.health_and_safety_rounded,
+      brandTitle: 'HealthOS',
+      destinations: const [
+        HosNavDestination(label: 'Home', icon: HosIcons.home),
+        HosNavDestination(label: 'Records', icon: HosIcons.reports),
+        HosNavDestination(label: 'Visits', icon: HosIcons.appointment),
+        HosNavDestination(label: 'Assist', icon: HosIcons.ai),
+        HosNavDestination(label: 'Profile', icon: HosIcons.profile),
+      ],
+      child: child,
     );
   }
 }

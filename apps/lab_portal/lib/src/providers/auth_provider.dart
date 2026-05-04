@@ -5,9 +5,9 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 final authStateProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return authService.onAuthStateChange.map((state) => state.session?.user);
+  return authService.onAuthStateChange;
 });
 
 final currentUserIdProvider = Provider<String?>((ref) {
-  return ref.watch(authStateProvider).valueOrNull?.id;
+  return ref.watch(authStateProvider).valueOrNull?.uid;
 });

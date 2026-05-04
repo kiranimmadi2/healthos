@@ -65,13 +65,15 @@ class _PatientsListScreenState extends ConsumerState<PatientsListScreen> {
     final patientsAsync = ref.watch(allPatientsProvider);
 
     return Scaffold(
-      body: Padding(
-        padding: AppSpacing.screenPadding,
+      body: HosPageContainer(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSpacing.lg),
-            Text('Patients', style: AppTypography.h1),
+            Text(
+              'Patients',
+              style: AppTypography.responsive(context, AppTypography.h1),
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Manage and view all registered patients.',

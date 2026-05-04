@@ -25,6 +25,24 @@ class PrescriptionRepository with RepositoryLogger {
         },
       );
 
+  Future<List<Prescription>> getByDoctorId(
+    String doctorId, {
+    int limit = 50,
+    int offset = 0,
+  }) =>
+      loggedOp(
+        'getByDoctorId(doctorId=$doctorId)',
+        () async {
+          final response = await _client
+              .from(SupabaseTables.prescriptions)
+              .select()
+              .eq('doctor_id', doctorId)
+              .order('issued_at', ascending: false)
+              .range(offset, offset + limit - 1);
+          return response.map((e) => Prescription.fromJson(e)).toList();
+        },
+      );
+
   Future<Prescription?> getById(String id) => loggedOp(
         'getById(id=$id)',
         () async {

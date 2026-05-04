@@ -182,12 +182,15 @@ class _SymptomCheckerScreenState
           const SizedBox(width: AppSpacing.xs),
         ],
       ),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
         children: [
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: AppSpacing.screenPadding,
+              padding: AppSpacing.pagePaddingOf(context),
               itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == _messages.length) {
@@ -276,6 +279,8 @@ class _SymptomCheckerScreenState
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }

@@ -74,17 +74,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 420),
-            padding: AppSpacing.screenPadding,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+      body: SingleChildScrollView(
+        child: HosPageContainer(
+          maxWidth: 440,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                   Icon(
                     Icons.local_hospital_rounded,
                     size: 64,
@@ -170,16 +168,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  HosButton(
-                    label: 'Sign in with Google',
-                    onPressed: _signInWithGoogle,
-                    isLoading: _isGoogleLoading,
-                    isOutlined: true,
-                  ),
-                ],
+              HosButton(
+                label: 'Sign in with Google',
+                onPressed: _signInWithGoogle,
+                isLoading: _isGoogleLoading,
+                isOutlined: true,
               ),
-            ),
+            ],
           ),
+        ),
         ),
       ),
     );

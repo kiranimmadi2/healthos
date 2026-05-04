@@ -19,7 +19,12 @@ class ReportsListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Lab reports')),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppBreakpoints.maxContentWidth,
+          ),
+          child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -145,6 +150,8 @@ class ReportsListScreen extends ConsumerWidget {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }

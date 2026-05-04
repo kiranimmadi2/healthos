@@ -37,9 +37,10 @@ class ProfileScreen extends ConsumerWidget {
             return const HosError(message: 'Profile not found');
           }
           return SingleChildScrollView(
-            padding: AppSpacing.screenPadding,
-            child: Column(
-              children: [
+            child: HosPageContainer(
+              maxWidth: 720,
+              child: Column(
+                children: [
                 const SizedBox(height: AppSpacing.lg),
                 HosAvatar(
                   name: patient.fullName,
@@ -92,7 +93,8 @@ class ProfileScreen extends ConsumerWidget {
                   subtitle: 'Manage family members and dependents',
                   onTap: () => context.push('/profile/family'),
                 ),
-              ],
+                ],
+              ),
             ),
           );
         },

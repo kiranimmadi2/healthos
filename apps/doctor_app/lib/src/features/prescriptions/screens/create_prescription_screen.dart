@@ -99,16 +99,13 @@ class _CreatePrescriptionScreenState
         title: const Text('Create Prescription'),
       ),
       body: SingleChildScrollView(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Padding(
-              padding: AppSpacing.screenPadding,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+        child: HosPageContainer(
+          maxWidth: 960,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                     Text('New Prescription', style: AppTypography.h2),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
@@ -148,15 +145,13 @@ class _CreatePrescriptionScreenState
                     ),
                     const SizedBox(height: AppSpacing.xl),
 
-                    HosButton(
-                      label: 'Save Prescription',
-                      onPressed: _submit,
-                      isLoading: _isLoading,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
+                HosButton(
+                  label: 'Save Prescription',
+                  onPressed: _submit,
+                  isLoading: _isLoading,
                 ),
-              ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
             ),
           ),
         ),

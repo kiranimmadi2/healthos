@@ -19,21 +19,6 @@ class AppointmentCard extends ConsumerWidget {
   bool get _isCancellable =>
       appointment.status == 'scheduled' || appointment.status == 'confirmed';
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'scheduled':
-        return AppColors.info;
-      case 'confirmed':
-        return AppColors.success;
-      case 'cancelled':
-        return AppColors.error;
-      case 'completed':
-        return AppColors.textTertiary;
-      default:
-        return AppColors.textTertiary;
-    }
-  }
-
   Future<void> _confirmCancel(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -151,7 +136,7 @@ class AppointmentCard extends ConsumerWidget {
                         return const SizedBox.shrink();
                       },
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
                     const SizedBox(height: 4),
                     Container(

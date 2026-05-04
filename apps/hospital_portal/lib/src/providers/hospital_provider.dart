@@ -11,7 +11,7 @@ final hospitalRepositoryProvider = Provider<HospitalRepository>((ref) {
 /// Provides the current hospital for the authenticated admin user.
 ///
 /// Resolution order:
-/// 1. Check auth user's app_metadata for hospital_id
+/// 1. Check Firebase custom claims for hospital_id
 /// 2. Match hospital by admin's email
 /// 3. Fall back to the first hospital (single-tenant MVP)
 final currentHospitalProvider = FutureProvider<Hospital?>((ref) async {
@@ -20,8 +20,9 @@ final currentHospitalProvider = FutureProvider<Hospital?>((ref) async {
 
   final repo = ref.read(hospitalRepositoryProvider);
 
-  // 1. Try app_metadata.hospital_id (set via Supabase dashboard or edge fn)
-  final hospitalId = user.appMetadata['hospital_id'] as String?;
+  // 1. Try custom claims (set via Firebase Admin SDK)
+  final idToken = await user.getIdTokenResult();
+  final hospitalId = idToken.claims?['hospital_id'] as String?;
   if (hospitalId != null) {
     final hospital = await repo.getById(hospitalId);
     if (hospital != null) return hospital;

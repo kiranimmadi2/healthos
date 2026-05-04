@@ -106,13 +106,10 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
             return const HosError(message: 'Doctor profile not found');
           }
           return SingleChildScrollView(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: Padding(
-                  padding: AppSpacing.screenPadding,
-                  child: Column(
-                    children: [
+            child: HosPageContainer(
+              maxWidth: 960,
+              child: Column(
+                children: [
                       const SizedBox(height: AppSpacing.lg),
                       HosAvatar(
                         name: doctor.fullName,
@@ -176,10 +173,8 @@ class _DoctorProfileScreenState extends ConsumerState<DoctorProfileScreen> {
                           await authService.signOut();
                         },
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ),
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
               ),
             ),
           );

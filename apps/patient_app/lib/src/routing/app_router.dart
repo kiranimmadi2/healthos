@@ -36,7 +36,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = ValueNotifier<int>(0);
   
   ref.listen(authStateProvider, (prev, next) {
-    debugPrint('[Router] authStateProvider changed → ${next.valueOrNull?.id}');
+    debugPrint('[Router] authStateProvider changed → ${next.valueOrNull?.uid}');
     refreshNotifier.value++;
   });
   ref.listen(patientProfileStateProvider, (prev, next) {

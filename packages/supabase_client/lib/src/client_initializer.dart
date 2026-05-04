@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseClientInitializer {
@@ -12,6 +13,11 @@ class SupabaseClientInitializer {
     await Supabase.initialize(
       url: url,
       anonKey: anonKey,
+      accessToken: () async {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return null;
+        return await user.getIdToken();
+      },
     );
   }
 }

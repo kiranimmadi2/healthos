@@ -58,10 +58,11 @@ class _MemberDetail extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
-      padding: AppSpacing.screenPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: HosPageContainer(
+        maxWidth: 720,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Header card
           HosCard(
             child: Row(
@@ -137,7 +138,8 @@ class _MemberDetail extends ConsumerWidget {
             label: 'Dependent',
             enabled: member.isDependent,
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -153,16 +153,14 @@ class _DoctorFormScreenState extends ConsumerState<DoctorFormScreen> {
   }
 
   Widget _buildForm() {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: SingleChildScrollView(
-          padding: AppSpacing.screenPadding,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+    return SingleChildScrollView(
+      child: HosPageContainer(
+        maxWidth: 720,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
                 const SizedBox(height: AppSpacing.md),
                 HosTextField(
                   controller: _fullNameController,
@@ -229,9 +227,8 @@ class _DoctorFormScreenState extends ConsumerState<DoctorFormScreen> {
                   isLoading: _isSubmitting,
                   icon: _isEditMode ? Icons.save_outlined : Icons.add,
                 ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-            ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
           ),
         ),
       ),

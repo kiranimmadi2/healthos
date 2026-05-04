@@ -21,12 +21,16 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.lg),
-            Text('Hospital Settings', style: AppTypography.h1),
+        child: HosPageContainer(
+          maxWidth: 720,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Hospital Settings',
+                style: AppTypography.responsive(context, AppTypography.h1),
+              ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Manage hospital profile and administration.',
@@ -59,8 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          authUser?.userMetadata?['full_name'] as String? ??
-                              'Hospital Administrator',
+                          authUser?.displayName ?? 'Hospital Administrator',
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -72,10 +75,10 @@ class SettingsScreen extends ConsumerWidget {
                             color: AppColors.textSecondary,
                           ),
                         ),
-                        if (authUser?.lastSignInAt != null) ...[
+                        if (authUser?.metadata.lastSignInTime != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            'Last sign-in: ${_formatDate(authUser!.lastSignInAt!)}',
+                            'Last sign-in: ${_formatDate(authUser!.metadata.lastSignInTime!)}',
                             style: AppTypography.caption.copyWith(
                               color: AppColors.textSecondary,
                             ),
@@ -308,6 +311,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
+        ),
       ),
     );
   }
@@ -321,13 +325,8 @@ class SettingsScreen extends ConsumerWidget {
     return email[0].toUpperCase();
   }
 
-  String _formatDate(String isoDate) {
-    try {
-      final dt = DateTime.parse(isoDate);
-      return '${dt.day}/${dt.month}/${dt.year}';
-    } catch (_) {
-      return isoDate;
-    }
+  String _formatDate(DateTime dt) {
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 }
 

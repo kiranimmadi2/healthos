@@ -112,155 +112,148 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: AppSpacing.screenPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.lg),
-            Text('Dashboard', style: AppTypography.h1),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Welcome back! Here is your hospital overview.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+        child: HosPageContainer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Dashboard',
+                style: AppTypography.responsive(context, AppTypography.h1),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            statsAsync.when(
-              loading: () => const Center(child: HosLoading()),
-              error: (e, _) => HosError(
-                message: e.toString(),
-                onRetry: () => ref.invalidate(dashboardStatsProvider),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Welcome back! Here is your hospital overview.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-              data: (stats) {
-                final patientCount = stats['patients'] ?? 0;
-                final doctorCount = stats['doctors'] ?? 0;
-                final reportsWeek = stats['reports_week'] ?? 0;
-                final totalReports = stats['total_reports'] ?? 0;
+              const SizedBox(height: AppSpacing.xl),
+              statsAsync.when(
+                loading: () => const Center(child: HosLoading()),
+                error: (e, _) => HosError(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(dashboardStatsProvider),
+                ),
+                data: (stats) {
+                  final patientCount = stats['patients'] ?? 0;
+                  final doctorCount = stats['doctors'] ?? 0;
+                  final reportsWeek = stats['reports_week'] ?? 0;
+                  final totalReports = stats['total_reports'] ?? 0;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth > 900
-                        ? 4
-                        : constraints.maxWidth > 600
-                            ? 2
-                            : 1;
-                    return GridView.count(
-                      crossAxisCount: crossAxisCount,
+                  return HosResponsiveGrid(
+                    mobileColumns: 1,
+                    tabletColumns: 2,
+                    desktopColumns: 3,
+                    largeColumns: 4,
+                    children: [
+                      StatsCard(
+                        icon: Icons.people_rounded,
+                        value: patientCount.toString(),
+                        label: 'Total Patients',
+                        iconColor: AppColors.primary,
+                        iconBackgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
+                      ),
+                      StatsCard(
+                        icon: Icons.medical_services_rounded,
+                        value: doctorCount.toString(),
+                        label: 'Total Doctors',
+                        iconColor: AppColors.secondary,
+                        iconBackgroundColor:
+                            AppColors.secondary.withValues(alpha: 0.1),
+                      ),
+                      StatsCard(
+                        icon: Icons.science_rounded,
+                        value: reportsWeek.toString(),
+                        label: 'Reports This Week',
+                        iconColor: AppColors.warning,
+                        iconBackgroundColor:
+                            AppColors.warning.withValues(alpha: 0.1),
+                      ),
+                      StatsCard(
+                        icon: Icons.description_rounded,
+                        value: totalReports.toString(),
+                        label: 'Total Reports',
+                        iconColor: AppColors.info,
+                        iconBackgroundColor:
+                            AppColors.info.withValues(alpha: 0.1),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Text('Recent Activity', style: AppTypography.h3),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('View all'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              activityAsync.when(
+                loading: () => const Center(child: HosLoading()),
+                error: (e, _) => HosError(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(recentActivityProvider),
+                ),
+                data: (activities) {
+                  if (activities.isEmpty) {
+                    return const HosEmptyState(
+                      message: 'No recent activity.',
+                      icon: Icons.history_rounded,
+                    );
+                  }
+                  return HosCard(
+                    child: ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisSpacing: AppSpacing.md,
-                      childAspectRatio: 1.8,
-                      children: [
-                        StatsCard(
-                          icon: Icons.people_rounded,
-                          value: patientCount.toString(),
-                          label: 'Total Patients',
-                          iconColor: AppColors.primary,
-                          iconBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.1),
-                        ),
-                        StatsCard(
-                          icon: Icons.medical_services_rounded,
-                          value: doctorCount.toString(),
-                          label: 'Total Doctors',
-                          iconColor: AppColors.secondary,
-                          iconBackgroundColor:
-                              AppColors.secondary.withValues(alpha: 0.1),
-                        ),
-                        StatsCard(
-                          icon: Icons.science_rounded,
-                          value: reportsWeek.toString(),
-                          label: 'Reports This Week',
-                          iconColor: AppColors.warning,
-                          iconBackgroundColor:
-                              AppColors.warning.withValues(alpha: 0.1),
-                        ),
-                        StatsCard(
-                          icon: Icons.description_rounded,
-                          value: totalReports.toString(),
-                          label: 'Total Reports',
-                          iconColor: AppColors.info,
-                          iconBackgroundColor:
-                              AppColors.info.withValues(alpha: 0.1),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              children: [
-                Text('Recent Activity', style: AppTypography.h3),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('View all'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            activityAsync.when(
-              loading: () => const Center(child: HosLoading()),
-              error: (e, _) => HosError(
-                message: e.toString(),
-                onRetry: () => ref.invalidate(recentActivityProvider),
-              ),
-              data: (activities) {
-                if (activities.isEmpty) {
-                  return const HosEmptyState(
-                    message: 'No recent activity.',
-                    icon: Icons.history_rounded,
+                      itemCount: activities.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final activity = activities[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                activity.color.withValues(alpha: 0.1),
+                            child: Icon(
+                              activity.icon,
+                              color: activity.color,
+                              size: 18,
+                            ),
+                          ),
+                          title: Text(
+                            activity.title,
+                            style: AppTypography.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            activity.subtitle,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Text(
+                            activity.time,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   );
-                }
-                return HosCard(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: activities.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final activity = activities[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              activity.color.withValues(alpha: 0.1),
-                          child: Icon(
-                            activity.icon,
-                            color: activity.color,
-                            size: 18,
-                          ),
-                        ),
-                        title: Text(
-                          activity.title,
-                          style: AppTypography.bodyMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Text(
-                          activity.subtitle,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          activity.time,
-                          style: AppTypography.caption.copyWith(
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

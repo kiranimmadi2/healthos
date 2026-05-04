@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 
+import 'app_breakpoints.dart';
 import 'app_colors.dart';
 
 class AppTypography {
   AppTypography._();
 
   static const String _fontFamily = 'Inter';
+
+  /// Multiplier applied to all responsive type sizes for the current breakpoint.
+  /// Mobile = 1.00, Tablet = 1.06, Desktop = 1.12, Large = 1.18.
+  static double scaleOf(BuildContext context) => context.responsive<double>(
+        mobile: 1.0,
+        tablet: 1.06,
+        desktop: 1.12,
+        large: 1.18,
+      );
+
+  static TextStyle responsive(BuildContext context, TextStyle base) {
+    final size = base.fontSize;
+    if (size == null) return base;
+    return base.copyWith(fontSize: size * scaleOf(context));
+  }
 
   static TextStyle get h1 => const TextStyle(
         fontFamily: _fontFamily,

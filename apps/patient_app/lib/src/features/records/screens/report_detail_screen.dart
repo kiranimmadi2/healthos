@@ -82,9 +82,14 @@ class _ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
           final abnormalCount =
               biomarkers.where((b) => !b.isNormal).length;
 
-          return ListView(
-            padding: AppSpacing.screenPadding,
-            children: [
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppBreakpoints.maxContentWidth,
+              ),
+              child: ListView(
+                padding: AppSpacing.pagePaddingOf(context),
+                children: [
               _SummaryCard(
                 total: biomarkers.length,
                 abnormal: abnormalCount,
@@ -138,7 +143,9 @@ class _ReportDetailScreenState extends ConsumerState<ReportDetailScreen> {
                   child: _BiomarkerRow(biomarker: b),
                 ),
               ),
-            ],
+                ],
+              ),
+            ),
           );
         },
       ),

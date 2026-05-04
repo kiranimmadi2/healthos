@@ -249,14 +249,15 @@ class _TimelineTab extends ConsumerWidget {
     final prescriptionsAsync = ref.watch(patientPrescriptionsProvider(patientId));
 
     return SingleChildScrollView(
-      padding: AppSpacing.screenPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PatientInfoCard(patient: patient, onEditHistory: () async {
-            await EditMedicalHistorySheet.show(context, patient);
-            onRefresh();
-          }),
+      child: HosPageContainer(
+        maxWidth: 1080,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PatientInfoCard(patient: patient, onEditHistory: () async {
+              await EditMedicalHistorySheet.show(context, patient);
+              onRefresh();
+            }),
           const SizedBox(height: AppSpacing.lg),
 
           Text('Patient Timeline', style: AppTypography.h3),
@@ -295,6 +296,7 @@ class _TimelineTab extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
+        ),
       ),
     );
   }

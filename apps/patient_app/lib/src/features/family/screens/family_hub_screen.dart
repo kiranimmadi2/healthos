@@ -25,15 +25,23 @@ class FamilyHubScreen extends ConsumerWidget {
         error: (e, _) => HosError(message: e.toString(), onRetry: () => ref.invalidate(familyMembersProvider)),
         data: (members) => members.isEmpty
             ? _EmptyState(onAdd: () => context.push('/profile/family/add'))
-            : ListView.separated(
-                padding: AppSpacing.screenPadding,
-                itemCount: members.length,
-                separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
-                itemBuilder: (context, i) => _FamilyMemberCard(
-                  member: members[i],
-                  onTap: () => context.push('/profile/family/${members[i].id}'),
-                  onEdit: () => context.push('/profile/family/${members[i].id}/edit'),
-                  onDelete: () => _confirmDelete(context, ref, members[i]),
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: ListView.separated(
+                    padding: AppSpacing.pagePaddingOf(context),
+                    itemCount: members.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: AppSpacing.md),
+                    itemBuilder: (context, i) => _FamilyMemberCard(
+                      member: members[i],
+                      onTap: () =>
+                          context.push('/profile/family/${members[i].id}'),
+                      onEdit: () => context
+                          .push('/profile/family/${members[i].id}/edit'),
+                      onDelete: () => _confirmDelete(context, ref, members[i]),
+                    ),
+                  ),
                 ),
               ),
       ),

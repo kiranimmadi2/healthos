@@ -149,16 +149,13 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Create Visit')),
       body: SingleChildScrollView(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Padding(
-              padding: AppSpacing.screenPadding,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+        child: HosPageContainer(
+          maxWidth: 960,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                     Text('New Visit Record', style: AppTypography.h2),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
@@ -286,70 +283,45 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
                     ),
                     if (_showVitals) ...[
                       const SizedBox(height: AppSpacing.sm),
-                      Row(
+                      HosResponsiveGrid(
+                        mobileColumns: 1,
+                        tabletColumns: 2,
+                        desktopColumns: 3,
                         children: [
-                          Expanded(
-                            child: HosTextField(
-                              controller: _systolicController,
-                              label: 'Systolic (mmHg)',
-                              keyboardType: TextInputType.number,
-                            ),
+                          HosTextField(
+                            controller: _systolicController,
+                            label: 'Systolic (mmHg)',
+                            keyboardType: TextInputType.number,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: HosTextField(
-                              controller: _diastolicController,
-                              label: 'Diastolic (mmHg)',
-                              keyboardType: TextInputType.number,
-                            ),
+                          HosTextField(
+                            controller: _diastolicController,
+                            label: 'Diastolic (mmHg)',
+                            keyboardType: TextInputType.number,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: HosTextField(
-                              controller: _heartRateController,
-                              label: 'Heart Rate (bpm)',
-                              keyboardType: TextInputType.number,
-                            ),
+                          HosTextField(
+                            controller: _heartRateController,
+                            label: 'Heart Rate (bpm)',
+                            keyboardType: TextInputType.number,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: HosTextField(
-                              controller: _temperatureController,
-                              label: 'Temp (°C)',
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            ),
+                          HosTextField(
+                            controller: _temperatureController,
+                            label: 'Temp (°C)',
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: HosTextField(
-                              controller: _weightController,
-                              label: 'Weight (kg)',
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            ),
+                          HosTextField(
+                            controller: _weightController,
+                            label: 'Weight (kg)',
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: HosTextField(
-                              controller: _heightController,
-                              label: 'Height (cm)',
-                              keyboardType: TextInputType.number,
-                            ),
+                          HosTextField(
+                            controller: _heightController,
+                            label: 'Height (cm)',
+                            keyboardType: TextInputType.number,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: HosTextField(
-                              controller: _spo2Controller,
-                              label: 'SpO₂ (%)',
-                              keyboardType: TextInputType.number,
-                            ),
+                          HosTextField(
+                            controller: _spo2Controller,
+                            label: 'SpO₂ (%)',
+                            keyboardType: TextInputType.number,
                           ),
                         ],
                       ),
@@ -361,10 +333,8 @@ class _CreateVisitScreenState extends ConsumerState<CreateVisitScreen> {
                       onPressed: _submit,
                       isLoading: _isLoading,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
-                ),
-              ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
             ),
           ),
         ),

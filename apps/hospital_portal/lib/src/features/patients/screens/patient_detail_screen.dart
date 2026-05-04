@@ -70,7 +70,7 @@ class PatientDetailScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // ── Patient Info Card ──
-                Padding(
+                HosPageContainer(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md,
                     AppSpacing.md,

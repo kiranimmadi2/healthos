@@ -146,10 +146,12 @@ class _BookAppointmentScreenState
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: AppSpacing.screenPadding,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: _buildStep(_step),
+              child: HosPageContainer(
+                maxWidth: 720,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _buildStep(_step),
+                ),
               ),
             ),
           ),

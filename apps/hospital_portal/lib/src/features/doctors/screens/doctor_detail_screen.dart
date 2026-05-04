@@ -108,10 +108,10 @@ class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
           }
 
           return SingleChildScrollView(
-            padding: AppSpacing.screenPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: HosPageContainer(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // ── Doctor Info Card ──
                 HosCard(
                   child: Column(
@@ -254,7 +254,8 @@ class _DoctorDetailScreenState extends ConsumerState<DoctorDetailScreen> {
                     );
                   },
                 ),
-              ],
+                ],
+              ),
             ),
           );
         },

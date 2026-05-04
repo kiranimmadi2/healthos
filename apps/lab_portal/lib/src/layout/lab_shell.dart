@@ -20,99 +20,46 @@ class LabShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedIndex = _currentIndex(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final isExtended = MediaQuery.of(context).size.width > 1200;
-
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            extended: isExtended,
-            selectedIndex: selectedIndex,
-            backgroundColor: colorScheme.surface,
-            onDestinationSelected: (index) {
-              switch (index) {
-                case 0:
-                  context.go('/upload');
-                case 1:
-                  context.go('/reports');
-                case 2:
-                  context.go('/patients');
-              }
-            },
-            leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.biotech_rounded,
-                      size: 22,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  if (isExtended) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'HealthOS Lab',
-                      style: AppTypography.caption.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            trailing: Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                  child: IconButton(
-                    icon: const Icon(Icons.logout_rounded),
-                    tooltip: 'Sign Out',
-                    color: AppColors.textTertiary,
-                    onPressed: () async {
-                      await ref.read(authServiceProvider).signOut();
-                    },
-                  ),
-                ),
-              ),
-            ),
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.upload_file_outlined),
-                selectedIcon: Icon(Icons.upload_file_rounded),
-                label: Text('Upload'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.science_outlined),
-                selectedIcon: Icon(Icons.science_rounded),
-                label: Text('Reports'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.person_search_outlined),
-                selectedIcon: Icon(Icons.person_search_rounded),
-                label: Text('Patients'),
-              ),
-            ],
-          ),
-          VerticalDivider(
-            thickness: 1,
-            width: 1,
-            color: Theme.of(context).dividerColor,
-          ),
-          Expanded(child: child),
-        ],
+    return HosNavShell(
+      destinations: const [
+        HosNavDestination(
+          label: 'Upload',
+          icon: Icons.upload_file_outlined,
+          selectedIcon: Icons.upload_file_rounded,
+        ),
+        HosNavDestination(
+          label: 'Reports',
+          icon: Icons.science_outlined,
+          selectedIcon: Icons.science_rounded,
+        ),
+        HosNavDestination(
+          label: 'Patients',
+          icon: Icons.person_search_outlined,
+          selectedIcon: Icons.person_search_rounded,
+        ),
+      ],
+      selectedIndex: _currentIndex(context),
+      onDestinationSelected: (index) {
+        switch (index) {
+          case 0:
+            context.go('/upload');
+          case 1:
+            context.go('/reports');
+          case 2:
+            context.go('/patients');
+        }
+      },
+      brandIcon: Icons.biotech_rounded,
+      brandTitle: 'HealthOS Lab',
+      trailing: IconButton(
+        icon: const Icon(Icons.logout_rounded),
+        tooltip: 'Sign Out',
+        color: AppColors.textTertiary,
+        onPressed: () async {
+          await ref.read(authServiceProvider).signOut();
+        },
       ),
+      child: child,
     );
   }
 }

@@ -60,6 +60,7 @@ class HomeScreen extends ConsumerWidget {
             });
             return const HosLoading(message: 'Setting up your profile...');
           }
+          final isWide = context.isExpanded;
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(currentPatientProvider);
@@ -67,26 +68,50 @@ class HomeScreen extends ConsumerWidget {
             },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  HealthIdCard(patient: patient),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text('Quick Actions', style: AppTypography.h4),
-                  const SizedBox(height: AppSpacing.sm),
-                  const QuickActionsGrid(),
-                  const SizedBox(height: AppSpacing.lg),
-                  const TodayDosesCard(),
-                  const SizedBox(height: AppSpacing.md),
-                  _UpcomingAppointmentSection(),
-                  const SizedBox(height: AppSpacing.lg),
-                  const FamilyHealthCard(),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text('Recent Activity', style: AppTypography.h4),
-                  const SizedBox(height: AppSpacing.sm),
-                  const RecentActivityList(),
-                ],
+              child: HosPageContainer(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HealthIdCard(patient: patient),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text('Quick Actions', style: AppTypography.h4),
+                    const SizedBox(height: AppSpacing.sm),
+                    const QuickActionsGrid(),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (isWide)
+                      HosResponsiveGrid(
+                        mobileColumns: 1,
+                        tabletColumns: 2,
+                        desktopColumns: 2,
+                        largeColumns: 2,
+                        children: [
+                          const TodayDosesCard(),
+                          _UpcomingAppointmentSection(),
+                          const FamilyHealthCard(),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Recent Activity',
+                                  style: AppTypography.h4),
+                              const SizedBox(height: AppSpacing.sm),
+                              const RecentActivityList(),
+                            ],
+                          ),
+                        ],
+                      )
+                    else ...[
+                      const TodayDosesCard(),
+                      const SizedBox(height: AppSpacing.md),
+                      _UpcomingAppointmentSection(),
+                      const SizedBox(height: AppSpacing.lg),
+                      const FamilyHealthCard(),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text('Recent Activity', style: AppTypography.h4),
+                      const SizedBox(height: AppSpacing.sm),
+                      const RecentActivityList(),
+                    ],
+                  ],
+                ),
               ),
             ),
           );
