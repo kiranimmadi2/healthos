@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Standard breakpoints for HealthOS responsiveness
 class AppBreakpoints {
-  static const double mobileMax = 600;
-  static const double tabletMax = 1024;
+  static const double mobileMax = 720;
+  static const double tabletMax = 1180;
+  static const double wide = 1440;
 }
 
 class ResponsiveLayout extends StatelessWidget {
@@ -27,6 +28,13 @@ class ResponsiveLayout extends StatelessWidget {
 
   static bool isDesktop(BuildContext context) =>
       MediaQuery.of(context).size.width >= AppBreakpoints.tabletMax;
+
+  static double pagePadding(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width >= AppBreakpoints.wide) return 40;
+    if (width >= AppBreakpoints.mobileMax) return 32;
+    return 20;
+  }
 
   @override
   Widget build(BuildContext context) {
