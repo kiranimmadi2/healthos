@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.healthos" "\0"
-            VALUE "FileDescription", "healthos" "\0"
+            VALUE "FileDescription", "HealthOS" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "healthos" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.healthos. All rights reserved." "\0"
             VALUE "OriginalFilename", "healthos.exe" "\0"
-            VALUE "ProductName", "healthos" "\0"
+            VALUE "ProductName", "HealthOS" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
