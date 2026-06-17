@@ -1,94 +1,86 @@
 # HealthOS
 
-AI-powered unified health platform with patient, doctor, hospital, and lab portals.
+HealthOS is a Flutter application with role-based patient and doctor
+workspaces. It uses Firebase for authentication and data storage, Riverpod for
+dependency injection and reactive state, GoRouter for navigation, and Gemini
+for AI-assisted patient triage.
 
-## Tech Stack
+## Technology
 
-- **Frontend:** Flutter (Dart) — Riverpod + GoRouter
-- **Backend:** Supabase (PostgreSQL, Edge Functions, Auth, Storage, Realtime)
-- **AI:** Gemini API (Google) via Edge Functions
-- **Push Notifications:** Firebase Cloud Messaging
-- **Monorepo:** Melos
+- Flutter and Dart
+- Firebase Auth
+- Cloud Firestore
+- Firebase Storage
+- Riverpod
+- GoRouter
+- Google Generative AI
 
-## Project Structure
+## Repository Map
 
+```text
+lib/
+|-- main.dart                  # Firebase initialization and app bootstrap
+|-- firebase_options.dart      # Generated Firebase platform configuration
+`-- src/
+    |-- app/                   # App widget, router, and theme
+    |-- features/              # Business and role-based feature modules
+    `-- shared/                # Feature-independent presentation primitives
+
+test/                          # Widget and integration-facing tests
+assets/                        # Bundled application assets
+android/, ios/, web/, ...      # Flutter platform runners
+tool/                          # Developer utilities
 ```
-healthos/
-├── apps/
-│   ├── patient_app/       # Flutter mobile (iOS + Android + Web)
-│   ├── doctor_app/        # Flutter tablet-first app
-│   ├── hospital_portal/   # Flutter Web admin dashboard
-│   └── lab_portal/        # Flutter Web report upload
-├── packages/
-│   ├── core/              # Shared models, constants, utilities
-│   ├── ui_kit/            # Design system components
-│   ├── supabase_client/   # Database query layer
-│   └── ai_client/         # Edge Function HTTP client
-├── supabase/
-│   ├── migrations/        # SQL schema migrations
-│   ├── functions/         # Deno Edge Functions
-│   └── seed.sql           # Development test data
-├── .github/workflows/     # CI/CD pipelines
-```
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for runtime flow and dependency rules,
+and [FOLDER_STRUCTURE.md](FOLDER_STRUCTURE.md) for detailed folder ownership.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Flutter SDK 3.24+
-- Dart SDK 3.2+
-- Melos (`dart pub global activate melos`)
-- Supabase CLI
+- Flutter with Dart 3.10 or newer
+- A configured Firebase project
+- Platform-specific Flutter tooling for the target device
 
-### Setup
+### Install
 
-```bash
-# Clone the repository
-git clone <repo-url> healthos
-cd healthos
+```powershell
+flutter pub get
+```
 
-# Install dependencies
-melos bootstrap
+The generated `lib/firebase_options.dart` file is required at runtime. Follow
+[FIREBASE_SETUP.md](FIREBASE_SETUP.md) when configuring a new environment.
 
-# Generate code (freezed models, json_serializable)
-melos run build_runner
+### Run
 
-# Start local Supabase
-supabase start
-
-# Run the patient app
-cd apps/patient_app
+```powershell
 flutter run
 ```
 
-### Environment Variables
+For web development:
 
-Copy `.env.example` to `.env` and fill in your values:
-
-```bash
-cp .env.example .env
+```powershell
+flutter run -d chrome
 ```
 
-## Development
+## Verification
 
-```bash
-# Run all tests
-melos run test
-
-# Run static analysis
-melos run analyze
-
-# Format code
-melos run format
-
-# Generate code after model changes
-melos run build_runner
+```powershell
+dart format --set-exit-if-changed lib test
+flutter analyze
+flutter test
 ```
 
-## Architecture
+## Development Rules
 
-- **Feature-based structure:** Each feature has data/domain/presentation layers
-- **Repository pattern:** All DB access through typed repositories
-- **RLS everywhere:** Row-Level Security on every table
-- **AI gateway:** Edge Functions proxy all AI calls (API key never on client)
-- **Freezed models:** Immutable data classes with JSON serialization
+- Preserve Firestore collection names and document fields.
+- Keep feature dependencies flowing through each feature's barrel file or a
+  specific application/domain module.
+- Keep Firebase access in `data/` repositories.
+- Keep Riverpod composition in `application/`.
+- Keep widgets and navigation concerns in `presentation/`.
+- Do not add cross-feature imports to another feature's internal `data/`
+  implementation.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before making structural changes.
