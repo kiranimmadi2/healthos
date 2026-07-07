@@ -23,3 +23,7 @@ final userRoleProvider = FutureProvider<String?>((ref) async {
   final data = await ref.watch(userRepositoryProvider).getUserData(user.uid);
   return data?['role'] as String?;
 });
+
+final allPatientsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+  return ref.watch(userRepositoryProvider).watchPatients();
+});
