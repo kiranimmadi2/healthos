@@ -14,3 +14,12 @@ final medicalRecordsProvider = StreamProvider<List<MedicalRecord>>((ref) {
   if (user == null) return Stream.value(const []);
   return ref.watch(recordRepositoryProvider).watchRecords(user.uid);
 });
+
+final patientRecordsProvider = StreamProvider.family<List<MedicalRecord>, String>((ref, patientId) {
+  if (patientId.isEmpty) return Stream.value(const []);
+  return ref.watch(recordRepositoryProvider).watchRecords(patientId);
+});
+
+final allRecordsProvider = StreamProvider<List<MedicalRecord>>((ref) {
+  return ref.watch(recordRepositoryProvider).watchAllRecords();
+});

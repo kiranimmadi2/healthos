@@ -17,6 +17,7 @@ class MedicalRecord {
     required this.category,
     required this.notes,
     required this.date,
+    this.patientId = '',
   });
 
   final String id;
@@ -24,15 +25,18 @@ class MedicalRecord {
   final String category;
   final String notes;
   final DateTime date;
+  final String patientId;
 
   factory MedicalRecord.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
+    final patientId = doc.reference.parent.parent?.id ?? '';
     return MedicalRecord(
       id: doc.id,
       title: data['title'] as String? ?? 'Record',
       category: data['category'] as String? ?? RecordCategory.other,
       notes: data['notes'] as String? ?? '',
       date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      patientId: patientId,
     );
   }
 

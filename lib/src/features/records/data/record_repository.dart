@@ -16,6 +16,14 @@ class RecordRepository {
     );
   }
 
+  Stream<List<MedicalRecord>> watchAllRecords() {
+    return _db.collectionGroup('records').snapshots().map(
+      (snapshot) =>
+          snapshot.docs.map(MedicalRecord.fromDoc).toList()
+            ..sort((a, b) => b.date.compareTo(a.date)),
+    );
+  }
+
   Future<void> addRecord(String uid, MedicalRecord record) {
     return _records(uid).add(record.toMap());
   }
