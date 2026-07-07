@@ -6,7 +6,17 @@ import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
 import '../../../appointments/application/appointment_providers.dart';
 import '../../../appointments/domain/appointment.dart';
+import '../../../auth/application/user_providers.dart';
 import '../../../chat/application/chat_providers.dart';
+import '../../application/doctor_portal_providers.dart';
+
+/// Returns a time-of-day greeting (Good morning / afternoon / evening).
+String greetingForNow() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 class DoctorDashboard extends ConsumerWidget {
   const DoctorDashboard({super.key, required this.onOpenSection});
@@ -18,27 +28,35 @@ class DoctorDashboard extends ConsumerWidget {
     final appointments =
         ref.watch(doctorAppointmentsProvider).value ?? const <Appointment>[];
     final conversations = ref.watch(chatThreadsProvider).value ?? const [];
+    final stats = ref.watch(doctorStatsProvider);
+    final profile = ref.watch(userProfileProvider).value;
+    final doctorName = (profile?['name'] as String?)?.trim();
+
     final now = DateTime.now();
     final today = appointments.where((appointment) {
       return appointment.dateTime.year == now.year &&
           appointment.dateTime.month == now.month &&
           appointment.dateTime.day == now.day &&
           appointment.status != AppointmentStatus.cancelled;
-    }).toList();
-    final activeCount = appointments.where((appointment) {
-      return appointment.status == AppointmentStatus.pending ||
-          appointment.status == AppointmentStatus.confirmed;
-    }).length;
+    }).toList()..sort((a, b) => a.dateTime.compareTo(b.dateTime));
 
     return HealthPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DashboardHero(onOpenSchedule: () => onOpenSection(2)),
+          _DashboardHero(
+            doctorName: doctorName,
+            todayCount: today.length,
+            pendingCount: stats.pendingAppointments,
+            onOpenSchedule: () => onOpenSection(2),
+          ),
           const SizedBox(height: AppSpacing.xl),
           _OverviewMetrics(
             onOpenSection: onOpenSection,
-            appointmentCount: activeCount,
+            appointmentCount: stats.activeAppointments,
+            todayCount: stats.todayAppointments,
+            reportsToReview: stats.reportsToReview,
+            highPriorityReports: stats.highPriorityReports,
             messageCount: conversations.length,
           ),
           const SizedBox(height: AppSpacing.section),
@@ -53,7 +71,11 @@ class DoctorDashboard extends ConsumerWidget {
                       onViewCalendar: () => onOpenSection(2),
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _ClinicalTasks(onOpenReports: () => onOpenSection(4)),
+                    _ClinicalTasks(
+                      stats: stats,
+                      onOpenReports: () => onOpenSection(4),
+                      onOpenSchedule: () => onOpenSection(2),
+                    ),
                   ],
                 );
               }
@@ -71,7 +93,9 @@ class DoctorDashboard extends ConsumerWidget {
                   Expanded(
                     flex: 4,
                     child: _ClinicalTasks(
+                      stats: stats,
                       onOpenReports: () => onOpenSection(4),
+                      onOpenSchedule: () => onOpenSection(2),
                     ),
                   ),
                 ],
@@ -85,12 +109,30 @@ class DoctorDashboard extends ConsumerWidget {
 }
 
 class _DashboardHero extends StatelessWidget {
-  const _DashboardHero({required this.onOpenSchedule});
+  const _DashboardHero({
+    required this.doctorName,
+    required this.todayCount,
+    required this.pendingCount,
+    required this.onOpenSchedule,
+  });
 
+  final String? doctorName;
+  final int todayCount;
+  final int pendingCount;
   final VoidCallback onOpenSchedule;
 
   @override
   Widget build(BuildContext context) {
+    final displayName =
+        (doctorName == null || doctorName!.isEmpty) ? 'Doctor' : doctorName!;
+    final subtitle = pendingCount > 0
+        ? 'You have $pendingCount booking request${pendingCount == 1 ? '' : 's'} to review.'
+        : todayCount > 0
+            ? 'You have $todayCount appointment${todayCount == 1 ? '' : 's'} scheduled today.'
+            : 'No pending requests — your schedule is clear.';
+    final scheduleHint = todayCount > 0
+        ? '$todayCount appointment${todayCount == 1 ? '' : 's'} today'
+        : 'Open to confirm pending bookings';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(28),
@@ -108,9 +150,9 @@ class _DashboardHero extends StatelessWidget {
           final greeting = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Good morning, Dr. Sharma',
-                style: TextStyle(
+              Text(
+                '${greetingForNow()}, $displayName',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   height: 1.2,
@@ -120,7 +162,7 @@ class _DashboardHero extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Review new booking requests and patient messages.',
+                subtitle,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.76),
                   fontSize: 15,
@@ -128,7 +170,28 @@ class _DashboardHero extends StatelessWidget {
               ),
             ],
           );
+          final textColumn = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Live clinical schedule',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                scheduleHint,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          );
+
           final nextAppointment = Container(
+            width: compact ? double.infinity : null,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
@@ -151,23 +214,7 @@ class _DashboardHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Live clinical schedule',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Open to confirm pending bookings',
-                      style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
-                    ),
-                  ],
-                ),
+                if (compact) Expanded(child: textColumn) else textColumn,
                 const SizedBox(width: 12),
                 IconButton.filled(
                   tooltip: 'Open schedule',
@@ -205,11 +252,17 @@ class _OverviewMetrics extends StatelessWidget {
   const _OverviewMetrics({
     required this.onOpenSection,
     required this.appointmentCount,
+    required this.todayCount,
+    required this.reportsToReview,
+    required this.highPriorityReports,
     required this.messageCount,
   });
 
   final ValueChanged<int> onOpenSection;
   final int appointmentCount;
+  final int todayCount;
+  final int reportsToReview;
+  final int highPriorityReports;
   final int messageCount;
 
   @override
@@ -225,18 +278,20 @@ class _OverviewMetrics extends StatelessWidget {
         2,
       ),
       _MetricData(
-        'Waiting now',
-        '3',
-        '12 min average',
+        'Today',
+        '$todayCount',
+        todayCount == 1 ? 'appointment' : 'appointments',
         Icons.groups_outlined,
         AppColors.secondary,
         AppColors.secondarySoft,
-        1,
+        2,
       ),
       _MetricData(
         'Reports to review',
-        '5',
-        '2 high priority',
+        '$reportsToReview',
+        highPriorityReports > 0
+            ? '$highPriorityReports high priority'
+            : 'all normal priority',
         Icons.description_outlined,
         AppColors.warning,
         AppColors.warningSoft,
@@ -245,7 +300,7 @@ class _OverviewMetrics extends StatelessWidget {
       _MetricData(
         'Messages',
         '$messageCount',
-        'conversations',
+        messageCount == 1 ? 'conversation' : 'conversations',
         Icons.chat_bubble_outline_rounded,
         AppColors.error,
         AppColors.errorSoft,
@@ -414,38 +469,49 @@ class _DashboardAppointment extends StatelessWidget {
   }
 }
 
-class _ClinicalTasks extends StatefulWidget {
-  const _ClinicalTasks({required this.onOpenReports});
+class _ClinicalTasks extends StatelessWidget {
+  const _ClinicalTasks({
+    required this.stats,
+    required this.onOpenReports,
+    required this.onOpenSchedule,
+  });
 
+  final DoctorStats stats;
   final VoidCallback onOpenReports;
-
-  @override
-  State<_ClinicalTasks> createState() => _ClinicalTasksState();
-}
-
-class _ClinicalTasksState extends State<_ClinicalTasks> {
-  final _completed = <String>{};
+  final VoidCallback onOpenSchedule;
 
   @override
   Widget build(BuildContext context) {
-    const tasks = [
+    final tasks = <({String title, String detail, IconData icon, Color color, VoidCallback onTap, bool done})>[
       (
-        'Review lab results',
-        '5 reports',
-        Icons.description_outlined,
-        AppColors.warning,
+        title: 'Review lab results',
+        detail: stats.reportsToReview == 0
+            ? 'All caught up'
+            : '${stats.reportsToReview} report${stats.reportsToReview == 1 ? '' : 's'}',
+        icon: Icons.description_outlined,
+        color: AppColors.warning,
+        onTap: onOpenReports,
+        done: stats.reportsToReview == 0,
       ),
       (
-        'Sign prescriptions',
-        '3 pending',
-        Icons.medication_outlined,
-        AppColors.primary,
+        title: 'Confirm booking requests',
+        detail: stats.pendingAppointments == 0
+            ? 'Nothing pending'
+            : '${stats.pendingAppointments} pending',
+        icon: Icons.event_available_outlined,
+        color: AppColors.primary,
+        onTap: onOpenSchedule,
+        done: stats.pendingAppointments == 0,
       ),
       (
-        'Schedule follow-ups',
-        '4 patients',
-        Icons.event_repeat_outlined,
-        AppColors.secondary,
+        title: 'Follow up with patients',
+        detail: stats.confirmedAppointments == 0
+            ? 'No upcoming visits'
+            : '${stats.confirmedAppointments} confirmed',
+        icon: Icons.event_repeat_outlined,
+        color: AppColors.secondary,
+        onTap: onOpenSchedule,
+        done: false,
       ),
     ];
     return Card(
@@ -463,16 +529,12 @@ class _ClinicalTasksState extends State<_ClinicalTasks> {
             const SizedBox(height: AppSpacing.xl),
             for (final task in tasks) ...[
               _TaskTile(
-                icon: task.$3,
-                color: task.$4,
-                title: task.$1,
-                detail: _completed.contains(task.$1) ? 'Completed' : task.$2,
-                completed: _completed.contains(task.$1),
-                onTap: () => setState(() {
-                  if (!_completed.add(task.$1)) {
-                    _completed.remove(task.$1);
-                  }
-                }),
+                icon: task.icon,
+                color: task.color,
+                title: task.title,
+                detail: task.detail,
+                completed: task.done,
+                onTap: task.onTap,
               ),
               if (task != tasks.last) const SizedBox(height: AppSpacing.md),
             ],
@@ -480,8 +542,8 @@ class _ClinicalTasksState extends State<_ClinicalTasks> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: widget.onOpenReports,
-                child: const Text('Open task list'),
+                onPressed: onOpenReports,
+                child: const Text('Open reports'),
               ),
             ),
           ],
@@ -538,8 +600,8 @@ class _TaskTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              completed ? Icons.undo_rounded : Icons.chevron_right_rounded,
+            const Icon(
+              Icons.chevron_right_rounded,
               color: AppColors.textMuted,
             ),
           ],

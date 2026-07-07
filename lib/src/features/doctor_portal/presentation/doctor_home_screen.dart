@@ -6,6 +6,9 @@ import '../../../shared/presentation/layout/responsive_layout.dart';
 import '../../../shared/presentation/shell/health_destination.dart';
 import '../../../shared/presentation/shell/health_shell.dart';
 import '../../auth/application/auth_providers.dart';
+import '../../auth/application/user_providers.dart';
+import '../../chat/application/chat_providers.dart';
+import '../application/doctor_portal_providers.dart';
 import 'widgets/doctor_workspace_widgets.dart';
 import 'workspaces/doctor_dashboard.dart';
 import 'workspaces/messages_workspace.dart';
@@ -70,12 +73,26 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
     final labels = _destinations
         .map((destination) => destination.label)
         .toList();
-    const subtitles = [
-      'Live appointments and requests',
-      '128 active patients',
-      'Week of June 8–14',
+
+    final stats = ref.watch(doctorStatsProvider);
+    final patientCount = ref.watch(allPatientsProvider).value?.length ?? 0;
+    final profile = ref.watch(userProfileProvider).value;
+    final doctorName = (profile?['name'] as String?)?.trim();
+    final initials = _initialsFor(doctorName);
+    final alertCount = stats.pendingAppointments + stats.reportsToReview;
+
+    final subtitles = [
+      stats.pendingAppointments > 0
+          ? '${stats.pendingAppointments} request${stats.pendingAppointments == 1 ? '' : 's'} to review'
+          : 'Live appointments and requests',
+      '$patientCount active patient${patientCount == 1 ? '' : 's'}',
+      stats.todayAppointments > 0
+          ? '${stats.todayAppointments} appointment${stats.todayAppointments == 1 ? '' : 's'} today'
+          : 'Manage confirmed consultations',
       'Live patient conversations',
-      '5 reports need review',
+      stats.reportsToReview > 0
+          ? '${stats.reportsToReview} report${stats.reportsToReview == 1 ? '' : 's'} need review'
+          : 'All reports reviewed',
     ];
 
     return HealthShell(
@@ -116,19 +133,21 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
         ),
         IconButton(
           tooltip: 'Notifications',
-          onPressed: () => _showNotifications(context),
-          icon: const Badge(
-            label: Text('3'),
-            child: Icon(Icons.notifications_outlined),
-          ),
+          onPressed: () => _showNotifications(context, stats),
+          icon: alertCount > 0
+              ? Badge(
+                  label: Text('$alertCount'),
+                  child: const Icon(Icons.notifications_outlined),
+                )
+              : const Icon(Icons.notifications_outlined),
         ),
         if (isDesktop)
-          const CircleAvatar(
+          CircleAvatar(
             radius: 20,
             backgroundColor: AppColors.secondarySoft,
             child: Text(
-              'AS',
-              style: TextStyle(
+              initials,
+              style: const TextStyle(
                 color: AppColors.secondary,
                 fontWeight: FontWeight.w800,
               ),
@@ -162,47 +181,88 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
     );
   }
 
-  Future<void> _showNotifications(BuildContext context) async {
+  Future<void> _showNotifications(BuildContext context, DoctorStats stats) async {
+    final conversationCount = ref.read(chatThreadsProvider).value?.length ?? 0;
+    final items = <Widget>[
+      if (stats.pendingAppointments > 0)
+        NotificationTile(
+          icon: Icons.event_available_outlined,
+          color: AppColors.primary,
+          title: 'Booking requests',
+          detail:
+              '${stats.pendingAppointments} appointment${stats.pendingAppointments == 1 ? '' : 's'} awaiting confirmation',
+          time: 'Now',
+        ),
+      if (stats.reportsToReview > 0)
+        NotificationTile(
+          icon: Icons.science_outlined,
+          color: AppColors.warning,
+          title: stats.highPriorityReports > 0
+              ? 'Reports need review'
+              : 'Diagnostic reports',
+          detail:
+              '${stats.reportsToReview} report${stats.reportsToReview == 1 ? '' : 's'} to review'
+              '${stats.highPriorityReports > 0 ? ' · ${stats.highPriorityReports} high priority' : ''}',
+          time: 'Now',
+        ),
+      if (conversationCount > 0)
+        NotificationTile(
+          icon: Icons.chat_bubble_outline_rounded,
+          color: AppColors.secondary,
+          title: 'Patient conversations',
+          detail:
+              '$conversationCount active conversation${conversationCount == 1 ? '' : 's'}',
+          time: 'Now',
+        ),
+    ];
+
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (context) => const SafeArea(
+      builder: (context) => SafeArea(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Notifications',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-              SizedBox(height: 16),
-              NotificationTile(
-                icon: Icons.science_outlined,
-                color: AppColors.warning,
-                title: 'Critical lab result',
-                detail: 'Priya Nair · Troponin result is ready',
-                time: '8 min',
-              ),
-              NotificationTile(
-                icon: Icons.event_available_outlined,
-                color: AppColors.primary,
-                title: 'Appointment checked in',
-                detail: 'Aarav Mehta is ready for consultation',
-                time: '14 min',
-              ),
-              NotificationTile(
-                icon: Icons.chat_bubble_outline_rounded,
-                color: AppColors.secondary,
-                title: 'New patient message',
-                detail: 'Meera Iyer sent a follow-up question',
-                time: '32 min',
-              ),
+              const SizedBox(height: 16),
+              if (items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      "You're all caught up — no new notifications.",
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  ),
+                )
+              else
+                ...items,
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Builds up-to-two-letter initials from a doctor's display name, stripping a
+  /// leading "Dr." title. Falls back to "DR" when no name is available.
+  static String _initialsFor(String? name) {
+    if (name == null || name.trim().isEmpty) return 'DR';
+    final cleaned = name
+        .replaceAll(RegExp(r'^\s*dr\.?\s+', caseSensitive: false), '')
+        .trim();
+    final parts = cleaned.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'DR';
+    if (parts.length == 1) {
+      final word = parts.first;
+      return (word.length >= 2 ? word.substring(0, 2) : word).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 }

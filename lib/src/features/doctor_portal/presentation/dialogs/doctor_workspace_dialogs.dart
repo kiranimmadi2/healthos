@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
-import '../../../../shared/presentation/widgets/status_pill.dart';
+import '../../../ai_triage/application/ai_triage_providers.dart';
+import '../../../records/application/record_providers.dart';
+import '../../../records/domain/medical_record.dart';
 import '../../demo/doctor_workspace_models.dart';
 import '../widgets/doctor_workspace_widgets.dart';
 
@@ -11,208 +15,283 @@ void showActionSnackBar(BuildContext context, String message) {
     ..showSnackBar(SnackBar(content: Text(message)));
 }
 
-Future<void> showAppointmentSheet(
-  BuildContext context,
-  DoctorAppointment appointment,
-) {
+Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
+  bool generatingSummary = false;
+  String? aiSummary;
+
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (context) => SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                AvatarInitials(
-                  initials: appointment.initials,
-                  color: appointment.color,
-                  radius: 28,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
+    builder: (context) => Consumer(
+      builder: (context, ref, child) {
+        final recordsAsync = ref.watch(patientRecordsProvider(patient.id));
+
+        return SafeArea(
+          child: StatefulBuilder(
+            builder: (context, setLocalState) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          AvatarInitials(
+                            initials: patient.initials,
+                            color: patient.color,
+                            radius: 30,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  patient.name,
+                                  style: Theme.of(context).textTheme.headlineMedium,
+                                ),
+                                Text(
+                                  '${patient.age} years · ${patient.gender} · ${patient.id}',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          PatientFact(
+                            label: 'Primary condition',
+                            value: patient.condition,
+                          ),
+                          PatientFact(label: 'Care plan', value: patient.carePlan),
+                          PatientFact(label: 'Last visit', value: patient.lastVisit),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
                       Text(
-                        appointment.name,
+                        'Clinical AI Insights',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      Text('${appointment.time} · ${appointment.type}'),
+                      const SizedBox(height: 8),
+                      if (generatingSummary)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(AppRadius.medium),
+                          ),
+                          child: const Row(
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text('Gemini is analyzing patient records...'),
+                            ],
+                          ),
+                        )
+                      else if (aiSummary != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(AppRadius.medium),
+                            border: Border.all(color: const Color(0xFFDCFCE7)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.auto_awesome, color: Color(0xFF16A34A), size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Gemini Clinical Summary',
+                                    style: TextStyle(
+                                      color: Color(0xFF16A34A),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                aiSummary!,
+                                style: const TextStyle(height: 1.5, color: Color(0xFF1F2937)),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        recordsAsync.maybeWhen(
+                          data: (records) {
+                            if (records.isEmpty) return const SizedBox.shrink();
+                            return SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  setLocalState(() => generatingSummary = true);
+                                  try {
+                                    final historyText = records
+                                        .map((r) => '${r.category} (${r.title}): ${r.notes}')
+                                        .join('\n');
+                                    final summary = await ref
+                                        .read(aiServiceProvider)
+                                        .getClinicalSummary(historyText);
+                                    setLocalState(() {
+                                      aiSummary = summary;
+                                      generatingSummary = false;
+                                    });
+                                  } catch (e) {
+                                    setLocalState(() => generatingSummary = false);
+                                    if (context.mounted) {
+                                      showActionSnackBar(context, 'AI error: $e');
+                                    }
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primarySoft,
+                                  foregroundColor: AppColors.primary,
+                                  elevation: 0,
+                                ),
+                                icon: const Icon(Icons.auto_awesome),
+                                label: const Text('Generate AI Clinical Summary'),
+                              ),
+                            );
+                          },
+                          orElse: () => const SizedBox.shrink(),
+                        ),
+                      const SizedBox(height: 28),
+                      Text(
+                        'Patient Medical Vault',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 12),
+                      recordsAsync.when(
+                        loading: () => const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        error: (err, _) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Error loading vault: $err'),
+                        ),
+                        data: (records) {
+                          if (records.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text(
+                                'No documents uploaded to their vault yet.',
+                                style: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: [
+                              for (final record in records)
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: AppColors.primarySoft,
+                                      child: Icon(
+                                        record.category == RecordCategory.labReport
+                                            ? Icons.science_outlined
+                                            : record.category == RecordCategory.imaging
+                                                ? Icons.portrait_rounded
+                                                : Icons.description_outlined,
+                                        color: AppColors.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      record.title,
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    subtitle: Text(
+                                      '${record.category} · ${DateFormat('MMM dd, yyyy').format(record.date)}',
+                                    ),
+                                    trailing: record.notes.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.info_outline, color: AppColors.textMuted),
+                                            onPressed: () {
+                                              showDialog<void>(
+                                                context: context,
+                                                builder: (context) => AlertDialog(
+                                                  title: Text(record.title),
+                                                  content: Text(record.notes),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () => Navigator.pop(context),
+                                                      child: const Text('Close'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                showActionSnackBar(context, 'Message thread opened');
+                              },
+                              icon: const Icon(Icons.chat_bubble_outline_rounded),
+                              label: const Text('Message'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close_rounded),
+                              label: const Text('Close'),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                StatusPill(
-                  label: appointment.status,
-                  foreground: appointment.statusColor,
-                  background: appointment.statusBackground,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Visit details',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            DetailRow(
-              icon: Icons.medical_services_outlined,
-              label: 'Reason',
-              value: appointment.reason,
-            ),
-            const DetailRow(
-              icon: Icons.location_on_outlined,
-              label: 'Location',
-              value: 'Consultation room 204',
-            ),
-            const DetailRow(
-              icon: Icons.notes_rounded,
-              label: 'Clinical note',
-              value: 'Review current medication and recent blood pressure log.',
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.chat_bubble_outline_rounded),
-                    label: const Text('Message'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      showActionSnackBar(context, 'Consultation opened');
-                    },
-                    icon: const Icon(Icons.arrow_forward_rounded),
-                    label: const Text('Open visit'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (context) => SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  AvatarInitials(
-                    initials: patient.initials,
-                    color: patient.color,
-                    radius: 30,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          patient.name,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        Text(
-                          '${patient.age} years · ${patient.gender} · ${patient.id}',
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'More actions',
-                    onPressed: () {},
-                    icon: const Icon(Icons.more_horiz_rounded),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  PatientFact(
-                    label: 'Primary condition',
-                    value: patient.condition,
-                  ),
-                  PatientFact(label: 'Care plan', value: patient.carePlan),
-                  PatientFact(label: 'Last visit', value: patient.lastVisit),
-                ],
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'Recent clinical activity',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              const DetailRow(
-                icon: Icons.monitor_heart_outlined,
-                label: 'Vitals',
-                value: 'BP 128/82 · Pulse 74 bpm · SpO₂ 98%',
-              ),
-              const DetailRow(
-                icon: Icons.medication_outlined,
-                label: 'Medication',
-                value: 'Amlodipine 5 mg · once daily',
-              ),
-              const DetailRow(
-                icon: Icons.event_note_outlined,
-                label: 'Next step',
-                value: 'Follow-up consultation in 4 weeks',
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        showActionSnackBar(context, 'Message thread opened');
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline_rounded),
-                      label: const Text('Message'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        showActionSnackBar(context, 'Patient chart opened');
-                      },
-                      icon: const Icon(Icons.folder_open_outlined),
-                      label: const Text('Open chart'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              );
+            },
           ),
-        ),
-      ),
+        );
+      },
     ),
   );
 }

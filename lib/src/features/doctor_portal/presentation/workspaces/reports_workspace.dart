@@ -1,85 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
-import '../../demo/doctor_workspace_data.dart';
+import '../../application/doctor_portal_providers.dart';
 import '../../demo/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
 import '../widgets/doctor_workspace_widgets.dart';
 import '../widgets/report_tile.dart';
 
-class ReportsWorkspace extends StatefulWidget {
+class ReportsWorkspace extends ConsumerStatefulWidget {
   const ReportsWorkspace({super.key});
 
   @override
-  State<ReportsWorkspace> createState() => _ReportsWorkspaceState();
+  ConsumerState<ReportsWorkspace> createState() => _ReportsWorkspaceState();
 }
 
-class _ReportsWorkspaceState extends State<ReportsWorkspace> {
+class _ReportsWorkspaceState extends ConsumerState<ReportsWorkspace> {
   String _filter = 'Needs review';
   final _reviewed = <String>{};
 
   @override
   Widget build(BuildContext context) {
-    final reports = doctorReports.where((report) {
-      if (_filter == 'All reports') return true;
-      if (_filter == 'Needs review') {
-        return !_reviewed.contains(report.id) &&
-            report.status == 'Needs review';
-      }
-      return report.priority == 'High';
-    }).toList();
+    final reportsAsync = ref.watch(allDiagnosticReportsProvider);
 
     return HealthPage(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          WorkspaceHeading(
-            title: 'Reports and insights',
-            description:
-                'Review diagnostic results and monitor practice performance.',
-            action: OutlinedButton.icon(
-              onPressed: () =>
-                  showActionSnackBar(context, 'Monthly report exported'),
-              icon: const Icon(Icons.download_rounded),
-              label: const Text('Export'),
-            ),
+      child: reportsAsync.when(
+        loading: () => const Center(
+          child: Padding(
+            padding: EdgeInsets.all(48.0),
+            child: CircularProgressIndicator(),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          const _ReportSummary(),
-          const SizedBox(height: AppSpacing.section),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 940;
-              final reportsList = _buildReportsList(
-                reports: reports,
-                reviewed: _reviewed,
-                onReviewed: (report) {
-                  setState(() => _reviewed.add(report.id));
-                  showActionSnackBar(context, '${report.type} marked reviewed');
+        ),
+        error: (e, st) => Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text('Error loading reports: $e'),
+        ),
+        data: (allReports) {
+          final reports = allReports.where((report) {
+            if (_filter == 'All reports') return true;
+            if (_filter == 'Needs review') {
+              return !_reviewed.contains(report.id) &&
+                  report.status == 'Needs review';
+            }
+            return report.priority == 'High';
+          }).toList();
+
+          final pendingCount = allReports.where((r) => r.status == 'Needs review' && !_reviewed.contains(r.id)).length;
+          final completedCount = _reviewed.length;
+          final highPriorityCount = allReports.where((r) => r.priority == 'High' && !_reviewed.contains(r.id)).length;
+          final stats = ref.watch(doctorStatsProvider);
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WorkspaceHeading(
+                title: 'Reports and insights',
+                description:
+                    'Review diagnostic results and monitor practice performance.',
+                action: OutlinedButton.icon(
+                  onPressed: () =>
+                      showActionSnackBar(context, 'Monthly report exported'),
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Export'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              _ReportSummary(
+                pending: pendingCount,
+                completed: completedCount,
+                highPriority: highPriorityCount,
+                total: allReports.length,
+              ),
+              const SizedBox(height: AppSpacing.section),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 940;
+                  final reportsList = _buildReportsList(
+                    reports: reports,
+                    reviewed: _reviewed,
+                    onReviewed: (report) {
+                      setState(() => _reviewed.add(report.id));
+                      showActionSnackBar(context, '${report.type} marked reviewed');
+                    },
+                  );
+                  final insights = _PracticeInsights(stats: stats);
+                  if (!wide) {
+                    return Column(
+                      children: [
+                        reportsList,
+                        const SizedBox(height: AppSpacing.xl),
+                        insights,
+                      ],
+                    );
+                  }
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 7, child: reportsList),
+                      const SizedBox(width: AppSpacing.xl),
+                      Expanded(flex: 4, child: insights),
+                    ],
+                  );
                 },
-              );
-              const insights = _PracticeInsights();
-              if (!wide) {
-                return Column(
-                  children: [
-                    reportsList,
-                    const SizedBox(height: AppSpacing.xl),
-                    insights,
-                  ],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 7, child: reportsList),
-                  const SizedBox(width: AppSpacing.xl),
-                  const Expanded(flex: 4, child: insights),
-                ],
-              );
-            },
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -146,36 +173,46 @@ class _ReportsWorkspaceState extends State<ReportsWorkspace> {
 }
 
 class _ReportSummary extends StatelessWidget {
-  const _ReportSummary();
+  const _ReportSummary({
+    required this.pending,
+    required this.completed,
+    required this.highPriority,
+    required this.total,
+  });
+
+  final int pending;
+  final int completed;
+  final int highPriority;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
-    const summaries = [
+    final summaries = [
       (
         'Pending review',
-        '5',
+        '$pending',
         Icons.pending_actions_rounded,
         AppColors.warning,
         AppColors.warningSoft,
       ),
       (
         'Completed today',
-        '12',
+        '$completed',
         Icons.task_alt_rounded,
         AppColors.success,
         AppColors.successSoft,
       ),
       (
         'High priority',
-        '2',
+        '$highPriority',
         Icons.priority_high_rounded,
         AppColors.error,
         AppColors.errorSoft,
       ),
       (
-        'Avg. turnaround',
-        '4.2h',
-        Icons.timer_outlined,
+        'Total reports',
+        '$total',
+        Icons.folder_open_outlined,
         AppColors.primary,
         AppColors.primarySoft,
       ),
@@ -218,7 +255,7 @@ class _ReportSummary extends StatelessWidget {
                               Text(summary.$1),
                             ],
                           ),
-                        ),
+                            ),
                       ],
                     ),
                   ),
@@ -232,14 +269,32 @@ class _ReportSummary extends StatelessWidget {
 }
 
 class _PracticeInsights extends StatelessWidget {
-  const _PracticeInsights();
+  const _PracticeInsights({required this.stats});
+
+  final DoctorStats stats;
 
   @override
   Widget build(BuildContext context) {
-    const insights = [
-      ('Appointments completed', 0.82, '82%', AppColors.primary),
-      ('On-time consultations', 0.91, '91%', AppColors.secondary),
-      ('Follow-ups booked', 0.68, '68%', AppColors.warning),
+    String pct(double value) => '${(value * 100).round()}%';
+    final insights = [
+      (
+        'Appointments completed',
+        stats.completionRate,
+        pct(stats.completionRate),
+        AppColors.primary,
+      ),
+      (
+        'Bookings confirmed',
+        stats.confirmationRate,
+        pct(stats.confirmationRate),
+        AppColors.secondary,
+      ),
+      (
+        'Active follow-ups',
+        stats.followUpRate,
+        pct(stats.followUpRate),
+        AppColors.warning,
+      ),
     ];
     return Card(
       child: Padding(
@@ -247,7 +302,7 @@ class _PracticeInsights extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('This week', style: Theme.of(context).textTheme.titleLarge),
+            Text('Overview', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
             const Text('Practice performance at a glance'),
             const SizedBox(height: AppSpacing.xl),
@@ -258,26 +313,26 @@ class _PracticeInsights extends StatelessWidget {
                 color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '34',
-                    style: TextStyle(
+                    '${stats.patientsSeen}',
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'patients seen',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: 3),
-                  Text('+12% from last week'),
+                  const SizedBox(height: 3),
+                  Text('${stats.completedAppointments} completed consultations'),
                 ],
               ),
             ),
