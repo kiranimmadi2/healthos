@@ -11,6 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:healthos/main.dart';
 import 'package:healthos/src/app/theme/theme.dart';
 import 'package:healthos/src/features/doctor_portal/doctor_portal.dart';
+import 'package:healthos/src/features/doctor_portal/application/doctor_portal_providers.dart';
+import 'package:healthos/src/features/auth/application/user_providers.dart';
+import 'package:healthos/src/features/appointments/application/appointment_providers.dart';
+import 'package:healthos/src/features/chat/application/chat_providers.dart';
 
 void main() {
   testWidgets('HealthOS smoke test', (WidgetTester tester) async {
@@ -35,6 +39,15 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            userProfileProvider.overrideWith(
+              (ref) => <String, dynamic>{'name': 'Asha Sharma', 'role': 'doctor'},
+            ),
+            allPatientsProvider.overrideWithValue(const AsyncValue.data([])),
+            allDiagnosticReportsProvider.overrideWithValue(const AsyncValue.data([])),
+            doctorAppointmentsProvider.overrideWithValue(const AsyncValue.data([])),
+            chatThreadsProvider.overrideWithValue(const AsyncValue.data([])),
+          ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
             home: const DoctorHomeScreen(),
@@ -43,7 +56,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Good morning, Dr. Sharma'), findsOneWidget);
+      // Greeting now renders the signed-in doctor's real name (time-of-day
+      // prefix varies, so match on the name).
+      expect(find.textContaining('Asha Sharma'), findsOneWidget);
       expect(find.text("Today's schedule"), findsOneWidget);
 
       for (final destination in const [
