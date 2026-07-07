@@ -1,4 +1,4 @@
-package com.roop.HealthOS
+package com.healthos.healthos
 
 import io.flutter.embedding.android.FlutterActivity
 
