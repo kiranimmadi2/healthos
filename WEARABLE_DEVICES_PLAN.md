@@ -78,10 +78,10 @@ flutter pub add health
 minSdk = maxOf(26, flutter.minSdkVersion)
 ```
 
-**1c. Android — [MainActivity.kt](android/app/src/main/kotlin/com/roop/HealthOS/MainActivity.kt):** the plugin's permission flow needs `FlutterFragmentActivity`:
+**1c. Android — [MainActivity.kt](android/app/src/main/kotlin/com/healthos/healthos/MainActivity.kt):** the plugin's permission flow needs `FlutterFragmentActivity`:
 
 ```kotlin
-package com.roop.HealthOS
+package com.healthos.healthos
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
