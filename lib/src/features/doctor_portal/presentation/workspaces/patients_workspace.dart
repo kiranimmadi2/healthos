@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../appointments/application/appointment_providers.dart';
 import '../../../appointments/domain/appointment.dart';
 import '../../../auth/application/user_providers.dart';
@@ -119,7 +120,7 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
                 context,
                 'New patient registration opened',
               ),
-              icon: const Icon(Icons.person_add_alt_1_rounded),
+              icon: const Icon(HosIcons.userAdd),
               label: const Text('Add patient'),
             ),
           ),
@@ -131,7 +132,7 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
                 onChanged: (value) => setState(() => _query = value),
                 decoration: const InputDecoration(
                   hintText: 'Search by patient or condition',
-                  prefixIcon: Icon(Icons.search_rounded),
+                  prefixIcon: Icon(HosIcons.search),
                 ),
               );
               final filters = Wrap(
@@ -182,7 +183,7 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
             loading: () => const Card(
               child: Padding(
                 padding: EdgeInsets.all(48.0),
-                child: Center(child: CircularProgressIndicator()),
+                child: HosLoading(),
               ),
             ),
             error: (e, st) => Card(

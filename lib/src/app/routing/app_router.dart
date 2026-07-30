@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/auth.dart';
 import '../../features/doctor_portal/doctor_portal.dart';
+import '../../features/hospital_portal/hospital_portal.dart';
 import '../../features/patient_portal/patient_portal.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -27,6 +28,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/', builder: (context, state) => const RootScreen()),
+      GoRoute(
+        path: '/hospital/dashboard',
+        builder: (context, state) => const HospitalDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/hospital/settings',
+        builder: (context, state) => const HospitalSettingsScreen(),
+      ),
     ],
   );
 });
@@ -44,13 +53,15 @@ class RootScreen extends ConsumerWidget {
           return const PatientHomeScreen();
         } else if (role == 'doctor') {
           return const DoctorHomeScreen();
+        } else if (role == 'hospital') {
+          return const HospitalDashboardScreen();
         } else {
           return const ProfileSetupScreen();
         }
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, st) => const ProfileSetupScreen(),
     );
   }
 }

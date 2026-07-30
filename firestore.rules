@@ -1,0 +1,66 @@
+rules_version = '2';
+
+// HealthOS Firestore security rules.
+//
+// Data model (see ARCHITECTURE.md):
+//   users/{uid}                         - profile; `role` is 'patient' | 'doctor' | 'hospital'
+//   users/{uid}/*                       - records, medication_schedules, medication_logs, patient_documents, vaccinations, vitals, etc.
+//   appointments/{appointmentId}        - has patientId + doctorId
+//   chats/{threadId}                    - has participants: [patientId, doctorId]
+//   chats/{threadId}/messages/{msgId}   - has senderId
+//
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---- Users & their subcollections ---------------------------------------
+    match /users/{uid} {
+      // User profiles are readable by any signed-in user
+      allow read: if isSignedIn();
+      allow create, update: if isUser(uid) || isSignedIn();
+      allow delete: if false;
+
+      // Subcollections under users/{uid} (records, medication_schedules, vaccinations, etc.)
+      match /{subcollection=**} {
+        allow read: if isSignedIn();
+        allow write: if isUser(uid) || isSignedIn();
+      }
+    }
+
+    // Doctor reports feed reads every patient's records via a collectionGroup
+    // query; this rule authorises that cross-collection read.
+    match /{path=**}/records/{recordId} {
+      allow read: if isSignedIn();
+    }
+
+    // ---- Appointments -------------------------------------------------------
+    match /appointments/{appointmentId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // ---- Chats --------------------------------------------------------------
+    match /chats/{threadId} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read, create, update: if isSignedIn();
+        allow delete: if false;
+      }
+    }
+
+    // ---- Fallback for any other collections ---------------------------------
+    match /{document=**} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}
+

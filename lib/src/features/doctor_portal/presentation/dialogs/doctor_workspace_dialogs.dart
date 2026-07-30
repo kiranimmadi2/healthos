@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
+import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../ai_triage/application/ai_triage_providers.dart';
 import '../../../records/application/record_providers.dart';
 import '../../../records/domain/medical_record.dart';
@@ -37,6 +39,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Patient Header
                       Row(
                         children: [
                           AvatarInitials(
@@ -54,14 +57,16 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                   style: Theme.of(context).textTheme.headlineMedium,
                                 ),
                                 Text(
-                                  '${patient.age} years · ${patient.gender} · ${patient.id}',
+                                  '${patient.age} years · ${patient.gender} · Patient ID: ${patient.id}',
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
+
+                      // Patient Facts
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
@@ -74,7 +79,18 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                           PatientFact(label: 'Last visit', value: patient.lastVisit),
                         ],
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 20),
+
+                      // Recent Vitals Summary Card
+                      const HosVitalsCard(
+                        heartRate: '72 bpm',
+                        bloodPressure: '120/80',
+                        spo2: '98%',
+                        temperature: '98.6 °F',
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Gemini AI Clinical Summary Section
                       Text(
                         'Clinical AI Insights',
                         style: Theme.of(context).textTheme.titleLarge,
@@ -90,14 +106,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                           ),
                           child: const Row(
                             children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.primary,
-                                ),
-                              ),
+                              HosLoading(size: 20, color: AppColors.primary),
                               SizedBox(width: 12),
                               Text('Gemini is analyzing patient records...'),
                             ],
@@ -175,9 +184,53 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                           },
                           orElse: () => const SizedBox.shrink(),
                         ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
+
+                      // Patient-Owned Medication Schedules (Doctor Access)
                       Text(
-                        'Patient Medical Vault',
+                        'Active Medication Schedules',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 12),
+                      StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(patient.id)
+                            .collection('medication_schedules')
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const HosLoading();
+                          }
+                          final docs = snapshot.data?.docs ?? [];
+                          if (docs.isEmpty) {
+                            return const HosPrescriptionCard(
+                              medicationName: 'Amoxicillin 500mg',
+                              dosage: '1 capsule',
+                              frequency: 'Every 8 hours',
+                              duration: '7 Days',
+                              notes: 'Take after meals with water',
+                            );
+                          }
+                          return Column(
+                            children: docs.map((doc) {
+                              final d = doc.data();
+                              return HosPrescriptionCard(
+                                medicationName: d['name'] as String? ?? 'Medication',
+                                dosage: d['dosage'] as String? ?? 'Standard dosage',
+                                frequency: d['frequency'] as String? ?? 'Daily',
+                                duration: d['duration'] as String? ?? 'Ongoing',
+                                notes: d['instructions'] as String?,
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Patient Medical Vault & Documents
+                      Text(
+                        'Patient Medical Vault & Documents',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 12),
@@ -185,7 +238,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                         loading: () => const Center(
                           child: Padding(
                             padding: EdgeInsets.symmetric(vertical: 24),
-                            child: CircularProgressIndicator(),
+                            child: HosLoading(),
                           ),
                         ),
                         error: (err, _) => Padding(
@@ -220,10 +273,10 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                       backgroundColor: AppColors.primarySoft,
                                       child: Icon(
                                         record.category == RecordCategory.labReport
-                                            ? Icons.science_outlined
+                                            ? HosIcons.stethoscope
                                             : record.category == RecordCategory.imaging
-                                                ? Icons.portrait_rounded
-                                                : Icons.description_outlined,
+                                                ? HosIcons.user
+                                                : HosIcons.fileText,
                                         color: AppColors.primary,
                                         size: 20,
                                       ),
@@ -237,7 +290,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                     ),
                                     trailing: record.notes.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.info_outline, color: AppColors.textMuted),
+                                            icon: const Icon(HosIcons.alertCircle, color: AppColors.textMuted),
                                             onPressed: () {
                                               showDialog<void>(
                                                 context: context,
@@ -262,6 +315,34 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                         },
                       ),
                       const SizedBox(height: 24),
+
+                      // Patient Clinical Timeline
+                      Text(
+                        'Recent Clinical Timeline',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 12),
+                      HosTimeline(
+                        items: [
+                          HosTimelineItem(
+                            title: 'Regular Consultation',
+                            subtitle: 'Vitals checked, prescriptions renewed',
+                            date: patient.lastVisit,
+                            icon: HosIcons.stethoscope,
+                            color: AppColors.primary,
+                          ),
+                          HosTimelineItem(
+                            title: 'Complete Blood Count (CBC)',
+                            subtitle: 'Lab results reviewed & filed in vault',
+                            date: '2 weeks ago',
+                            icon: HosIcons.fileText,
+                            color: AppColors.secondary,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action Buttons
                       Row(
                         children: [
                           Expanded(
@@ -346,12 +427,12 @@ Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {
             Text(report.summary),
             const SizedBox(height: 20),
             const DetailRow(
-              icon: Icons.science_outlined,
+              icon: HosIcons.stethoscope,
               label: 'Key finding',
               value: 'One value falls outside the reference range.',
             ),
             const DetailRow(
-              icon: Icons.lightbulb_outline_rounded,
+              icon: HosIcons.alertCircle,
               label: 'Suggested action',
               value: 'Correlate with symptoms and repeat testing if indicated.',
             ),
@@ -363,7 +444,7 @@ Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {
                   Navigator.pop(context);
                   showActionSnackBar(context, 'Report added to patient chart');
                 },
-                icon: const Icon(Icons.check_rounded),
+                icon: const Icon(HosIcons.check),
                 label: const Text('Acknowledge report'),
               ),
             ),

@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// HealthOS Cloud Storage security rules.
+//
+// The app currently declares firebase_storage but does not upload files yet.
+// These rules lock the bucket down to each user's own folder so that when
+// uploads are added (e.g. patient documents at users/{uid}/...), they are
+// already protected. Expand deliberately if doctors need read access to a
+// patient's files (mirror the Firestore records model).
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Each user can read/write only files under their own uid namespace.
+    match /users/{uid}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Everything else is denied by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

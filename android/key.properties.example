@@ -1,0 +1,21 @@
+# Release signing configuration template.
+#
+# 1. Generate an upload keystore (run from the `android/` folder):
+#
+#      keytool -genkey -v -keystore upload-keystore.jks \
+#        -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+#    (On Windows, keytool ships with the JDK, e.g.
+#     "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe")
+#
+# 2. Copy this file to `android/key.properties` and fill in the real values.
+#    key.properties, *.jks and *.keystore are git-ignored — never commit them.
+#
+# 3. Register the new keystore's SHA-1/SHA-256 in the Firebase console so
+#    Google Sign-In keeps working for release builds:
+#      keytool -list -v -keystore upload-keystore.jks -alias upload
+
+storeFile=upload-keystore.jks
+storePassword=CHANGE_ME
+keyAlias=upload
+keyPassword=CHANGE_ME

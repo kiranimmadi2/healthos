@@ -1,18 +1,13 @@
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 
 class AIService {
-  // Using the provided API Key for standalone Google AI
-  static const String _apiKey = 'AIzaSyDmvsFflSUzeU04f1LyDi2hw1_0TRE5MFY';
+  // Routed through Firebase AI Logic (Gemini Developer API backend).
+  // No API key is stored or exposed in client source code — authorization is handled via Firebase project credentials and App Check.
+  final GenerativeModel _flashModel =
+      FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-  final GenerativeModel _flashModel = GenerativeModel(
-    model: 'gemini-2.5-flash',
-    apiKey: _apiKey,
-  );
-
-  final GenerativeModel _proModel = GenerativeModel(
-    model: 'gemini-2.5-pro',
-    apiKey: _apiKey,
-  );
+  final GenerativeModel _proModel =
+      FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-pro');
 
   /// Builds a readable patient context block from the Firestore user document
   /// so the model can personalize its answer.
@@ -58,8 +53,7 @@ class AIService {
     String input, {
     Map<String, dynamic>? patientProfile,
   }) async {
-    final prompt =
-        '''
+    final prompt = '''
 You are a friendly medical assistant inside the HealthOS app, talking directly to the patient.
 
 ${_patientContext(patientProfile)}
@@ -88,8 +82,7 @@ Instructions:
   }
 
   Future<String> getClinicalSummary(String medicalHistory) async {
-    final prompt =
-        '''
+    final prompt = '''
     You are a clinical assistant. Summarize the following patient medical history into 3 clear, actionable bullet points for a doctor.
 
     History: $medicalHistory

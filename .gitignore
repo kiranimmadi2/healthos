@@ -61,6 +61,11 @@ supabase/.temp
 **/GoogleService-Info.plist
 **/firebase_options.dart
 
+# Android release signing - NEVER commit these
+**/android/key.properties
+**/*.jks
+**/*.keystore
+
 # OS files
 .DS_Store
 Thumbs.db
