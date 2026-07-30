@@ -15,57 +15,50 @@ class RecordsScreen extends ConsumerWidget {
     final recordsAsync = ref.watch(medicalRecordsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'MEDICAL VAULT',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-            fontSize: 16,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
+      backgroundColor: const Color(0xFFF8FAFC),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90),
         child: FloatingActionButton.extended(
           onPressed: () => _showAddRecordSheet(context, ref),
           backgroundColor: const Color(0xFF2563EB),
           foregroundColor: Colors.white,
+          elevation: 4,
           icon: const Icon(Icons.add_rounded),
           label: const Text(
-            'ADD RECORD',
-            style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
+            'Add Record',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
         ),
       ),
-      body: recordsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
-        data: (records) {
-          if (records.isEmpty) {
-            return _buildEmptyState();
-          }
-          return ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            itemCount: records.length + 1,
-            itemBuilder: (context, index) {
-              if (index == records.length) {
-                return const SizedBox(height: 160);
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: recordsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, st) => Center(child: Text('Error: $e')),
+            data: (records) {
+              if (records.isEmpty) {
+                return _buildEmptyState(context, ref);
               }
-              return _buildRecordCard(context, ref, records[index]);
+              return ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                itemCount: records.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == records.length) {
+                    return const SizedBox(height: 160);
+                  }
+                  return _buildRecordCard(context, ref, records[index]);
+                },
+              );
             },
-          );
-        },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -73,35 +66,66 @@ class RecordsScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.folder_open_rounded,
-                size: 64,
+                Icons.folder_shared_rounded,
+                size: 48,
                 color: Color(0xFF2563EB),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
             const Text(
-              'No records yet',
+              'Your Medical Vault is Empty',
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
+                color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Add lab reports, prescriptions, imaging, and immunizations to keep your health history in one place.',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[600],
-                height: 1.5,
+            const SizedBox(height: 10),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: const Text(
+                'Add lab reports, prescriptions, imaging scans, and immunization records to keep your complete health history in one secure location.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+            ElevatedButton.icon(
+              onPressed: () => _showAddRecordSheet(context, ref),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Upload Your First Record'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
             ),
           ],
         ),

@@ -61,7 +61,14 @@ class RootScreen extends ConsumerWidget {
       },
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, st) => const ProfileSetupScreen(),
+      error: (e, st) {
+        final profile = ref.watch(userProfileProvider).value;
+        final role = profile?['role'] as String?;
+        if (role == 'patient') return const PatientHomeScreen();
+        if (role == 'doctor') return const DoctorHomeScreen();
+        if (role == 'hospital') return const HospitalDashboardScreen();
+        return const ProfileSetupScreen();
+      },
     );
   }
 }

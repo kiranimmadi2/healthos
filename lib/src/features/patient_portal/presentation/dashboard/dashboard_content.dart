@@ -26,10 +26,13 @@ class DashboardContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final profile = ref.watch(userProfileProvider).value;
-    final userName =
+    final rawName =
         (profile?['name'] as String?)?.split(' ').first ??
         user?.displayName?.split(' ').first ??
         'there';
+    final userName = rawName.isNotEmpty
+        ? '${rawName[0].toUpperCase()}${rawName.substring(1).toLowerCase()}'
+        : 'there';
 
     return HealthPage(
       bottomPadding: 104,

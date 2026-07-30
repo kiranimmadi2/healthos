@@ -81,9 +81,17 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _ActionData {
-  const _ActionData(this.label, this.icon, this.destination);
+  const _ActionData(
+    this.label,
+    this.subtitle,
+    this.icon,
+    this.gradient,
+    this.destination,
+  );
 
   final String label;
+  final String subtitle;
   final IconData icon;
+  final LinearGradient gradient;
   final int destination;
 }

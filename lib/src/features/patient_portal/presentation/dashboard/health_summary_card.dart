@@ -39,7 +39,7 @@ class _HealthSummaryCard extends ConsumerWidget {
             const Text('From your profile'),
             const SizedBox(height: AppSpacing.xl),
             _MetricRow(
-              icon: Icons.height_rounded,
+              icon: Icons.straighten_rounded,
               iconColor: AppColors.primary,
               label: 'Height',
               value: height != null ? '${height.toStringAsFixed(0)} cm' : '—',
@@ -47,7 +47,7 @@ class _HealthSummaryCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _MetricRow(
-              icon: Icons.monitor_weight_outlined,
+              icon: Icons.scale_rounded,
               iconColor: AppColors.secondary,
               label: 'Weight',
               value: weight != null ? '${weight.toStringAsFixed(0)} kg' : '—',
@@ -55,7 +55,7 @@ class _HealthSummaryCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             _MetricRow(
-              icon: Icons.favorite_outline_rounded,
+              icon: Icons.monitor_heart_rounded,
               iconColor: AppColors.error,
               label: 'BMI',
               value: bmi != null ? bmi.toStringAsFixed(1) : '—',

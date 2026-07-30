@@ -34,59 +34,52 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
     final doctorsAsync = ref.watch(availableDoctorsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'SPECIALISTS',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-            fontSize: 16,
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: doctorsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, st) => Center(child: Text('Error: $e')),
+            data: (doctors) {
+              final categories = [
+                'All',
+                ...{for (final d in doctors) d.specialization},
+              ];
+              final filtered = _filter(doctors);
+
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  _buildSearchBar(),
+                  _buildCategories(categories),
+                  Expanded(
+                    child: doctors.isEmpty
+                        ? _buildEmptyState(
+                            'No doctors have joined yet.\nCheck back soon!',
+                          )
+                        : filtered.isEmpty
+                        ? _buildEmptyState('No specialists match your search.')
+                        : ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 8,
+                            ),
+                            itemCount: filtered.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == filtered.length) {
+                                return const SizedBox(height: 100);
+                              }
+                              return _buildDoctorCard(context, filtered[index]);
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: doctorsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Error: $e')),
-        data: (doctors) {
-          final categories = [
-            'All',
-            ...{for (final d in doctors) d.specialization},
-          ];
-          final filtered = _filter(doctors);
-
-          return Column(
-            children: [
-              _buildSearchBar(),
-              _buildCategories(categories),
-              Expanded(
-                child: doctors.isEmpty
-                    ? _buildEmptyState(
-                        'No doctors have joined yet.\nCheck back soon!',
-                      )
-                    : filtered.isEmpty
-                    ? _buildEmptyState('No specialists match your search.')
-                    : ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                        itemCount: filtered.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == filtered.length) {
-                            return const SizedBox(height: 100);
-                          }
-                          return _buildDoctorCard(context, filtered[index]);
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }
@@ -191,141 +184,198 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
 
   Widget _buildDoctorCard(BuildContext context, DoctorProfile doctor) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Hero(
-            tag: 'doctor_${doctor.uid}',
-            child: Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
+          Stack(
+            children: [
+              Hero(
+                tag: 'doctor_${doctor.uid}',
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        'https://ui-avatars.com/api/?name=${Uri.encodeComponent(doctor.name)}&background=2563EB&color=fff&bold=true',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ],
-                image: DecorationImage(
-                  image: NetworkImage(
-                    'https://ui-avatars.com/api/?name=${Uri.encodeComponent(doctor.name)}&background=6366F1&color=fff&bold=true',
-                  ),
-                  fit: BoxFit.cover,
                 ),
               ),
-            ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2.5),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  doctor.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    letterSpacing: -0.5,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        doctor.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: Color(0xFF059669),
+                          ),
+                          SizedBox(width: 3),
+                          Text(
+                            '4.9',
+                            style: TextStyle(
+                              color: Color(0xFF059669),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   doctor.specialization.toUpperCase(),
                   style: const TextStyle(
                     color: Color(0xFF0F8F83),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                    letterSpacing: 1.0,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    letterSpacing: 0.6,
                   ),
                 ),
                 if (doctor.hospital.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    doctor.hospital,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    if (doctor.yearsOfExperience != null) ...[
+                  Row(
+                    children: [
                       const Icon(
-                        Icons.work_history_rounded,
-                        color: Color(0xFF2563EB),
-                        size: 16,
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: Color(0xFF64748B),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        '${doctor.yearsOfExperience} yrs',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
+                      Expanded(
+                        child: Text(
+                          doctor.hospital,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2563EB).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        'AVAILABLE',
-                        style: TextStyle(
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.w900,
-                          fontSize: 9,
+                  ),
+                ],
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (doctor.yearsOfExperience != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 13,
+                              color: Color(0xFF2563EB),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${doctor.yearsOfExperience} yrs exp',
+                              style: const TextStyle(
+                                color: Color(0xFF2563EB),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () {
+          const SizedBox(width: 16),
+          ElevatedButton.icon(
+            onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => BookAppointmentScreen(doctor: doctor),
                 ),
               );
             },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+            icon: const Icon(Icons.calendar_today_rounded, size: 14),
+            label: const Text('Book'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: Colors.black54,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
               ),
             ),
           ),

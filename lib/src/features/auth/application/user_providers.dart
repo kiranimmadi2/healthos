@@ -8,20 +8,17 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepository(FirebaseFirestore.instance);
 });
 
-/// Full Firestore user document for the signed-in user.
-final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+/// Full user document for the signed-in user, backed by real-time updates and persistent local caching.
+final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
   final user = ref.watch(authStateProvider).value;
-  if (user == null) return null;
+  if (user == null) return Stream.value(null);
 
-  return ref.watch(userRepositoryProvider).getUserData(user.uid);
+  return ref.watch(userRepositoryProvider).watchUserData(user.uid);
 });
 
-final userRoleProvider = FutureProvider<String?>((ref) async {
-  final user = ref.watch(authStateProvider).value;
-  if (user == null) return null;
-
-  final data = await ref.watch(userRepositoryProvider).getUserData(user.uid);
-  return data?['role'] as String?;
+final userRoleProvider = Provider<AsyncValue<String?>>((ref) {
+  final profileAsync = ref.watch(userProfileProvider);
+  return profileAsync.whenData((data) => data?['role'] as String?);
 });
 
 final allPatientsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {

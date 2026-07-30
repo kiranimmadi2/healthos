@@ -25,12 +25,12 @@ void main() {
         ProviderScope(
           overrides: [
             userProfileProvider.overrideWith(
-              (ref) => <String, dynamic>{
+              (ref) => Stream.value(<String, dynamic>{
                 'name': 'Alex Johnson',
                 'role': 'patient',
                 'height': 175,
                 'weight': 70,
-              },
+              }),
             ),
             patientAppointmentsProvider.overrideWithValue(const AsyncValue.data([])),
             availableDoctorsProvider.overrideWithValue(const AsyncValue.data([])),
@@ -58,11 +58,11 @@ void main() {
         ProviderScope(
           overrides: [
             userProfileProvider.overrideWith(
-              (ref) => <String, dynamic>{
+              (ref) => Stream.value(<String, dynamic>{
                 'name': 'Dr. Asha Sharma',
                 'role': 'doctor',
                 'hospital': 'Apollo City Hospital',
-              },
+              }),
             ),
             allPatientsProvider.overrideWithValue(const AsyncValue.data([
               {

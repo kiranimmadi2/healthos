@@ -699,12 +699,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         const SizedBox(height: 10),
         Center(
-          child: TextButton.icon(
-            onPressed: _isLoading ? null : _autoFillTestCode,
-            icon: const Icon(Icons.flash_on_rounded, size: 16, color: AppColors.primary),
-            label: const Text(
-              "Didn't receive email? Tap to auto-fill test OTP (123456)",
-              style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+          child: Container(
+            margin: const EdgeInsets.only(top: 14),
+            child: InkWell(
+              onTap: _isLoading ? null : _autoFillTestCode,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.secondarySoft,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.flash_on_rounded,
+                      size: 15,
+                      color: AppColors.secondary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _lastSentOtpCode != null
+                            ? "Dev OTP: $_lastSentOtpCode"
+                            : "Dev Test OTP: 123456",
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.secondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -756,8 +787,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildPinBox(int index) {
+    final hasValue = _otpPinControllers[index].text.isNotEmpty;
     return SizedBox(
-      width: 48,
+      width: 50,
       height: 56,
       child: TextField(
         controller: _otpPinControllers[index],
@@ -767,13 +799,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         style: const TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          color: AppColors.primary,
         ),
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
           LengthLimitingTextInputFormatter(6),
         ],
         onChanged: (value) {
+          setState(() {});
           if (value.length > 1) {
             // Handle pasting complete 6-digit code
             final digits = value.replaceAll(RegExp(r'\D'), '');
@@ -800,12 +833,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         },
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
+          fillColor: hasValue ? AppColors.primarySoft : Colors.white,
+          filled: true,
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-            borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue ? AppColors.primary : AppColors.border,
+              width: hasValue ? 1.5 : 1.0,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppRadius.medium),
+            borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
         ),

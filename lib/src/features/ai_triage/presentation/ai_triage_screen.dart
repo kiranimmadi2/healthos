@@ -45,82 +45,131 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'AI HEALTH ASSISTANT',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-            fontSize: 16,
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            children: [
+              Expanded(
+                child: _messages.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 24,
+                        ),
+                        itemCount: _messages.length,
+                        itemBuilder: (context, index) =>
+                            _buildChatBubble(_messages[index]),
+                      ),
+              ),
+              if (_isLoading) _buildLoadingIndicator(),
+              _buildInputArea(),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 24,
-                    ),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) =>
-                        _buildChatBubble(_messages[index]),
-                  ),
-          ),
-          if (_isLoading) _buildLoadingIndicator(),
-          _buildInputArea(),
-          const SizedBox(height: 110),
-        ],
       ),
     );
   }
 
   Widget _buildEmptyState() {
+    final suggestions = [
+      'Persistent headache & dizziness',
+      'Mild fever and sore throat',
+      'Lower back tightness after exercise',
+    ];
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.bolt_rounded,
-                size: 64,
-                color: Color(0xFF2563EB),
+                Icons.smart_toy_rounded,
+                size: 44,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             const Text(
-              'Analyze symptoms with AI',
+              'AI Care Assistant',
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
+                color: Color(0xFF0F172A),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Describe how you feel and Gemini 2.5 Pro will provide an instant triage analysis.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-                height: 1.5,
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: const Text(
+                'Describe your health concerns or non-emergency symptoms for instant, medically guided triage insights.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                for (final suggestion in suggestions)
+                  ActionChip(
+                    onPressed: () {
+                      _controller.text = suggestion;
+                      _sendMessage();
+                    },
+                    avatar: const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 14,
+                      color: Color(0xFF2563EB),
+                    ),
+                    label: Text(suggestion),
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    labelStyle: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

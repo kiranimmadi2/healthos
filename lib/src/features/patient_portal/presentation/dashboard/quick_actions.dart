@@ -8,10 +8,34 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _ActionData('Book appointment', Icons.calendar_month_outlined, 1),
-      _ActionData('Find a doctor', Icons.person_search_outlined, 1),
-      _ActionData('View records', Icons.folder_open_outlined, 2),
-      _ActionData('Check symptoms', Icons.chat_bubble_outline_rounded, 3),
+      _ActionData(
+        'Book appointment',
+        'Schedule consultation',
+        Icons.calendar_month_rounded,
+        AppColors.primaryGradient,
+        1,
+      ),
+      _ActionData(
+        'Find a doctor',
+        'Browse specialists',
+        Icons.medical_services_rounded,
+        AppColors.purpleGradient,
+        1,
+      ),
+      _ActionData(
+        'View records',
+        'Access reports & lab tests',
+        Icons.folder_shared_rounded,
+        AppColors.secondaryGradient,
+        2,
+      ),
+      _ActionData(
+        'Check symptoms',
+        'AI Health Assistant',
+        Icons.smart_toy_rounded,
+        AppColors.emeraldGradient,
+        3,
+      ),
     ];
 
     return LayoutBuilder(
@@ -93,21 +117,43 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primarySoft,
-                      borderRadius: BorderRadius.circular(AppRadius.medium),
+                      gradient: widget.data.gradient,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.data.gradient.colors.first.withOpacity(
+                            0.25,
+                          ),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: Icon(widget.data.icon, color: AppColors.primary),
+                    child: Icon(
+                      widget.data.icon,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     widget.data.label,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 2),
-                  const Text('Open'),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.data.subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),

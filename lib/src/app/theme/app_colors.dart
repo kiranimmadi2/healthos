@@ -19,4 +19,40 @@ abstract final class AppColors {
   static const textPrimary = Color(0xFF0F172A);
   static const textSecondary = Color(0xFF475569);
   static const textMuted = Color(0xFF64748B);
+
+  // Accent Colors
+  static const accentPurple = Color(0xFF7C3AED);
+  static const accentPurpleSoft = Color(0xFFF3E8FF);
+  static const accentTeal = Color(0xFF0D9488);
+  static const accentTealSoft = Color(0xFFCCFBF1);
+  static const accentEmerald = Color(0xFF059669);
+  static const accentEmeraldSoft = Color(0xFFD1FAE5);
+  static const accentAmber = Color(0xFFD97706);
+  static const accentAmberSoft = Color(0xFFFEF3C7);
+
+  // Gradients
+  static const primaryGradient = LinearGradient(
+    colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const secondaryGradient = LinearGradient(
+    colors: [Color(0xFF0F8F83), Color(0xFF14B8A6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const purpleGradient = LinearGradient(
+    colors: [Color(0xFF7C3AED), Color(0xFF8B5CF6)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const emeraldGradient = LinearGradient(
+    colors: [Color(0xFF059669), Color(0xFF10B981)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
+

@@ -33,13 +33,13 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
     ),
     HealthDestination(
       label: 'Records',
-      icon: Icons.folder_outlined,
-      selectedIcon: Icons.folder_rounded,
+      icon: Icons.folder_shared_outlined,
+      selectedIcon: Icons.folder_shared_rounded,
     ),
     HealthDestination(
-      label: 'Care assistant',
-      icon: Icons.chat_bubble_outline_rounded,
-      selectedIcon: Icons.chat_bubble_rounded,
+      label: 'Care Assistant',
+      icon: Icons.smart_toy_outlined,
+      selectedIcon: Icons.smart_toy_rounded,
     ),
   ];
 
@@ -57,16 +57,16 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final titles = [
-      'My health',
-      'Find a doctor',
-      'Medical records',
-      'Care assistant',
+      'My Health',
+      'Find a Doctor',
+      'Medical Records',
+      'Care Assistant',
     ];
     final subtitles = [
-      'Your care overview',
-      'Verified specialists near you',
-      'Reports, prescriptions, and history',
-      'Guidance for non-emergency symptoms',
+      'Your personal care overview',
+      'Verified medical specialists',
+      'Reports, prescriptions & test history',
+      'AI guidance for your health questions',
     ];
 
     return HealthShell(
@@ -75,22 +75,46 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
       destinations: _destinations,
       selectedIndex: _currentIndex,
       onDestinationSelected: _selectDestination,
-      leading: IconButton(
-        tooltip: 'Sign out',
-        onPressed: () => ref.read(authRepositoryProvider).signOut(),
-        icon: const Icon(Icons.logout_rounded),
+      leading: InkWell(
+        onTap: () => ref.read(authRepositoryProvider).signOut(),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.logout_rounded,
+                color: AppColors.error,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       actions: [
         IconButton(
           tooltip: 'Notifications',
           onPressed: () {},
-          icon: Badge(
+          icon: const Badge(
             backgroundColor: AppColors.error,
             smallSize: 8,
-            child: const Icon(Icons.notifications_outlined),
+            child: Icon(Icons.notifications_none_rounded, size: 22),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Semantics(
           button: true,
           label: 'Open profile',
@@ -98,9 +122,13 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
             onTap: () {},
             borderRadius: BorderRadius.circular(24),
             child: const CircleAvatar(
-              radius: 20,
+              radius: 18,
               backgroundColor: AppColors.primarySoft,
-              child: Icon(Icons.person_rounded, color: AppColors.primary),
+              child: Icon(
+                Icons.person_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
           ),
         ),

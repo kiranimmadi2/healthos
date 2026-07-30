@@ -41,7 +41,7 @@ void main() {
         ProviderScope(
           overrides: [
             userProfileProvider.overrideWith(
-              (ref) => <String, dynamic>{'name': 'Asha Sharma', 'role': 'doctor'},
+              (ref) => Stream.value(<String, dynamic>{'name': 'Asha Sharma', 'role': 'doctor'}),
             ),
             allPatientsProvider.overrideWithValue(const AsyncValue.data([])),
             allDiagnosticReportsProvider.overrideWithValue(const AsyncValue.data([])),

@@ -158,33 +158,355 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDoctorHeader(),
-                  const SizedBox(height: 40),
-                  _buildSectionTitle('SELECT DATE'),
-                  const SizedBox(height: 16),
-                  _buildDateSelector(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('SELECT TIME'),
-                  const SizedBox(height: 16),
-                  _buildTimeSelector(),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle('DESCRIBE SYMPTOMS'),
-                  const SizedBox(height: 16),
-                  _buildSymptomsInput(),
-                  const SizedBox(height: 48),
-                  _buildConfirmButton(),
-                  const SizedBox(height: 40),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth > 700) {
+            return _buildWebSplitLayout(context);
+          } else {
+            return _buildMobileLayout(context);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebSplitLayout(BuildContext context) {
+    final avatarUrl =
+        'https://ui-avatars.com/api/?name=${Uri.encodeComponent(widget.doctor.name)}&background=6366F1&color=fff&size=512&bold=true';
+
+    return Row(
+      children: [
+        // Left Panel: Doctor Profile & Branding (50%)
+        Expanded(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF0F172A),
+                  Color(0xFF1E293B),
+                  Color(0xFF1E1B4B),
                 ],
               ),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: SafeArea(
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Hero(
+                          tag: 'doctor_${widget.doctor.uid}',
+                          child: Container(
+                            width: 150,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                width: 4,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.4),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
+                              image: DecorationImage(
+                                image: NetworkImage(avatarUrl),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          widget.doctor.name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.doctor.specialization.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF38BDF8),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        if (widget.doctor.hospital.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.doctor.hospital,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 28),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildDarkStatCard(
+                              Icons.star_rounded,
+                              '4.9',
+                              Colors.amber,
+                            ),
+                            _buildDarkStatCard(
+                              Icons.verified_user_rounded,
+                              'Certified',
+                              const Color(0xFF60A5FA),
+                            ),
+                            _buildDarkStatCard(
+                              Icons.location_on_rounded,
+                              '2.4km',
+                              Colors.grey[300]!,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Right Panel: Booking Form (50%)
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 48, vertical: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Book Appointment',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose your preferred date and time slot for consultation.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    _buildSectionTitle('SELECT DATE'),
+                    const SizedBox(height: 16),
+                    _buildDateSelector(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('SELECT TIME'),
+                    const SizedBox(height: 16),
+                    _buildTimeSelector(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('DESCRIBE SYMPTOMS'),
+                    const SizedBox(height: 16),
+                    _buildSymptomsInput(),
+                    const SizedBox(height: 40),
+                    _buildConfirmButton(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
+    final avatarUrl =
+        'https://ui-avatars.com/api/?name=${Uri.encodeComponent(widget.doctor.name)}&background=6366F1&color=fff&size=512&bold=true';
+
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          elevation: 0,
+          backgroundColor: const Color(0xFF0F172A),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            widget.doctor.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24.0),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0F172A),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Hero(
+                      tag: 'doctor_${widget.doctor.uid}',
+                      child: Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                          image: DecorationImage(
+                            image: NetworkImage(avatarUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.doctor.name,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.doctor.specialization.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF38BDF8),
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildDarkStatCard(
+                          Icons.star_rounded,
+                          '4.9',
+                          Colors.amber,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDarkStatCard(
+                          Icons.verified_user_rounded,
+                          'Certified',
+                          const Color(0xFF60A5FA),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildDarkStatCard(
+                          Icons.location_on_rounded,
+                          '2.4km',
+                          Colors.grey[300]!,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('SELECT DATE'),
+                    const SizedBox(height: 16),
+                    _buildDateSelector(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('SELECT TIME'),
+                    const SizedBox(height: 16),
+                    _buildTimeSelector(),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('DESCRIBE SYMPTOMS'),
+                    const SizedBox(height: 16),
+                    _buildSymptomsInput(),
+                    const SizedBox(height: 48),
+                    _buildConfirmButton(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDarkStatCard(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+              color: Colors.white,
             ),
           ),
         ],
@@ -200,104 +522,6 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         fontWeight: FontWeight.w900,
         letterSpacing: 1.5,
         color: Color(0xFF64748B),
-      ),
-    );
-  }
-
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 220,
-      pinned: true,
-      elevation: 0,
-      backgroundColor: const Color(0xFF0F172A),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Hero(
-          tag: 'doctor_${widget.doctor.uid}',
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(
-                  'https://ui-avatars.com/api/?name=${widget.doctor.name}&background=6366F1&color=fff&size=512&bold=true',
-                ),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.4),
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.7),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDoctorHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.doctor.name,
-          style: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          widget.doctor.specialization.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 13,
-            color: Color(0xFF0F8F83),
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            _buildStatCard(Icons.star_rounded, '4.9', Colors.amber),
-            const SizedBox(width: 12),
-            _buildStatCard(
-              Icons.verified_user_rounded,
-              'Certified',
-              const Color(0xFF2563EB),
-            ),
-            const SizedBox(width: 12),
-            _buildStatCard(Icons.location_on_rounded, '2.4km', Colors.grey),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-          ),
-        ],
       ),
     );
   }

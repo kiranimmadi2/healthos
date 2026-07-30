@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../application/auth_providers.dart';
@@ -156,10 +156,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         }
       }
 
+      try {
+        await user.updateDisplayName(_nameController.text.trim());
+      } catch (_) {}
+
       await ref
           .read(userRepositoryProvider)
           .createUserData(user.uid, profileData);
-      ref.invalidate(userRoleProvider);
       ref.invalidate(userProfileProvider);
     } catch (e) {
       if (mounted) _showError('Could not save profile: $e');

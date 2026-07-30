@@ -62,40 +62,126 @@ class HealthShell extends StatelessWidget {
             children: [
               SafeArea(
                 right: false,
-                child: NavigationRail(
-                  extended: isDesktop,
-                  minExtendedWidth: 248,
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: onDestinationSelected,
-                  labelType: isDesktop
-                      ? NavigationRailLabelType.none
-                      : NavigationRailLabelType.all,
-                  leading: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 28),
-                    child: isDesktop
-                        ? const _BrandMark(showLabel: true)
-                        : const _BrandMark(showLabel: false),
+                child: Container(
+                  width: isDesktop ? 250 : 80,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surface,
+                    border: Border(right: BorderSide(color: AppColors.border)),
                   ),
-                  trailing: Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: leading,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                        child: isDesktop
+                            ? const _BrandMark(showLabel: true)
+                            : const _BrandMark(showLabel: false),
                       ),
-                    ),
+                      const Divider(height: 1),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: destinations.length,
+                          itemBuilder: (context, index) {
+                            final destination = destinations[index];
+                            final isSelected = selectedIndex == index;
+
+                            if (!isDesktop) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: InkWell(
+                                  onTap: () => onDestinationSelected(index),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppColors.primarySoft
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      isSelected
+                                          ? destination.selectedIcon
+                                          : destination.icon,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.textMuted,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return Container(
+                              margin: const EdgeInsets.symmetric(vertical: 3),
+                              child: InkWell(
+                                onTap: () => onDestinationSelected(index),
+                                borderRadius: BorderRadius.circular(12),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 150),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primarySoft
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: AppColors.primary
+                                                .withOpacity(0.2),
+                                          )
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isSelected
+                                            ? destination.selectedIcon
+                                            : destination.icon,
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.textMuted,
+                                        size: 22,
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Text(
+                                          destination.label,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: isSelected
+                                                ? AppColors.primary
+                                                : AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      if (leading != null) ...[
+                        const Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: leading,
+                        ),
+                      ],
+                    ],
                   ),
-                  destinations: [
-                    for (final destination in destinations)
-                      NavigationRailDestination(
-                        icon: Icon(destination.icon),
-                        selectedIcon: Icon(destination.selectedIcon),
-                        label: Text(destination.label),
-                      ),
-                  ],
                 ),
               ),
-              const VerticalDivider(),
               Expanded(
                 child: Column(
                   children: [
@@ -128,7 +214,10 @@ class HealthShell extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(title),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
           if (subtitle != null)
             Text(
               subtitle!,
@@ -138,15 +227,16 @@ class HealthShell extends StatelessWidget {
             ),
         ],
       ),
-      actions: [...actions, const SizedBox(width: 8)],
+      actions: [...actions, const SizedBox(width: 12)],
     );
   }
 
   Widget _buildDesktopHeader(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: SizedBox(
-        height: 80,
+      child: Container(
+        height: 76,
+        color: AppColors.surface,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Row(
@@ -156,12 +246,20 @@ class HealthShell extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                     if (subtitle != null)
                       Text(
                         subtitle!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textMuted,
+                          fontSize: 13,
                         ),
                       ),
                   ],
