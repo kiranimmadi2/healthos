@@ -59,7 +59,7 @@ class _HospitalDashboardScreenState
                   Text(
                     'Real-time metrics, doctor deployment, and operational logs.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textMuted,
+                          color: context.hos.textMuted,
                         ),
                   ),
                 ],
@@ -143,11 +143,11 @@ class _HospitalDashboardScreenState
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.85),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.hos.border),
               ),
               child: Column(
-                children: const [
-                  Icon(HosIcons.stethoscope, size: 40, color: AppColors.textMuted),
+                children: [
+                  Icon(HosIcons.stethoscope, size: 40, color: context.hos.textMuted),
                   SizedBox(height: 12),
                   Text(
                     'No doctors currently registered',
@@ -156,7 +156,7 @@ class _HospitalDashboardScreenState
                   SizedBox(height: 4),
                   Text(
                     'Doctors will appear here as soon as they sign up or are onboarded.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    style: TextStyle(color: context.hos.textMuted, fontSize: 13),
                   ),
                 ],
               ),
@@ -185,12 +185,12 @@ class _HospitalDashboardScreenState
                   decoration: BoxDecoration(
                     color: doc['status'] == 'Active'
                         ? AppColors.primarySoft
-                        : AppColors.background,
+                        : context.hos.background,
                     borderRadius: BorderRadius.circular(AppRadius.small),
                     border: Border.all(
                       color: doc['status'] == 'Active'
                           ? AppColors.primary
-                          : AppColors.border,
+                          : context.hos.border,
                     ),
                   ),
                   child: Text(
@@ -199,7 +199,7 @@ class _HospitalDashboardScreenState
                       fontSize: 12,
                       color: doc['status'] == 'Active'
                           ? AppColors.primary
-                          : AppColors.textMuted,
+                          : context.hos.textMuted,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

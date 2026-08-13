@@ -324,10 +324,10 @@ class _PracticeInsights extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'patients seen',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: context.hos.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -343,8 +343,8 @@ class _PracticeInsights extends StatelessWidget {
                   Expanded(
                     child: Text(
                       insight.$1,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.hos.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -358,7 +358,7 @@ class _PracticeInsights extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: insight.$2,
                   minHeight: 8,
-                  backgroundColor: AppColors.surfaceMuted,
+                  backgroundColor: context.hos.surfaceMuted,
                   color: insight.$4,
                 ),
               ),

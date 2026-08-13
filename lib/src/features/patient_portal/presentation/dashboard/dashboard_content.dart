@@ -331,7 +331,7 @@ class _FindDoctorPanelState extends ConsumerState<_FindDoctorPanel> {
                 itemBuilder: (context, index) {
                   final item = specialties[index];
                   final isDark = Theme.of(context).brightness == Brightness.dark;
-                  final labelColor = isDark ? Colors.white : AppColors.textPrimary;
+                  final labelColor = isDark ? Colors.white : context.hos.textPrimary;
 
                   return InkWell(
                     onTap: () {
@@ -439,9 +439,9 @@ class _HealthTipsCard extends StatelessWidget {
                         ),
                         Text(
                           tip.$2,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textMuted,
+                            color: context.hos.textMuted,
                           ),
                         ),
                       ],
@@ -478,7 +478,7 @@ class _ResultAndHistoryCard extends StatelessWidget {
                       fontSize: 18,
                     ),
               ),
-              const Icon(Icons.swap_horiz_rounded, size: 20, color: AppColors.textMuted),
+              Icon(Icons.swap_horiz_rounded, size: 20, color: context.hos.textMuted),
             ],
           ),
           const SizedBox(height: 16),
@@ -493,7 +493,7 @@ class _ResultAndHistoryCard extends StatelessWidget {
 
   Widget _historyItem(BuildContext context, String category, String title, String date, Color dotColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? const Color(0xFF94A3B8) : AppColors.textMuted;
+    final mutedColor = isDark ? const Color(0xFF94A3B8) : context.hos.textMuted;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -559,7 +559,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
               final boxBg = isDark
                   ? const Color(0xFF1E293B).withOpacity(0.85)
                   : Colors.white.withOpacity(0.85);
-              final textMainColor = isDark ? Colors.white : AppColors.textMain;
+              final textMainColor = isDark ? Colors.white : context.hos.textPrimary;
 
               if (appointment == null) {
                 return Container(
@@ -580,7 +580,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         'Book a consultation with our verified doctors anytime.',
-                        style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted),
+                        style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -616,7 +616,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
                                 appointment.specialization.isEmpty
                                     ? 'Specialist'
                                     : appointment.specialization,
-                                style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                                style: TextStyle(fontSize: 12, color: context.hos.textMuted),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -654,7 +654,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(14),
                           child: Column(
                             children: [
-                              const Text('Status', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                              Text('Status', style: TextStyle(fontSize: 11, color: context.hos.textMuted)),
                               const SizedBox(height: 4),
                               Text(
                                 appointment.status == AppointmentStatus.confirmed
@@ -674,7 +674,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(14),
                           child: Column(
                             children: [
-                              const Text('Date', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                              Text('Date', style: TextStyle(fontSize: 11, color: context.hos.textMuted)),
                               const SizedBox(height: 4),
                               Text(
                                 dateFormatted,
@@ -692,7 +692,7 @@ class _AppointmentQueueCard extends ConsumerWidget {
                           padding: const EdgeInsets.all(14),
                           child: Column(
                             children: [
-                              const Text('Time', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                              Text('Time', style: TextStyle(fontSize: 11, color: context.hos.textMuted)),
                               const SizedBox(height: 4),
                               Text(
                                 timeFormatted,

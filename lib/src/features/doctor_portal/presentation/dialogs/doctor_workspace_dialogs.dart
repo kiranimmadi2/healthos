@@ -266,13 +266,13 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                         ),
                         data: (records) {
                           if (records.isEmpty) {
-                            return const Padding(
+                            return Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Text(
                                 'No documents uploaded to their vault yet.',
                                 style: TextStyle(
                                   fontStyle: FontStyle.italic,
-                                  color: AppColors.textMuted,
+                                  color: context.hos.textMuted,
                                 ),
                               ),
                             );
@@ -283,9 +283,9 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                 Container(
                                   margin: const EdgeInsets.only(bottom: 12),
                                   decoration: BoxDecoration(
-                                    color: AppColors.background,
+                                    color: context.hos.background,
                                     borderRadius: BorderRadius.circular(AppRadius.medium),
-                                    border: Border.all(color: AppColors.border),
+                                    border: Border.all(color: context.hos.border),
                                   ),
                                   child: ListTile(
                                     leading: CircleAvatar(
@@ -309,7 +309,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                     ),
                                     trailing: record.notes.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(HosIcons.alertCircle, color: AppColors.textMuted),
+                                            icon: Icon(HosIcons.alertCircle, color: context.hos.textMuted),
                                             onPressed: () {
                                               showDialog<void>(
                                                 context: context,
@@ -480,10 +480,10 @@ Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {
               ],
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Clinical summary',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.hos.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),

@@ -578,9 +578,9 @@ class _TaskTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: context.hos.background,
           borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.hos.border),
         ),
         child: Row(
           children: [
@@ -600,9 +600,9 @@ class _TaskTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
+              color: context.hos.textMuted,
             ),
           ],
         ),

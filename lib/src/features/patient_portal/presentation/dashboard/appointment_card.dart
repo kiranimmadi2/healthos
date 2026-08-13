@@ -60,7 +60,7 @@ class _EmptyAppointmentCard extends StatelessWidget {
                 child: Text(
                   'Your Appointment',
                   style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.textSecondary,
+                    color: isDark ? Colors.white : context.hos.textSecondary,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
@@ -104,9 +104,9 @@ class _EmptyAppointmentCard extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Book a consultation with our verified doctors & specialists.',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: context.hos.textSecondary),
                     ),
                   ],
                 ),
@@ -218,10 +218,10 @@ class _NextAppointmentCard extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Your Appointment',
                 style: TextStyle(
-                  color: AppColors.textMuted,
+                  color: context.hos.textMuted,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -249,9 +249,9 @@ class _NextAppointmentCard extends ConsumerWidget {
                       appointment.specialization.isEmpty
                           ? 'General Specialist'
                           : appointment.specialization,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
-                        color: AppColors.textSecondary,
+                        color: context.hos.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

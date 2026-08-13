@@ -300,7 +300,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 : 'Sign in to continue to your care workspace'),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.hos.textSecondary,
                             ),
                       ),
                       const SizedBox(height: 24),
@@ -318,11 +318,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
                               'OR',
-                              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                              style: TextStyle(color: context.hos.textMuted, fontSize: 12),
                             ),
                           ),
                           Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
@@ -375,9 +375,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Expanded(
             child: Text(
               'Account exists with $providersStr. Logging in will link all sign-in methods to your single account.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textPrimary,
+                color: context.hos.textPrimary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -390,7 +390,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildAuthModeToggle() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
+        color: context.hos.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       padding: const EdgeInsets.all(4),
@@ -406,7 +406,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _authMode == AuthMode.password
-                      ? AppColors.surface
+                      ? context.hos.surface
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppRadius.small),
                   boxShadow: _authMode == AuthMode.password
@@ -427,7 +427,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       size: 18,
                       color: _authMode == AuthMode.password
                           ? AppColors.primary
-                          : AppColors.textMuted,
+                          : context.hos.textMuted,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -438,7 +438,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : FontWeight.w500,
                         color: _authMode == AuthMode.password
                             ? AppColors.primary
-                            : AppColors.textMuted,
+                            : context.hos.textMuted,
                       ),
                     ),
                   ],
@@ -456,7 +456,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: _authMode == AuthMode.otp
-                      ? AppColors.surface
+                      ? context.hos.surface
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppRadius.small),
                   boxShadow: _authMode == AuthMode.otp
@@ -477,7 +477,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       size: 18,
                       color: _authMode == AuthMode.otp
                           ? AppColors.primary
-                          : AppColors.textMuted,
+                          : context.hos.textMuted,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -488,7 +488,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             : FontWeight.w500,
                         color: _authMode == AuthMode.otp
                             ? AppColors.primary
-                            : AppColors.textMuted,
+                            : context.hos.textMuted,
                       ),
                     ),
                   ],
@@ -656,7 +656,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
+            color: context.hos.surfaceMuted,
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: Row(
@@ -668,16 +668,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Code sent to:',
                       style: TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
+                          fontSize: 12, color: context.hos.textSecondary),
                     ),
                     Text(
                       _otpEmailController.text.trim(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: context.hos.textPrimary,
                         fontSize: 14,
                       ),
                     ),
@@ -696,12 +696,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        const Text(
+        Text(
           'Enter 6-Digit OTP Code:',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14,
-            color: AppColors.textPrimary,
+            color: context.hos.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -776,8 +776,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _resendCountdown > 0
                   ? 'Resend OTP in ${_resendCountdown}s'
                   : "Didn't get the code?",
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.hos.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -850,7 +850,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: hasValue ? AppColors.primary : AppColors.border,
+              color: hasValue ? AppColors.primary : context.hos.border,
               width: hasValue ? 1.5 : 1.0,
             ),
           ),

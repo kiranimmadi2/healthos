@@ -84,7 +84,7 @@ class _HospitalSettingsScreenState
           Text(
             'Configure hospital profile, alert thresholds, and active departments.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
+                  color: context.hos.textMuted,
                 ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -95,7 +95,7 @@ class _HospitalSettingsScreenState
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.hos.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,7 +176,7 @@ class _HospitalSettingsScreenState
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.hos.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +226,7 @@ class _HospitalSettingsScreenState
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.hos.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +277,7 @@ class _HospitalSettingsScreenState
                       backgroundColor: AppColors.primarySoft,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadius.small),
-                        side: const BorderSide(color: AppColors.border),
+                        side: BorderSide(color: context.hos.border),
                       ),
                     );
                   }).toList(),

@@ -199,7 +199,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             : Colors.white.withOpacity(0.85),
         borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : AppColors.border,
+          color: isDark ? const Color(0xFF334155) : context.hos.border,
           width: 1.5,
         ),
         boxShadow: [
@@ -226,7 +226,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
           Text(
             'Describe the dish, portion size, or ingredients for an AI nutrition check.',
             style: TextStyle(
-              color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
+              color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted,
               fontSize: 13,
             ),
           ),
@@ -244,18 +244,18 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                     label: Text(type),
                     selected: isSelected,
                     selectedColor: isDark ? const Color(0xFF1E3A8A) : AppColors.primarySoft,
-                    backgroundColor: isDark ? const Color(0xFF0F172A) : AppColors.surfaceMuted,
+                    backgroundColor: isDark ? const Color(0xFF0F172A) : context.hos.surfaceMuted,
                     labelStyle: TextStyle(
                       color: isSelected
                           ? (isDark ? const Color(0xFF60A5FA) : AppColors.primary)
-                          : (isDark ? const Color(0xFFCBD5E1) : AppColors.textSecondary),
+                          : (isDark ? const Color(0xFFCBD5E1) : context.hos.textSecondary),
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 13,
                     ),
                     side: BorderSide(
                       color: isSelected
                           ? (isDark ? const Color(0xFF60A5FA) : AppColors.primary)
-                          : (isDark ? const Color(0xFF334155) : AppColors.border),
+                          : (isDark ? const Color(0xFF334155) : context.hos.border),
                     ),
                     onSelected: (val) {
                       if (val) setState(() => _selectedMealType = type);
@@ -279,18 +279,18 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             decoration: InputDecoration(
               hintText: 'e.g. 2 slices whole wheat toast with mashed avocado & 2 poached eggs',
               hintStyle: TextStyle(
-                color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted,
                 fontSize: 14,
               ),
               filled: true,
-              fillColor: isDark ? const Color(0xFF0F172A).withOpacity(0.6) : AppColors.surfaceMuted,
+              fillColor: isDark ? const Color(0xFF0F172A).withOpacity(0.6) : context.hos.surfaceMuted,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.small),
-                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : AppColors.border),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : context.hos.border),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.small),
-                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : AppColors.border),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : context.hos.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.small),
@@ -331,29 +331,27 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.hos.surface,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.hos.border),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: CircularProgressIndicator(
-              strokeWidth: 3.5,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-          ),
-          SizedBox(height: AppSpacing.lg),
+          const HosTypingIndicator(),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'Analyzing your meal...',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: context.hos.textPrimary,
+            ),
           ),
-          SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            'Evaluating calories, glycemic load & personal health risks on local GPU/NPU',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            'Evaluating calories, glycemic load and how this meal fits your '
+            'health profile.',
+            style: TextStyle(color: context.hos.textMuted, fontSize: 13),
             textAlign: TextAlign.center,
           ),
         ],
@@ -387,8 +385,8 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             return ActionChip(
               avatar: const Icon(Icons.restaurant_menu_rounded, size: 16, color: AppColors.primary),
               label: Text(preset['name']!),
-              backgroundColor: isDark ? const Color(0xFF1E293B).withOpacity(0.7) : AppColors.surface,
-              side: BorderSide(color: isDark ? const Color(0xFF334155) : AppColors.border),
+              backgroundColor: isDark ? const Color(0xFF1E293B).withOpacity(0.7) : context.hos.surface,
+              side: BorderSide(color: isDark ? const Color(0xFF334155) : context.hos.border),
               labelStyle: TextStyle(fontSize: 12, color: hos.textPrimary),
               onPressed: () => _selectPreset(preset['name']!, preset['type']!),
             );
@@ -613,9 +611,9 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : AppColors.surface,
+            color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : context.hos.surface,
             borderRadius: BorderRadius.circular(AppRadius.small),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : AppColors.border),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : context.hos.border),
           ),
           child: Row(
             children: [
@@ -644,7 +642,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                     Text(
                       result.portionAdvice,
                       style: TextStyle(
-                        color: isDark ? const Color(0xFFCBD5E1) : AppColors.textSecondary,
+                        color: isDark ? const Color(0xFFCBD5E1) : context.hos.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -669,9 +667,9 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : AppColors.surface,
+        color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : context.hos.surface,
         borderRadius: BorderRadius.circular(AppRadius.small),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : AppColors.border),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : context.hos.border),
       ),
       child: Row(
         children: [
@@ -692,7 +690,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                    color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted,
                     fontSize: 11,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -738,9 +736,9 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             return Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : AppColors.surface,
+                color: isDark ? const Color(0xFF1E293B).withOpacity(0.75) : context.hos.surface,
                 borderRadius: BorderRadius.circular(AppRadius.small),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : AppColors.border),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : context.hos.border),
               ),
               child: Row(
                 children: [
@@ -765,7 +763,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                         Text(
                           '${item.mealType} • ${item.macros.calories} kcal • Glycemic Index ${item.macros.glycemicIndex}',
                           style: TextStyle(
-                            color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                            color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted,
                             fontSize: 12,
                           ),
                         ),
@@ -775,7 +773,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                   Text(
                     dateFormat.format(item.timestamp),
                     style: TextStyle(
-                      color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
+                      color: isDark ? const Color(0xFF94A3B8) : context.hos.textMuted,
                       fontSize: 12,
                     ),
                   ),

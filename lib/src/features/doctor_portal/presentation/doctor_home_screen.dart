@@ -247,12 +247,12 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
               ),
               const SizedBox(height: 16),
               if (items.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),
                   child: Center(
                     child: Text(
                       "You're all caught up — no new notifications.",
-                      style: TextStyle(color: AppColors.textMuted),
+                      style: TextStyle(color: context.hos.textMuted),
                     ),
                   ),
                 )

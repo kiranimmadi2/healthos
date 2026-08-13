@@ -38,9 +38,9 @@ class _HealthSummaryCard extends ConsumerWidget {
                 ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Personal vital indicators',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.hos.textMuted, fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.xl),
           _MetricRow(

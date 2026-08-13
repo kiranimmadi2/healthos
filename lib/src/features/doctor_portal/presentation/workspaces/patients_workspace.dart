@@ -204,7 +204,7 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const Spacer(),
-              const Icon(Icons.swap_vert_rounded, color: AppColors.textMuted),
+              Icon(Icons.swap_vert_rounded, color: context.hos.textMuted),
               const SizedBox(width: 4),
               const Text('Last visit'),
             ],

@@ -48,8 +48,8 @@ class PatientListTile extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           patient.condition,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.hos.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -66,8 +66,8 @@ class PatientListTile extends StatelessWidget {
                       children: [
                         Text(
                           patient.condition,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.hos.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -84,9 +84,9 @@ class PatientListTile extends StatelessWidget {
                     background: AppColors.warningSoft,
                   ),
                 const SizedBox(width: 4),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
-                  color: AppColors.textMuted,
+                  color: context.hos.textMuted,
                 ),
               ],
             );

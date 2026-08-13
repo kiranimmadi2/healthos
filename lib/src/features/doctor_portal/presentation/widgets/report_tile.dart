@@ -59,7 +59,7 @@ class ReportTile extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   report.summary,
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: context.hos.textPrimary),
                 ),
                 const SizedBox(height: 12),
                 Wrap(

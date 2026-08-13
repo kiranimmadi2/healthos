@@ -196,10 +196,10 @@ class _DateSelector extends StatelessWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.primary : AppColors.surface,
+                  color: selected ? AppColors.primary : context.hos.surface,
                   borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
-                    color: selected ? AppColors.primary : AppColors.border,
+                    color: selected ? AppColors.primary : context.hos.border,
                   ),
                 ),
                 child: Column(
@@ -208,7 +208,7 @@ class _DateSelector extends StatelessWidget {
                     Text(
                       DateFormat('EEE').format(day).toUpperCase(),
                       style: TextStyle(
-                        color: selected ? Colors.white70 : AppColors.textMuted,
+                        color: selected ? Colors.white70 : context.hos.textMuted,
                         fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
@@ -217,7 +217,7 @@ class _DateSelector extends StatelessWidget {
                     Text(
                       '${day.day}',
                       style: TextStyle(
-                        color: selected ? Colors.white : AppColors.textPrimary,
+                        color: selected ? Colors.white : context.hos.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
@@ -362,10 +362,10 @@ class _LiveAppointmentTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'BOOKED PATIENT',
                     style: TextStyle(
-                      color: AppColors.textMuted,
+                      color: context.hos.textMuted,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.7,
@@ -433,8 +433,8 @@ class _LiveAppointmentTile extends StatelessWidget {
           width: 82,
           child: Text(
             DateFormat('h:mm a').format(appointment.dateTime),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.hos.textPrimary,
               fontWeight: FontWeight.w800,
             ),
           ),

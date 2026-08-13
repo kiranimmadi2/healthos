@@ -298,8 +298,8 @@ class _ConversationList extends StatelessWidget {
                                         Expanded(
                                           child: Text(
                                             name,
-                                            style: const TextStyle(
-                                              color: AppColors.textPrimary,
+                                            style: TextStyle(
+                                              color: context.hos.textPrimary,
                                               fontWeight: FontWeight.w700,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -310,8 +310,8 @@ class _ConversationList extends StatelessWidget {
                                             DateFormat(
                                               'HH:mm',
                                             ).format(thread.lastMessageAt!),
-                                            style: const TextStyle(
-                                              color: AppColors.textMuted,
+                                            style: TextStyle(
+                                              color: context.hos.textMuted,
                                               fontSize: 11,
                                             ),
                                           ),
@@ -329,9 +329,9 @@ class _ConversationList extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right_rounded,
-                                color: AppColors.textMuted,
+                                color: context.hos.textMuted,
                               ),
                             ],
                           ),
@@ -453,12 +453,12 @@ class _LiveMessageThreadState extends ConsumerState<_LiveMessageThread> {
                         style: Theme.of(context).textTheme.titleMedium,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Row(
+                      Row(
                         children: [
                           Icon(
                             Icons.lock_outline_rounded,
                             size: 14,
-                            color: AppColors.textMuted,
+                            color: context.hos.textMuted,
                           ),
                           SizedBox(width: 4),
                           Text('Secure patient conversation'),
@@ -524,7 +524,7 @@ class _LiveMessageThreadState extends ConsumerState<_LiveMessageThread> {
                       decoration: InputDecoration(
                         hintText: 'Write a message',
                         filled: true,
-                        fillColor: AppColors.surfaceMuted,
+                        fillColor: context.hos.surfaceMuted,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 13,
@@ -547,7 +547,7 @@ class _LiveMessageThreadState extends ConsumerState<_LiveMessageThread> {
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: AppColors.border,
+                      disabledBackgroundColor: context.hos.border,
                     ),
                     icon: widget.sending
                         ? const SizedBox(
@@ -588,7 +588,7 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.fromLTRB(15, 10, 15, 8),
         decoration: BoxDecoration(
-          color: isMine ? AppColors.primary : AppColors.surfaceMuted,
+          color: isMine ? AppColors.primary : context.hos.surfaceMuted,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -604,7 +604,7 @@ class _MessageBubble extends StatelessWidget {
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: isMine ? Colors.white : AppColors.textPrimary,
+                  color: isMine ? Colors.white : context.hos.textPrimary,
                   height: 1.35,
                 ),
               ),
@@ -614,7 +614,7 @@ class _MessageBubble extends StatelessWidget {
               Text(
                 DateFormat('HH:mm').format(message.sentAt!),
                 style: TextStyle(
-                  color: isMine ? Colors.white70 : AppColors.textMuted,
+                  color: isMine ? Colors.white70 : context.hos.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -648,7 +648,7 @@ class _MessageEmptyState extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 48, color: AppColors.textMuted),
+              Icon(icon, size: 48, color: context.hos.textMuted),
               const SizedBox(height: 12),
               Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 6),

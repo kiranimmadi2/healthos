@@ -89,7 +89,7 @@ class EmptyState extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(icon, size: 38, color: AppColors.textMuted),
+              Icon(icon, size: 38, color: context.hos.textMuted),
               const SizedBox(height: 12),
               Text(title, style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 4),
@@ -165,7 +165,7 @@ class DetailRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.textMuted, size: 21),
+          Icon(icon, color: context.hos.textMuted, size: 21),
           const SizedBox(width: 12),
           SizedBox(
             width: 100,
@@ -177,7 +177,7 @@ class DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.hos.textPrimary),
             ),
           ),
         ],
@@ -198,9 +198,9 @@ class PatientFact extends StatelessWidget {
       width: 190,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.hos.background,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.hos.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,8 +209,8 @@ class PatientFact extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.hos.textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),

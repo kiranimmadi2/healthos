@@ -145,9 +145,9 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                 const SizedBox(height: 4),
                 Text(
                   widget.data.subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: context.hos.textMuted,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
