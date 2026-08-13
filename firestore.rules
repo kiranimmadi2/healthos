@@ -22,15 +22,20 @@ service cloud.firestore {
 
     // ---- Users & their subcollections ---------------------------------------
     match /users/{uid} {
-      // User profiles are readable by any signed-in user
+      // User profiles are readable by any signed-in user.
+      // TODO(phase-10b): narrow to owner + care team + own-hospital admin once
+      // `public_profiles` exists and `careTeamDoctorIds` is populated.
       allow read: if isSignedIn();
-      allow create, update: if isUser(uid) || isSignedIn();
+      // Only the owner may create or modify their own profile. The previous
+      // `isUser(uid) || isSignedIn()` was exactly equivalent to `isSignedIn()`,
+      // i.e. any authenticated user could overwrite any other user's profile.
+      allow create, update: if isUser(uid);
       allow delete: if false;
 
-      // Subcollections under users/{uid} (records, medication_schedules, vaccinations, etc.)
+      // Subcollections under users/{uid} (records, medication_schedules, vitals, etc.)
       match /{subcollection=**} {
         allow read: if isSignedIn();
-        allow write: if isUser(uid) || isSignedIn();
+        allow write: if isUser(uid);
       }
     }
 
@@ -57,10 +62,8 @@ service cloud.firestore {
       }
     }
 
-    // ---- Fallback for any other collections ---------------------------------
-    match /{document=**} {
-      allow read, write: if isSignedIn();
-    }
+    // No catch-all. Any collection not matched above is denied by default, so a
+    // new collection cannot become world-writable-to-any-account by accident.
   }
 }
 

@@ -48,6 +48,10 @@ dependencies:
   timezone: ^0.11.1
   shared_preferences: ^2.5.5
   http: ^1.2.0
+  flutter_animate: ^4.5.2
+  cached_network_image: ^3.4.1
+  file_picker: ^11.0.3
+  firebase_app_check: ^0.4.6
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +63,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  fake_cloud_firestore: ^4.2.0
+  firebase_auth_mocks: ^0.15.2
+  mocktail: ^1.0.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
