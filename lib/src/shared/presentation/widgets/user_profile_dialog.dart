@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/theme.dart';
+import '../../domain/app_failure.dart';
 import '../../../app/theme/theme_provider.dart';
 import '../../../features/auth/application/auth_providers.dart';
 import '../../../features/auth/application/user_providers.dart';
@@ -294,7 +295,7 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update profile: $e'),
+            content: Text(describeFailure(e)),
             backgroundColor: Colors.red.shade700,
           ),
         );

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/domain/app_failure.dart';
 import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../chat/application/chat_providers.dart';
@@ -45,7 +46,7 @@ class _MessagesWorkspaceState extends ConsumerState<MessagesWorkspace> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Could not send message: $e')));
+        ).showSnackBar(SnackBar(content: Text(describeFailure(e))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -76,11 +77,11 @@ class _MessagesWorkspaceState extends ConsumerState<MessagesWorkspace> {
                   child: threadsAsync.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, st) => _MessageEmptyState(
-                      fill: true,
-                      icon: Icons.error_outline_rounded,
-                      title: 'Could not load messages',
-                      description: '$e',
+                    error: (e, st) => SizedBox.expand(
+                      child: HosErrorState(
+                        error: e,
+                        title: "Could not load messages",
+                      ),
                     ),
                     data: (threads) => _buildMobileContent(threads, currentUid),
                   ),
@@ -106,10 +107,12 @@ class _MessagesWorkspaceState extends ConsumerState<MessagesWorkspace> {
                   height: 500,
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (e, st) => _MessageEmptyState(
-                  icon: Icons.error_outline_rounded,
-                  title: 'Could not load messages',
-                  description: '$e',
+                error: (e, st) => SizedBox(
+                  height: 500,
+                  child: HosErrorState(
+                    error: e,
+                    title: "Could not load messages",
+                  ),
                 ),
                 data: (threads) => _buildWideContent(threads, currentUid),
               ),
@@ -122,12 +125,13 @@ class _MessagesWorkspaceState extends ConsumerState<MessagesWorkspace> {
 
   Widget _buildMobileContent(List<ChatThread> threads, String? currentUid) {
     if (threads.isEmpty) {
-      return const _MessageEmptyState(
-        fill: true,
-        icon: Icons.forum_outlined,
-        title: 'No conversations yet',
-        description:
-            'Patient messages will appear here when a conversation starts.',
+      return const SizedBox.expand(
+        child: HosEmptyState(
+          icon: Icons.forum_outlined,
+          title: "No conversations yet",
+          message:
+              "Patient messages will appear here when a conversation starts.",
+        ),
       );
     }
 
@@ -161,11 +165,14 @@ class _MessagesWorkspaceState extends ConsumerState<MessagesWorkspace> {
 
   Widget _buildWideContent(List<ChatThread> threads, String? currentUid) {
     if (threads.isEmpty) {
-      return const _MessageEmptyState(
-        icon: Icons.forum_outlined,
-        title: 'No conversations yet',
-        description:
-            'Patient messages will appear here as soon as they start a conversation.',
+      return const SizedBox(
+        height: 500,
+        child: HosEmptyState(
+          icon: Icons.forum_outlined,
+          title: "No conversations yet",
+          message:
+              "Patient messages will appear here as soon as they start a conversation.",
+        ),
       );
     }
 
@@ -623,42 +630,5 @@ class _MessageBubble extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _MessageEmptyState extends StatelessWidget {
-  const _MessageEmptyState({
-    required this.icon,
-    required this.title,
-    required this.description,
-    this.fill = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final bool fill;
-
-  @override
-  Widget build(BuildContext context) {
-    final card = Card(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 48, color: context.hos.textMuted),
-              const SizedBox(height: 12),
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 6),
-              Text(description, textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (fill) return SizedBox.expand(child: card);
-    return SizedBox(height: 500, child: card);
   }
 }

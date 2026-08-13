@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/domain/app_failure.dart';
 import 'package:intl/intl.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/user_providers.dart';
@@ -96,7 +97,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Booking failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(describeFailure(e))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

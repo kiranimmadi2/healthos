@@ -185,10 +185,13 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
             ),
             data: (_) {
               if (filteredPatients.isEmpty) {
-                return const EmptyState(
-                  icon: Icons.person_search_rounded,
-                  title: 'No patients found',
-                  description: 'Try another search or filter.',
+                return const Card(
+                    child: HosEmptyState(
+                      compact: true,
+                      icon: Icons.person_search_rounded,
+                      title: 'No patients found',
+                      message: 'Try another search or filter.',
+                    ),
                 );
               }
               return Card(

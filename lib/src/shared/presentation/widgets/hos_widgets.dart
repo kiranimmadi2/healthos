@@ -141,66 +141,6 @@ class HosStatCard extends StatelessWidget {
 }
 
 /// Vitals Card displaying vital parameters
-class HosVitalsCard extends StatelessWidget {
-  const HosVitalsCard({
-    super.key,
-    required this.heartRate,
-    required this.bloodPressure,
-    required this.spo2,
-    this.temperature,
-  });
-
-  final String heartRate;
-  final String bloodPressure;
-  final String spo2;
-  final String? temperature;
-
-  @override
-  Widget build(BuildContext context) {
-    final vitals = [
-      ('Heart Rate', heartRate, HosIcons.activity, AppColors.error),
-      ('Blood Pressure', bloodPressure, HosIcons.stethoscope, AppColors.primary),
-      ('SpO2', spo2, HosIcons.medical, AppColors.secondary),
-      if (temperature != null)
-        ('Temperature', temperature!, HosIcons.alertCircle, AppColors.warning),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: context.hos.brandSoft,
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: context.hos.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: vitals.map((v) {
-          return Column(
-            children: [
-              Icon(v.$3, color: v.$4, size: 20),
-              const SizedBox(height: 4),
-              Text(
-                v.$2,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                v.$1,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: context.hos.textMuted,
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
 /// Prescription Summary Card Component
 class HosPrescriptionCard extends StatelessWidget {
   const HosPrescriptionCard({

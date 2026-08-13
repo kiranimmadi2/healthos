@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/theme.dart';
-import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
+import '../../../../shared//presentation/shell/health_page.dart';
 import '../../application/doctor_portal_providers.dart';
 import '../../domain/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
@@ -32,9 +33,10 @@ class _ReportsWorkspaceState extends ConsumerState<ReportsWorkspace> {
             child: CircularProgressIndicator(),
           ),
         ),
-        error: (e, st) => Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Text('Error loading reports: $e'),
+        error: (e, st) => HosErrorState(
+          error: e,
+          compact: true,
+          title: 'Could not load reports',
         ),
         data: (allReports) {
           final reports = allReports.where((report) {
@@ -147,10 +149,13 @@ class _ReportsWorkspaceState extends ConsumerState<ReportsWorkspace> {
         ),
         const SizedBox(height: AppSpacing.md),
         if (reports.isEmpty)
-          const EmptyState(
-            icon: Icons.task_alt_rounded,
-            title: 'All caught up',
-            description: 'There are no reports in this view.',
+          const Card(
+              child: HosEmptyState(
+                compact: true,
+                icon: Icons.task_alt_rounded,
+                title: 'All caught up',
+                message: 'There are no reports in this view.',
+              ),
           )
         else
           Card(

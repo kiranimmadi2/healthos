@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/domain/app_failure.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/status_pill.dart';
 import '../../../appointments/appointments.dart';
 import '../../../chat/application/chat_providers.dart';
@@ -39,7 +41,7 @@ class _ScheduleWorkspaceState extends ConsumerState<ScheduleWorkspace> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Could not update booking: $e')));
+        ).showSnackBar(SnackBar(content: Text(describeFailure(e))));
       }
     }
   }
@@ -108,9 +110,10 @@ class _ScheduleWorkspaceState extends ConsumerState<ScheduleWorkspace> {
               ),
             ),
             error: (e, st) => Card(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text('Could not load appointments: $e'),
+              child: HosErrorState(
+                error: e,
+                compact: true,
+                title: "Could not load appointments",
               ),
             ),
             data: (appointments) {
@@ -123,10 +126,13 @@ class _ScheduleWorkspaceState extends ConsumerState<ScheduleWorkspace> {
               }).toList();
 
               if (visible.isEmpty) {
-                return const EmptyState(
-                  icon: Icons.event_available_rounded,
-                  title: 'No appointments',
-                  description: 'This day is open for consultations.',
+                return const Card(
+                    child: HosEmptyState(
+                      compact: true,
+                      icon: Icons.event_available_rounded,
+                      title: 'No appointments',
+                      message: 'This day is open for consultations.',
+                    ),
                 );
               }
               return Card(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/domain/app_failure.dart';
 
 import '../domain/medical_record.dart';
 
@@ -56,7 +57,7 @@ class _AddRecordFormState extends State<AddRecordForm> {
         setState(() => _saving = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Could not save record: $e')));
+        ).showSnackBar(SnackBar(content: Text(describeFailure(e))));
       }
     }
   }

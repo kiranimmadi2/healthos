@@ -18,7 +18,11 @@ class _AppointmentCard extends ConsumerWidget {
       error: (e, st) => GlassContainer(
         borderRadius: 28,
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Text('Could not load appointments: $e'),
+        child: HosErrorState(
+          error: e,
+          compact: true,
+          title: 'Could not load appointments',
+        ),
       ),
       data: (appointment) {
         if (appointment == null) {

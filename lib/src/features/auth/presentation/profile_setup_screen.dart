@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/theme.dart';
+import '../../../shared/domain/app_failure.dart';
 import 'package:intl/intl.dart';
 import '../application/auth_providers.dart';
 import '../application/user_providers.dart';
@@ -169,7 +170,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           .createUserData(user.uid, profileData);
       ref.invalidate(userProfileProvider);
     } catch (e) {
-      if (mounted) _showError('Could not save profile: $e');
+      if (mounted) _showError(describeFailure(e));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
