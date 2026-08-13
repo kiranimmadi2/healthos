@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/theme.dart';
 import '../../../shared/presentation/shell/health_page.dart';
+import '../../../shared/presentation/widgets/hos_states.dart';
 import '../application/food_nutrition_providers.dart';
 import '../domain/meal_analysis.dart';
 
@@ -55,31 +56,44 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
   @override
   Widget build(BuildContext context) {
     final analysisState = ref.watch(mealAnalysisProvider);
+    final history = ref.watch(mealHistoryProvider);
 
     return HealthPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildOnDeviceHeader(context),
+          _buildHeader(context),
           const SizedBox(height: AppSpacing.lg),
           _buildInputCard(context, analysisState.isLoading),
           const SizedBox(height: AppSpacing.xl),
           if (analysisState.isLoading)
             _buildLoadingIndicator()
+          else if (analysisState.error != null)
+            HosErrorState(
+              error: analysisState.error,
+              title: 'Could not analyse this meal',
+              onRetry: () =>
+                  ref.read(mealAnalysisProvider.notifier).clearCurrentResult(),
+            )
           else if (analysisState.currentResult != null)
             _buildAnalysisResults(context, analysisState.currentResult!)
           else
             _buildPresetsAndIntro(context),
-          if (analysisState.history.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xxl),
-            _buildHistorySection(context, analysisState.history),
-          ],
+          ...history.maybeWhen(
+            data: (items) => items.isEmpty
+                ? const <Widget>[]
+                : <Widget>[
+                    const SizedBox(height: AppSpacing.xxl),
+                    _buildHistorySection(context, items),
+                  ],
+            orElse: () => const <Widget>[],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOnDeviceHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       decoration: BoxDecoration(
@@ -115,7 +129,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                 Row(
                   children: [
                     const Text(
-                      'On-Device Gemma 2B',
+                      'Meal Analyzer',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -124,21 +138,30 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.25),
+                        color: AppColors.primary.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.success.withOpacity(0.5)),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.5),
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.shield_outlined, color: AppColors.success, size: 12),
+                          Icon(
+                            Icons.auto_awesome,
+                            color: Color(0xFF93C5FD),
+                            size: 12,
+                          ),
                           SizedBox(width: 4),
                           Text(
-                            '100% Offline & Private',
+                            'Powered by Gemini',
                             style: TextStyle(
-                              color: AppColors.success,
+                              color: Color(0xFF93C5FD),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -150,7 +173,9 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                 ),
                 const SizedBox(height: 2),
                 const Text(
-                  'Runs locally on device memory to evaluate food safety against your medical history.',
+                  'Your meal description and health profile are sent to Google '
+                  'Gemini for analysis. Estimates only — not a substitute for a '
+                  'dietitian.',
                   style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                 ),
               ],
@@ -196,7 +221,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Describe the dish, portion size, or ingredients for Instant Gemma AI safety triage.',
+            'Describe the dish, portion size, or ingredients for an AI nutrition check.',
             style: TextStyle(
               color: isDark ? const Color(0xFF94A3B8) : AppColors.textMuted,
               fontSize: 13,
@@ -288,7 +313,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
               ),
               icon: const Icon(Icons.psychology_rounded, size: 20),
               label: const Text(
-                'Analyze Meal with On-Device Gemma',
+                'Analyze Meal',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
@@ -319,7 +344,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
           ),
           SizedBox(height: AppSpacing.lg),
           Text(
-            'On-Device Gemma 2B Processing...',
+            'Analyzing your meal...',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
           ),
           SizedBox(height: AppSpacing.xs),
@@ -442,7 +467,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                result.gemmaSummary,
+                result.summary,
                 style: TextStyle(
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   fontSize: 14,
@@ -605,7 +630,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Gemma Portion Recommendation',
+                      'Portion Recommendation',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
+import '../../../../shared/domain/app_failure.dart';
 import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../ai_triage/application/ai_triage_providers.dart';
@@ -82,12 +83,21 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                       ),
                       const SizedBox(height: 20),
 
-                      // Recent Vitals Summary Card
-                      const HosVitalsCard(
-                        heartRate: '72 bpm',
-                        bloodPressure: '120/80',
-                        spo2: '98%',
-                        temperature: '98.6 °F',
+                      // Vitals. Nothing in the app records these yet, so there
+                      // is deliberately no card here: this previously rendered
+                      // a const 72bpm / 120/80 / 98% / 98.6F card that was
+                      // identical for every patient and looked measured.
+                      Text(
+                        'Recent Vitals',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      const HosEmptyState(
+                        compact: true,
+                        icon: Icons.monitor_heart_outlined,
+                        title: 'No vitals recorded',
+                        message:
+                            'Vitals recorded during a visit will appear here.',
                       ),
                       const SizedBox(height: 24),
 
@@ -169,7 +179,10 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                   } catch (e) {
                                     setLocalState(() => generatingSummary = false);
                                     if (context.mounted) {
-                                      showActionSnackBar(context, 'AI error: $e');
+                                      showActionSnackBar(
+                                        context,
+                                        describeFailure(e),
+                                      );
                                     }
                                   }
                                 },
@@ -205,12 +218,16 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                           }
                           final docs = snapshot.data?.docs ?? [];
                           if (docs.isEmpty) {
-                            return const HosPrescriptionCard(
-                              medicationName: 'Amoxicillin 500mg',
-                              dosage: '1 capsule',
-                              frequency: 'Every 8 hours',
-                              duration: '7 Days',
-                              notes: 'Take after meals with water',
+                            // Was a fabricated "Amoxicillin 500mg" card shown
+                            // whenever a patient had no medications recorded --
+                            // a prescription a clinician could have acted on
+                            // that did not exist.
+                            return const HosEmptyState(
+                              compact: true,
+                              icon: Icons.medication_outlined,
+                              title: 'No active medications',
+                              message: 'Prescriptions for this patient will '
+                                  'appear here once recorded.',
                             );
                           }
                           return Column(
@@ -324,23 +341,47 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 12),
-                      HosTimeline(
-                        items: [
-                          HosTimelineItem(
-                            title: 'Regular Consultation',
-                            subtitle: 'Vitals checked, prescriptions renewed',
-                            date: patient.lastVisit,
-                            icon: HosIcons.stethoscope,
-                            color: AppColors.primary,
-                          ),
-                          HosTimelineItem(
-                            title: 'Complete Blood Count (CBC)',
-                            subtitle: 'Lab results reviewed & filed in vault',
-                            date: '2 weeks ago',
-                            icon: HosIcons.fileText,
-                            color: AppColors.secondary,
-                          ),
-                        ],
+                      // Built from this patient's actual records. Previously
+                      // two invented entries ("Complete Blood Count (CBC)",
+                      // "2 weeks ago") shown for every patient.
+                      recordsAsync.when(
+                        loading: () => const HosSkeletonList(
+                          count: 2,
+                          padding: EdgeInsets.zero,
+                        ),
+                        error: (err, _) => HosErrorState(
+                          error: err,
+                          compact: true,
+                          title: 'Could not load timeline',
+                        ),
+                        data: (records) {
+                          if (records.isEmpty) {
+                            return const HosEmptyState(
+                              compact: true,
+                              icon: Icons.timeline_rounded,
+                              title: 'No clinical history yet',
+                              message:
+                                  'Visits and records will build this timeline.',
+                            );
+                          }
+                          final recent = records.take(5).toList();
+                          return HosTimeline(
+                            items: [
+                              for (final record in recent)
+                                HosTimelineItem(
+                                  title: record.title,
+                                  subtitle: record.notes.isEmpty
+                                      ? record.category
+                                      : record.notes,
+                                  date: DateFormat(
+                                    'MMM dd, yyyy',
+                                  ).format(record.date),
+                                  icon: _timelineIcon(record.category),
+                                  color: _timelineColor(context, record.category),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
 
@@ -377,6 +418,27 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
       },
     ),
   );
+}
+
+IconData _timelineIcon(String category) {
+  return switch (category) {
+    RecordCategory.labReport => HosIcons.fileText,
+    RecordCategory.prescription => HosIcons.pill,
+    RecordCategory.imaging => Icons.document_scanner_rounded,
+    RecordCategory.immunization => HosIcons.shield,
+    _ => HosIcons.stethoscope,
+  };
+}
+
+Color _timelineColor(BuildContext context, String category) {
+  final hos = context.hos;
+  return switch (category) {
+    RecordCategory.labReport => hos.categoryLab,
+    RecordCategory.prescription => hos.categoryPrescription,
+    RecordCategory.imaging => hos.categoryImaging,
+    RecordCategory.immunization => hos.categoryImmunization,
+    _ => hos.categoryOther,
+  };
 }
 
 Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {

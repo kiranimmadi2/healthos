@@ -76,7 +76,7 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
     ];
     final subtitles = [
       'Your personal care overview',
-      if (!kIsWeb) 'On-device Gemma AI food & safety analysis',
+      if (!kIsWeb) 'AI food & nutrition analysis',
       'Verified medical specialists',
       'Reports, prescriptions & test history',
       'AI guidance for your health questions',

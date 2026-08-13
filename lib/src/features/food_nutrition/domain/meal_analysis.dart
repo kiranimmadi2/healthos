@@ -1,10 +1,9 @@
-enum GemmaModelStatus {
-  initializing,
-  readyOnDevice,
-  runningInference,
-  fallbackCloud,
-  error,
-}
+/// State of a meal analysis request.
+///
+/// Replaces `GemmaModelStatus`, whose `readyOnDevice` default was never
+/// accurate (analysis has always been a cloud Gemini call) and whose
+/// `fallbackCloud` value was never assigned.
+enum NutritionAiStatus { idle, analyzing, error }
 
 enum HealthSuitability {
   safe,
@@ -68,8 +67,10 @@ class MealAnalysisResult {
   final List<String> healthWarnings;
   final List<String> benefits;
   final String portionAdvice;
-  final String gemmaSummary;
-  final bool isOnDeviceInference;
+
+  /// Short model-written summary. Renamed from `gemmaSummary`; the analysis
+  /// is performed by cloud Gemini, not by an on-device Gemma model.
+  final String summary;
 
   const MealAnalysisResult({
     required this.foodName,
@@ -81,8 +82,7 @@ class MealAnalysisResult {
     required this.healthWarnings,
     required this.benefits,
     required this.portionAdvice,
-    required this.gemmaSummary,
-    required this.isOnDeviceInference,
+    required this.summary,
   });
 
   factory MealAnalysisResult.fromJson(Map<String, dynamic> json) {
@@ -105,9 +105,9 @@ class MealAnalysisResult {
       suitabilityScore: (json['suitabilityScore'] as num?)?.toInt() ?? 85,
       healthWarnings: (json['healthWarnings'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       benefits: (json['benefits'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      portionAdvice: json['portionAdvice'] as String? ?? 'Standard portion suitable.',
-      gemmaSummary: json['gemmaSummary'] as String? ?? 'Meal processed by Gemma Model.',
-      isOnDeviceInference: json['isOnDeviceInference'] as bool? ?? true,
+      portionAdvice:
+          json['portionAdvice'] as String? ?? 'Standard portion suitable.',
+      summary: json['summary'] as String? ?? json['gemmaSummary'] as String? ?? '',
     );
   }
 
@@ -121,7 +121,6 @@ class MealAnalysisResult {
         'healthWarnings': healthWarnings,
         'benefits': benefits,
         'portionAdvice': portionAdvice,
-        'gemmaSummary': gemmaSummary,
-        'isOnDeviceInference': isOnDeviceInference,
+        'summary': summary,
       };
 }

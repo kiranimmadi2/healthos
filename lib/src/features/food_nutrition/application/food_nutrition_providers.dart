@@ -1,86 +1,121 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../auth/application/auth_providers.dart';
 import '../../auth/application/user_providers.dart';
-import '../data/on_device_gemma_service.dart';
+import '../data/nutrition_ai_service.dart';
 import '../domain/meal_analysis.dart';
 
-final onDeviceGemmaServiceProvider = Provider<OnDeviceGemmaService>((ref) {
-  return OnDeviceGemmaService();
+final nutritionAiServiceProvider = Provider<NutritionAiService>((ref) {
+  return NutritionAiService();
 });
 
-final gemmaModelStatusProvider = Provider<GemmaModelStatus>((ref) {
-  final service = ref.watch(onDeviceGemmaServiceProvider);
-  return service.currentStatus;
+/// Past analyses for the signed-in patient.
+///
+/// Previously history lived only in memory and was lost on every restart.
+final mealHistoryProvider =
+    StreamProvider<List<MealAnalysisResult>>((ref) {
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return Stream.value(const []);
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('meal_analyses')
+      .orderBy('timestamp', descending: true)
+      .limit(50)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map((doc) => MealAnalysisResult.fromJson(doc.data()))
+            .toList(),
+      );
 });
 
 class MealAnalysisState {
-  final bool isLoading;
-  final MealAnalysisResult? currentResult;
-  final List<MealAnalysisResult> history;
-  final String? errorMessage;
-
   const MealAnalysisState({
-    this.isLoading = false,
+    this.status = NutritionAiStatus.idle,
     this.currentResult,
-    this.history = const [],
-    this.errorMessage,
+    this.error,
   });
 
+  final NutritionAiStatus status;
+  final MealAnalysisResult? currentResult;
+
+  /// The raw failure, rendered through `describeFailure` at the call site.
+  final Object? error;
+
+  bool get isLoading => status == NutritionAiStatus.analyzing;
+
   MealAnalysisState copyWith({
-    bool? isLoading,
+    NutritionAiStatus? status,
     MealAnalysisResult? currentResult,
-    List<MealAnalysisResult>? history,
-    String? errorMessage,
+    Object? error,
+    bool clearResult = false,
+    bool clearError = true,
   }) {
     return MealAnalysisState(
-      isLoading: isLoading ?? this.isLoading,
-      currentResult: currentResult ?? this.currentResult,
-      history: history ?? this.history,
-      errorMessage: errorMessage,
+      status: status ?? this.status,
+      currentResult: clearResult ? null : (currentResult ?? this.currentResult),
+      error: clearError ? error : (error ?? this.error),
     );
   }
 }
 
 class MealAnalysisNotifier extends Notifier<MealAnalysisState> {
   @override
-  MealAnalysisState build() {
-    return const MealAnalysisState();
-  }
+  MealAnalysisState build() => const MealAnalysisState();
 
   Future<void> analyzeMeal({
     required String foodDescription,
     required String mealType,
   }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(status: NutritionAiStatus.analyzing, error: null);
 
     try {
-      final profile = await ref.read(userProfileProvider.future);
-      final service = ref.read(onDeviceGemmaServiceProvider);
+      final profile = ref.read(currentUserProfileProvider).value;
+      final result = await ref
+          .read(nutritionAiServiceProvider)
+          .analyzeMeal(
+            foodDescription: foodDescription,
+            mealType: mealType,
+            patientProfile: profile,
+          );
 
-      final result = await service.processFoodItem(
-        foodDescription: foodDescription,
-        mealType: mealType,
-        patientProfile: profile,
-      );
-
-      final updatedHistory = [result, ...state.history];
       state = state.copyWith(
-        isLoading: false,
+        status: NutritionAiStatus.idle,
         currentResult: result,
-        history: updatedHistory,
       );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to process meal with Gemma model: $e',
-      );
+      await _persist(result);
+    } catch (error) {
+      // Surface the failure. Never substitute an estimate.
+      state = state.copyWith(status: NutritionAiStatus.error, error: error);
+    }
+  }
+
+  Future<void> _persist(MealAnalysisResult result) async {
+    final user = ref.read(authStateProvider).value;
+    if (user == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('meal_analyses')
+          .add(result.toJson());
+    } catch (error) {
+      // History is a convenience; a write failure must not lose the result
+      // already on screen.
+      debugPrint('Could not save meal analysis: $error');
     }
   }
 
   void clearCurrentResult() {
-    state = state.copyWith(currentResult: null);
+    state = state.copyWith(clearResult: true, error: null);
   }
 }
 
-final mealAnalysisProvider = NotifierProvider<MealAnalysisNotifier, MealAnalysisState>(() {
-  return MealAnalysisNotifier();
-});
+final mealAnalysisProvider =
+    NotifierProvider<MealAnalysisNotifier, MealAnalysisState>(
+  MealAnalysisNotifier.new,
+);

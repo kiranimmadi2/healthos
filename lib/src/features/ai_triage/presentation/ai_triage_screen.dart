@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/theme/theme.dart';
+import '../../../shared/domain/app_failure.dart';
+import '../../../shared/presentation/widgets/hos_states.dart';
 import '../../auth/application/user_providers.dart';
 import '../application/ai_triage_providers.dart';
 
@@ -63,7 +66,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
     _scrollToBottom();
 
     try {
-      final profile = await ref.read(userProfileProvider.future);
+      final profile = ref.read(currentUserProfileProvider).value;
       final triage = await ref
           .read(aiServiceProvider)
           .getTriage(text, patientProfile: profile);
@@ -79,11 +82,14 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
         _scrollToBottom();
       }
     } catch (e) {
+      // Record the failure as a failure. Never substitute invented guidance.
       if (mounted) {
         setState(() {
           _messages.add(_ChatMessage(
-            text: 'I am here to help. Could you please rephrase your health question?',
+            text: describeFailure(e),
             isUser: false,
+            isError: true,
+            retryPrompt: text,
             timestamp: DateTime.now(),
           ));
         });
@@ -283,6 +289,8 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
   }
 
   Widget _buildChatBubble(_ChatMessage message, bool isDark) {
+    if (message.isError) return _buildErrorBubble(message);
+
     final isUser = message.isUser;
     final rawText = message.text;
 
@@ -502,31 +510,23 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                 color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Color(0xFF3B82F6),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Care Assistant is analyzing your message...',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+            child: const HosTypingIndicator(label: 'Analyzing your message'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildErrorBubble(_ChatMessage message) {
+    final prompt = message.retryPrompt;
+    return _ErrorBubble(
+      message: message.text,
+      onRetry: prompt == null
+          ? null
+          : () {
+              setState(() => _messages.remove(message));
+              _sendMessage(prompt);
+            },
     );
   }
 
@@ -650,11 +650,86 @@ class _ChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+
+  /// True when this entry records a failure to reach the model rather than a
+  /// model response. Kept distinct so a failure can never be mistaken for
+  /// medical guidance — the previous version appended a friendly-sounding
+  /// sentence that looked exactly like a real answer.
+  final bool isError;
+
+  /// The user text that produced this failure, so it can be retried.
+  final String? retryPrompt;
+
   _ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.isError = false,
+    this.retryPrompt,
   });
+}
+
+/// Distinct treatment for "we could not reach the model".
+///
+/// Deliberately does not look like an assistant reply: it is visibly an error,
+/// states that the question was not analysed, and offers a retry.
+class _ErrorBubble extends StatelessWidget {
+  const _ErrorBubble({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final hos = context.hos;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16, right: 40),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: hos.dangerBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: hos.dangerFg.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.cloud_off_rounded, size: 18, color: hos.dangerFg),
+                const SizedBox(width: 8),
+                Text(
+                  'Care Assistant unavailable',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: hos.dangerFg,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$message\n\nYour question was not analysed — nothing here is '
+              'medical advice. Please try again, or book a doctor.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: hos.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('Retry'),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _TriageCategoryInfo {
