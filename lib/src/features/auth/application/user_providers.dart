@@ -17,23 +17,36 @@ final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
   return ref.watch(userRepositoryProvider).watchUserData(user.uid);
 });
 
-/// Typed view of [userProfileProvider].
+/// Typed view of [userProfileProvider]. Prefer this over the raw map.
 ///
-/// Prefer this over the raw map. The map provider is kept while screens are
-/// converted; both are backed by the same stream, so there is no extra read.
+/// Both are backed by the same stream, so reading this costs nothing extra.
+/// The uid comes from the document itself, falling back to the signed-in user;
+/// depending on the auth stream here would blank out a cached profile whenever
+/// auth had not yet resolved, which defeats the offline cache in
+/// [UserRepository] and makes the provider awkward to test.
 final currentUserProfileProvider = Provider<AsyncValue<UserProfile?>>((ref) {
-  final user = ref.watch(authStateProvider).value;
+  final fallbackUid = ref.watch(authStateProvider).value?.uid ?? '';
   return ref.watch(userProfileProvider).whenData((data) {
-    if (data == null || user == null) return null;
-    return UserProfile.fromMap(user.uid, data);
+    if (data == null) return null;
+    return UserProfile.fromMap(fallbackUid, data);
   });
 });
 
 final userRoleProvider = Provider<AsyncValue<String?>>((ref) {
-  final profileAsync = ref.watch(userProfileProvider);
-  return profileAsync.whenData((data) => data?['role'] as String?);
+  return ref.watch(currentUserProfileProvider).whenData(
+        (profile) => profile?.role.isEmpty ?? true ? null : profile!.role,
+      );
 });
 
-final allPatientsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
-  return ref.watch(userRepositoryProvider).watchPatients();
+/// Every user with the patient role, as typed profiles.
+///
+/// TODO(phase-10b): this streams every patient in the database to any doctor.
+/// It should be scoped to the doctor's own patients once appointments carry a
+/// care-team link.
+final allPatientsProvider = StreamProvider<List<UserProfile>>((ref) {
+  return ref.watch(userRepositoryProvider).watchPatients().map(
+        (patients) => patients
+            .map((data) => UserProfile.fromMap(data['uid'] as String? ?? '', data))
+            .toList(),
+      );
 });

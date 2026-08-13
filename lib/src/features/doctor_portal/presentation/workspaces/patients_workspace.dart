@@ -9,6 +9,7 @@ import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../appointments/application/appointment_providers.dart';
 import '../../../appointments/domain/appointment.dart';
 import '../../../auth/application/user_providers.dart';
+import '../../../auth/domain/user_profile.dart';
 import '../../application/doctor_portal_providers.dart';
 import '../../demo/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
@@ -20,6 +21,20 @@ class PatientsWorkspace extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<PatientsWorkspace> createState() => _PatientsWorkspaceState();
+}
+
+/// Stable avatar tint for a patient, so the same person keeps the same colour
+/// between rebuilds and screens.
+Color _avatarColor(String name) {
+  const palette = [
+    AppColors.primary,
+    AppColors.secondary,
+    AppColors.warning,
+    AppColors.error,
+    Color(0xFF7C3AED),
+    Color(0xFF0891B2),
+  ];
+  return palette[name.hashCode.abs() % palette.length];
 }
 
 class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
@@ -50,65 +65,26 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
 
     final List<DoctorPatient> allPatients = patientsAsync.maybeWhen(
       data: (list) {
-        return list.map((patientMap) {
-          final uid = patientMap['uid'] as String? ?? '';
-          final name = patientMap['name'] as String? ?? 'Patient';
-          final gender = patientMap['gender'] as String? ?? 'Not specified';
-          final dobStr = patientMap['dob'] as String?;
-
-          int age = 0;
-          if (dobStr != null) {
-            final dob = DateTime.tryParse(dobStr);
-            if (dob != null) {
-              final now = DateTime.now();
-              age = now.year - dob.year;
-              if (now.month < dob.month ||
-                  (now.month == dob.month && now.day < dob.day)) {
-                age--;
-              }
-            }
-          }
-
-          final initials = name
-              .split(' ')
-              .map((e) => e.isNotEmpty ? e[0] : '')
-              .take(2)
-              .join()
-              .toUpperCase();
-
-          final patientAppointments =
-              appointments.where((a) => a.patientId == uid).toList();
-          String lastVisit = 'No visits yet';
-          bool needsFollowUp = false;
-          if (patientAppointments.isNotEmpty) {
-            patientAppointments.sort((a, b) => b.dateTime.compareTo(a.dateTime));
-            final latestAppt = patientAppointments.first;
-            lastVisit = DateFormat('dd MMM yyyy').format(latestAppt.dateTime);
-            needsFollowUp = latestAppt.status == AppointmentStatus.pending;
-          }
-
-          final colors = [
-            AppColors.primary,
-            AppColors.secondary,
-            AppColors.warning,
-            AppColors.error,
-            const Color(0xFF7C3AED),
-            const Color(0xFF0891B2),
-          ];
-          final colorIndex = name.hashCode.abs() % colors.length;
-          final color = colors[colorIndex];
+        return list.map((patient) {
+          final patientAppointments = appointments
+              .where((a) => a.patientId == patient.uid)
+              .toList()
+            ..sort((a, b) => b.dateTime.compareTo(a.dateTime));
+          final latest = patientAppointments.firstOrNull;
 
           return DoctorPatient(
-            id: uid,
-            name: name,
-            initials: initials.isEmpty ? 'PT' : initials,
-            age: age,
-            gender: gender,
-            condition: patientMap['condition'] as String? ?? 'Under observation',
-            carePlan: patientMap['carePlan'] as String? ?? 'General wellness',
-            lastVisit: lastVisit,
-            color: color,
-            needsFollowUp: needsFollowUp,
+            id: patient.uid,
+            name: patient.name.isEmpty ? 'Patient' : patient.name,
+            initials: UserProfile.initialsOf(patient.name, fallback: 'PT'),
+            age: patient.age ?? 0,
+            gender: patient.gender ?? 'Not specified',
+            condition: 'Under observation',
+            carePlan: 'General wellness',
+            lastVisit: latest == null
+                ? 'No visits yet'
+                : DateFormat('dd MMM yyyy').format(latest.dateTime),
+            color: _avatarColor(patient.name),
+            needsFollowUp: latest?.status == AppointmentStatus.pending,
           );
         }).toList();
       },

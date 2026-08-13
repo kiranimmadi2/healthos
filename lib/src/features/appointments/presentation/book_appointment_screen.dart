@@ -66,9 +66,10 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
     try {
       final user = ref.read(authStateProvider).value;
       if (user == null) throw Exception('Not signed in');
-      final profile = await ref.read(userProfileProvider.future);
-      final patientName =
-          profile?['name'] as String? ?? user.displayName ?? 'Patient';
+      final profile = ref.read(currentUserProfileProvider).value;
+      final patientName = profile?.name.trim().isNotEmpty == true
+          ? profile!.name.trim()
+          : (user.displayName ?? 'Patient');
 
       final appointment = Appointment(
         id: '',

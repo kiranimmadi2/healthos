@@ -8,6 +8,7 @@ import '../../../shared/presentation/shell/health_shell.dart';
 import '../../../shared/presentation/widgets/user_profile_dialog.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/user_providers.dart';
+import '../../auth/domain/user_profile.dart';
 import '../../chat/application/chat_providers.dart';
 import '../application/doctor_portal_providers.dart';
 import 'widgets/doctor_workspace_widgets.dart';
@@ -77,9 +78,8 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
 
     final stats = ref.watch(doctorStatsProvider);
     final patientCount = ref.watch(allPatientsProvider).value?.length ?? 0;
-    final profile = ref.watch(userProfileProvider).value;
-    final doctorName = (profile?['name'] as String?)?.trim();
-    final initials = _initialsFor(doctorName);
+    final profile = ref.watch(currentUserProfileProvider).value;
+    final initials = UserProfile.initialsOf(profile?.name, fallback: 'DR');
     final alertCount = stats.pendingAppointments + stats.reportsToReview;
 
     final subtitles = [
@@ -267,17 +267,4 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
 
   /// Builds up-to-two-letter initials from a doctor's display name, stripping a
   /// leading "Dr." title. Falls back to "DR" when no name is available.
-  static String _initialsFor(String? name) {
-    if (name == null || name.trim().isEmpty) return 'DR';
-    final cleaned = name
-        .replaceAll(RegExp(r'^\s*dr\.?\s+', caseSensitive: false), '')
-        .trim();
-    final parts = cleaned.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    if (parts.isEmpty) return 'DR';
-    if (parts.length == 1) {
-      final word = parts.first;
-      return (word.length >= 2 ? word.substring(0, 2) : word).toUpperCase();
-    }
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
-  }
 }

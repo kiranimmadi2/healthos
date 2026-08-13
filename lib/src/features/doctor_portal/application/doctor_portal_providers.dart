@@ -140,12 +140,14 @@ final allDiagnosticReportsProvider = Provider<AsyncValue<List<DiagnosticReport>>
 
   final records = recordsAsync.value ?? [];
   final patients = patientsAsync.value ?? [];
-  final patientMap = {for (final p in patients) p['uid'] as String: p['name'] as String? ?? 'Patient'};
+  final patientNames = {
+    for (final p in patients) p.uid: p.name.isEmpty ? 'Patient' : p.name,
+  };
 
   final reports = records
       .where((r) => r.category == RecordCategory.labReport || r.category == RecordCategory.imaging)
       .map((record) {
-        final patientName = patientMap[record.patientId] ?? 'Unknown Patient';
+        final patientName = patientNames[record.patientId] ?? 'Unknown Patient';
 
         IconData icon = Icons.description_outlined;
         Color iconColor = AppColors.primary;

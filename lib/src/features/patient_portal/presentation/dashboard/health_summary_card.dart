@@ -3,27 +3,22 @@ part of 'dashboard_content.dart';
 class _HealthSummaryCard extends ConsumerWidget {
   const _HealthSummaryCard();
 
+  /// Patient-facing wording for a BMI band. Deliberately gentler than the
+  /// clinical wording used in the AI prompt ("Normal weight").
+  static const _bmiLabels = {
+    BmiCategory.underweight: 'Underweight',
+    BmiCategory.normal: 'Healthy',
+    BmiCategory.overweight: 'Overweight',
+    BmiCategory.obese: 'Obese',
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(userProfileProvider).value;
-    final height = (profile?['height'] as num?)?.toDouble();
-    final weight = (profile?['weight'] as num?)?.toDouble();
-    double? bmi;
-    if (height != null && weight != null && height > 0) {
-      final heightM = height / 100;
-      bmi = weight / (heightM * heightM);
-    }
-
-    String bmiStatus = '—';
-    if (bmi != null) {
-      bmiStatus = bmi < 18.5
-          ? 'Underweight'
-          : bmi < 25
-          ? 'Healthy'
-          : bmi < 30
-          ? 'Overweight'
-          : 'Obese';
-    }
+    final profile = ref.watch(currentUserProfileProvider).value;
+    final height = profile?.heightCm;
+    final weight = profile?.weightKg;
+    final bmi = profile?.bmi;
+    final bmiStatus = _bmiLabels[profile?.bmiCategory] ?? '—';
 
     return GlassContainer(
       borderRadius: 28,

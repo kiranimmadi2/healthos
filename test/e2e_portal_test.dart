@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:healthos/src/app/theme/theme.dart';
+import 'package:healthos/src/features/auth/domain/user_profile.dart';
 import 'package:healthos/src/features/auth/application/user_providers.dart';
 import 'package:healthos/src/features/appointments/application/appointment_providers.dart';
 import 'package:healthos/src/features/chat/application/chat_providers.dart';
@@ -66,16 +67,16 @@ void main() {
                 'hospital': 'Apollo City Hospital',
               }),
             ),
-            allPatientsProvider.overrideWithValue(const AsyncValue.data([
-              {
-                'uid': 'p101',
-                'name': 'Sarah Connor',
-                'gender': 'Female',
-                'dob': '1990-05-15',
-                'condition': 'Hypertension',
-                'carePlan': 'Sodium control & regular vitals log',
-              }
-            ])),
+            allPatientsProvider.overrideWithValue(
+              AsyncValue.data([
+                UserProfile.fromMap('p101', const {
+                  'uid': 'p101',
+                  'name': 'Sarah Connor',
+                  'gender': 'Female',
+                  'dob': '1990-05-15',
+                }),
+              ]),
+            ),
             allDiagnosticReportsProvider.overrideWithValue(const AsyncValue.data([])),
             doctorAppointmentsProvider.overrideWithValue(const AsyncValue.data([])),
             chatThreadsProvider.overrideWithValue(const AsyncValue.data([])),
@@ -122,8 +123,8 @@ void main() {
               ]),
             ),
             allPatientsProvider.overrideWithValue(
-              const AsyncValue.data([
-                {'uid': 'p101', 'name': 'Sarah Connor'},
+              AsyncValue.data([
+                UserProfile.fromMap('p101', const {'name': 'Sarah Connor'}),
               ]),
             ),
           ],

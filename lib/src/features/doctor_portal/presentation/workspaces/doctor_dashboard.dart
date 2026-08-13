@@ -29,8 +29,7 @@ class DoctorDashboard extends ConsumerWidget {
         ref.watch(doctorAppointmentsProvider).value ?? const <Appointment>[];
     final conversations = ref.watch(chatThreadsProvider).value ?? const [];
     final stats = ref.watch(doctorStatsProvider);
-    final profile = ref.watch(userProfileProvider).value;
-    final doctorName = (profile?['name'] as String?)?.trim();
+    final doctorName = ref.watch(currentUserProfileProvider).value?.name.trim();
 
     final now = DateTime.now();
     final today = appointments.where((appointment) {

@@ -9,6 +9,9 @@ abstract final class UserRole {
   static const all = [patient, doctor, hospital];
 }
 
+/// WHO body-mass-index bands.
+enum BmiCategory { underweight, normal, overweight, obese }
+
 /// Whether a doctor has been vetted by a hospital.
 ///
 /// The patient-facing UI advertises "verified doctors", but nothing backed that
@@ -117,6 +120,49 @@ class UserProfile {
     final metres = h / 100;
     final value = w / (metres * metres);
     return value.isFinite && value > 0 && value < 200 ? value : null;
+  }
+
+  /// WHO band for [bmi], or null when BMI is unknown.
+  ///
+  /// The thresholds were previously repeated in the health summary card and
+  /// the AI prompt builder. Call sites still choose their own wording — the
+  /// patient dashboard says "Healthy" where the clinical prompt says "Normal
+  /// weight" — but the cut-offs live here.
+  BmiCategory? get bmiCategory {
+    final value = bmi;
+    if (value == null) return null;
+    if (value < 18.5) return BmiCategory.underweight;
+    if (value < 25) return BmiCategory.normal;
+    if (value < 30) return BmiCategory.overweight;
+    return BmiCategory.obese;
+  }
+
+  /// Up to two letters for an avatar, e.g. "Ada Lovelace" -> "AL".
+  String get initials => initialsOf(name);
+
+  /// Avatar initials for an arbitrary display name.
+  ///
+  /// Consolidates three implementations that disagreed on fallback text and on
+  /// how to handle titles. One of them indexed `[0]` on split segments, which
+  /// threw a RangeError for any name containing a double space.
+  static String initialsOf(String? name, {String fallback = '?'}) {
+    if (name == null) return fallback;
+
+    final words = name
+        .replaceAll(
+          RegExp(r'^\s*(dr|mr|mrs|ms|prof)\.?\s+', caseSensitive: false),
+          '',
+        )
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+
+    if (words.isEmpty) return fallback;
+    if (words.length == 1) {
+      final word = words.first;
+      return (word.length >= 2 ? word.substring(0, 2) : word).toUpperCase();
+    }
+    return '${words.first[0]}${words.last[0]}'.toUpperCase();
   }
 
   /// First name, for greetings. Falls back to the whole name.

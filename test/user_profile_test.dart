@@ -159,6 +159,49 @@ void main() {
       );
     });
 
+    test('initials use first and last word', () {
+      expect(UserProfile.initialsOf('Ada Lovelace'), 'AL');
+      expect(UserProfile.initialsOf('Mary Jane Watson'), 'MW');
+    });
+
+    test('initials strip a leading title', () {
+      expect(UserProfile.initialsOf('Dr. Asha Sharma'), 'AS');
+      expect(UserProfile.initialsOf('dr Asha Sharma'), 'AS');
+      expect(UserProfile.initialsOf('Prof. Alan Turing'), 'AT');
+    });
+
+    test('initials take two letters from a single-word name', () {
+      expect(UserProfile.initialsOf('Prince'), 'PR');
+      expect(UserProfile.initialsOf('X'), 'X');
+    });
+
+    test('initials survive irregular whitespace', () {
+      // The previous implementation indexed [0] on split segments and threw a
+      // RangeError here.
+      expect(UserProfile.initialsOf('Ada  Lovelace'), 'AL');
+      expect(UserProfile.initialsOf('  Ada Lovelace  '), 'AL');
+    });
+
+    test('initials fall back when there is no usable name', () {
+      expect(UserProfile.initialsOf(null, fallback: 'DR'), 'DR');
+      expect(UserProfile.initialsOf('   ', fallback: 'PT'), 'PT');
+      expect(UserProfile.initialsOf('Dr.', fallback: 'DR'), 'DR');
+    });
+
+    test('bmiCategory uses the WHO cut-offs', () {
+      BmiCategory? categoryFor(double height, double weight) =>
+          UserProfile.fromMap('u1', {
+            'height': height,
+            'weight': weight,
+          }).bmiCategory;
+
+      expect(categoryFor(180, 55), BmiCategory.underweight); // 16.98
+      expect(categoryFor(180, 70), BmiCategory.normal); // 21.6
+      expect(categoryFor(180, 90), BmiCategory.overweight); // 27.8
+      expect(categoryFor(180, 110), BmiCategory.obese); // 33.9
+      expect(UserProfile.fromMap('u1', const {}).bmiCategory, isNull);
+    });
+
     test('firstName falls back when the name is blank', () {
       expect(UserProfile.fromMap('u1', {'name': 'Ada Lovelace'}).firstName, 'Ada');
       expect(UserProfile.fromMap('u1', {'name': '  '}).firstName, 'there');

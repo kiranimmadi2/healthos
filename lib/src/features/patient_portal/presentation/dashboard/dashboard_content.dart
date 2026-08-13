@@ -13,6 +13,7 @@ import '../../../../shared/presentation/widgets/status_pill.dart';
 import '../../../appointments/appointments.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../auth/application/user_providers.dart';
+import '../../../auth/domain/user_profile.dart';
 import '../../../chat/chat.dart';
 import '../../../doctors/doctors.dart';
 
@@ -27,17 +28,21 @@ class DashboardContent extends ConsumerWidget {
 
   final ValueChanged<int> onNavigate;
 
+  /// First name in Title Case for the greeting, preferring the saved profile
+  /// over the auth display name, and falling back to "there".
+  static String _greetingName(UserProfile? profile, String? displayName) {
+    final source = (profile?.name.trim().isNotEmpty ?? false)
+        ? profile!.firstName
+        : (displayName?.trim().split(RegExp(r'\s+')).first ?? '');
+    if (source.isEmpty || source == 'there') return 'there';
+    return source[0].toUpperCase() + source.substring(1).toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
-    final profile = ref.watch(userProfileProvider).value;
-    final rawName =
-        (profile?['name'] as String?)?.split(' ').first ??
-        user?.displayName?.split(' ').first ??
-        'there';
-    final userName = rawName.isNotEmpty
-        ? '${rawName[0].toUpperCase()}${rawName.substring(1).toLowerCase()}'
-        : 'there';
+    final profile = ref.watch(currentUserProfileProvider).value;
+    final userName = _greetingName(profile, user?.displayName);
 
     return HealthPage(
       maxWidth: 1400,
