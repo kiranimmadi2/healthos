@@ -3,19 +3,6 @@ part of 'dashboard_content.dart';
 class _CareUpdates extends ConsumerWidget {
   const _CareUpdates();
 
-  static (String, Color, IconData) _statusStyle(Appointment appointment) {
-    switch (appointment.status) {
-      case AppointmentStatus.confirmed:
-        return ('Confirmed', AppColors.success, Icons.event_available_rounded);
-      case AppointmentStatus.completed:
-        return ('Completed', AppColors.secondary, Icons.task_alt_rounded);
-      case AppointmentStatus.cancelled:
-        return ('Cancelled', AppColors.error, Icons.event_busy_rounded);
-      default:
-        return ('Pending', AppColors.warning, Icons.schedule_rounded);
-    }
-  }
-
   /// Opens the conversation with the doctor on this update.
   ///
   /// These tiles previously had an empty `onTap`, so they looked interactive
@@ -91,20 +78,18 @@ class _CareUpdates extends ConsumerWidget {
                 Builder(
                   builder: (context) {
                     final appointment = recent[i];
-                    final (label, color, icon) = _statusStyle(appointment);
+                    final style = AppointmentStatusStyle.forAppointment(
+                      appointment,
+                    );
                     return _UpdateTile(
-                      icon: icon,
-                      color: color,
-                      title:
-                          '${appointment.doctorName} · ${label.toLowerCase()}',
+                      icon: style.feedIcon,
+                      color: style.foreground,
+                      title: '${appointment.doctorName} · '
+                          '${style.label.toLowerCase()}',
                       subtitle: DateFormat(
                         'MMM dd, yyyy · hh:mm a',
                       ).format(appointment.dateTime),
-                      trailing: StatusPill(
-                        label: label,
-                        foreground: color,
-                        background: color.withOpacity(0.12),
-                      ),
+                      trailing: style.toPill(showIcon: false),
                       onTap: () => _openThread(context, ref, appointment),
                     );
                   },

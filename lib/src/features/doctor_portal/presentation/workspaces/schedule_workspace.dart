@@ -5,8 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
 import '../../../../shared/presentation/widgets/status_pill.dart';
-import '../../../appointments/application/appointment_providers.dart';
-import '../../../appointments/domain/appointment.dart';
+import '../../../appointments/appointments.dart';
 import '../../../chat/application/chat_providers.dart';
 import '../../../chat/presentation/chat_screen.dart';
 import '../widgets/doctor_workspace_widgets.dart';
@@ -248,30 +247,8 @@ class _LiveAppointmentTile extends StatelessWidget {
   final VoidCallback onComplete;
   final VoidCallback onMessage;
 
-  StatusPill _status() {
-    return switch (appointment.status) {
-      AppointmentStatus.confirmed => const StatusPill(
-        label: 'Confirmed',
-        foreground: AppColors.success,
-        background: AppColors.successSoft,
-      ),
-      AppointmentStatus.completed => const StatusPill(
-        label: 'Completed',
-        foreground: AppColors.secondary,
-        background: AppColors.secondarySoft,
-      ),
-      AppointmentStatus.cancelled => const StatusPill(
-        label: 'Cancelled',
-        foreground: AppColors.error,
-        background: AppColors.errorSoft,
-      ),
-      _ => const StatusPill(
-        label: 'Pending',
-        foreground: AppColors.warning,
-        background: AppColors.warningSoft,
-      ),
-    };
-  }
+  StatusPill _status() =>
+      AppointmentStatusStyle.forAppointment(appointment).toPill(showIcon: false);
 
   @override
   Widget build(BuildContext context) {

@@ -133,25 +133,6 @@ class _NextAppointmentCard extends ConsumerWidget {
 
   final Appointment appointment;
 
-  StatusPill _statusPill() {
-    switch (appointment.status) {
-      case AppointmentStatus.confirmed:
-        return const StatusPill(
-          label: 'Confirmed',
-          foreground: AppColors.success,
-          background: AppColors.successSoft,
-          icon: Icons.check_circle_outline_rounded,
-        );
-      default:
-        return const StatusPill(
-          label: 'Pending',
-          foreground: AppColors.warning,
-          background: AppColors.warningSoft,
-          icon: Icons.schedule_rounded,
-        );
-    }
-  }
-
   Future<void> _messageDoctor(BuildContext context, WidgetRef ref) async {
     final threadId = await ref
         .read(chatRepositoryProvider)
@@ -226,7 +207,7 @@ class _NextAppointmentCard extends ConsumerWidget {
                   fontSize: 14,
                 ),
               ),
-              _statusPill(),
+              AppointmentStatusStyle.forAppointment(appointment).toPill(),
             ],
           ),
           const SizedBox(height: 12),
