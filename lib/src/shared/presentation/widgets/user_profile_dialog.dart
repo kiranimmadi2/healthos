@@ -421,7 +421,7 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
-                                ?.copyWith(color: AppColors.textMuted),
+                                ?.copyWith(color: context.hos.textMuted),
                             overflow: TextOverflow.ellipsis,
                           ),
                       ],
@@ -565,7 +565,7 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
                                       : 'Select Date',
                                   style: TextStyle(
                                     color: _selectedDob == null
-                                        ? AppColors.textMuted
+                                        ? context.hos.textMuted
                                         : null,
                                   ),
                                 ),
@@ -906,7 +906,7 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: isSelected
                       ? AppColors.primary
-                      : (isDark ? Colors.white : AppColors.textPrimary),
+                      : (isDark ? Colors.white : context.hos.textPrimary),
                 ),
               ),
             ],

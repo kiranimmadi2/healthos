@@ -53,7 +53,7 @@ class _IconLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: AppColors.textMuted),
+        Icon(icon, size: 18, color: context.hos.textMuted),
         const SizedBox(width: 6),
         Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],
