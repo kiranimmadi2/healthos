@@ -21,36 +21,35 @@ class _CareUpdates extends ConsumerWidget {
     final appointmentsAsync = ref.watch(patientAppointmentsProvider);
 
     return appointmentsAsync.when(
-      loading: () => const Card(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: Center(child: CircularProgressIndicator()),
-        ),
+      loading: () => const GlassContainer(
+        borderRadius: 28,
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Center(child: CircularProgressIndicator()),
       ),
-      error: (e, st) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Text('Could not load updates: $e'),
-        ),
+      error: (e, st) => GlassContainer(
+        borderRadius: 28,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Text('Could not load updates: $e'),
       ),
       data: (appointments) {
         if (appointments.isEmpty) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Text(
-                'No activity yet. Book your first appointment to get started.',
-              ),
+          return const GlassContainer(
+            borderRadius: 28,
+            padding: EdgeInsets.all(AppSpacing.xl),
+            child: Text(
+              'No activity yet. Book your first appointment to get started.',
             ),
           );
         }
 
         final recent = appointments.reversed.take(3).toList();
-        return Card(
+        return GlassContainer(
+          borderRadius: 28,
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               for (var i = 0; i < recent.length; i++) ...[
-                if (i > 0) const Divider(),
+                if (i > 0) Divider(height: 1, color: Colors.white.withOpacity(0.4)),
                 Builder(
                   builder: (context) {
                     final appointment = recent[i];
@@ -66,7 +65,7 @@ class _CareUpdates extends ConsumerWidget {
                       trailing: StatusPill(
                         label: label,
                         foreground: color,
-                        background: color.withValues(alpha: 0.09),
+                        background: color.withOpacity(0.12),
                       ),
                       onTap: () {},
                     );

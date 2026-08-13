@@ -11,6 +11,8 @@ import 'package:healthos/src/features/doctor_portal/application/doctor_portal_pr
 import 'package:healthos/src/features/hospital_portal/hospital_portal.dart';
 import 'package:healthos/src/features/patient_portal/patient_portal.dart';
 
+import 'package:healthos/src/features/doctors/domain/doctor_profile.dart';
+
 void main() {
   group('HealthOS E2E Portal Integration Tests', () {
     testWidgets('Patient Portal E2E - renders dashboard and navigation', (
@@ -106,6 +108,25 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            availableDoctorsProvider.overrideWithValue(
+              AsyncValue.data([
+                DoctorProfile(
+                  uid: 'd101',
+                  name: 'Dr. Asha Sharma',
+                  specialization: 'Cardiology',
+                  hospital: 'Apollo City Hospital',
+                  yearsOfExperience: 12,
+                  isAvailable: true,
+                ),
+              ]),
+            ),
+            allPatientsProvider.overrideWithValue(
+              const AsyncValue.data([
+                {'uid': 'p101', 'name': 'Sarah Connor'},
+              ]),
+            ),
+          ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
             home: const Scaffold(
@@ -118,7 +139,7 @@ void main() {
 
       expect(find.text('Hospital Command Center'), findsOneWidget);
       expect(find.text('Total Patients'), findsOneWidget);
-      expect(find.text('1,248'), findsOneWidget);
+      expect(find.text('1'), findsNWidgets(2));
       expect(find.text('Active Doctors'), findsOneWidget);
       expect(find.text('Dr. Asha Sharma'), findsOneWidget);
     });

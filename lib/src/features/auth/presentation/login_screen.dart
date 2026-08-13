@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/presentation/branding/app_logo.dart';
 import '../../../shared/presentation/branding/google_logo.dart';
+import '../../../shared/presentation/widgets/glass_container.dart';
 import '../application/auth_providers.dart';
 
 enum AuthMode { password, otp }
@@ -262,77 +263,88 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: AppLogo(size: 64)),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Welcome to HealthOS',
-                    style: Theme.of(context).textTheme.headlineLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    _authMode == AuthMode.otp
-                        ? (_otpStep == OtpStep.enterEmail
-                            ? 'Sign in instantly with a 6-digit Email OTP code'
-                            : 'Enter the verification code sent to your email')
-                        : (_isSignUp
-                            ? 'Create your secure healthcare account'
-                            : 'Sign in to continue to your care workspace'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildAuthModeToggle(),
-                  const SizedBox(height: 24),
-                  if (_existingProviders.isNotEmpty) ...[
-                    _buildProviderNoticeBanner(),
-                    const SizedBox(height: 20),
-                  ],
-                  if (_authMode == AuthMode.password)
-                    _buildPasswordAuthForm()
-                  else
-                    _buildOtpAuthForm(),
-                  const SizedBox(height: 24),
-                  Row(
+      backgroundColor: Colors.transparent,
+      body: GlassCanvas(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: GlassContainer(
+                  borderRadius: 32,
+                  blur: 24,
+                  opacity: 0.70,
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(child: Divider(color: Colors.grey[300])),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'OR',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                      const Center(child: AppLogo(size: 64)),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Welcome to HealthOS',
+                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _authMode == AuthMode.otp
+                            ? (_otpStep == OtpStep.enterEmail
+                                ? 'Sign in instantly with a 6-digit Email OTP code'
+                                : 'Enter the verification code sent to your email')
+                            : (_isSignUp
+                                ? 'Create your secure healthcare account'
+                                : 'Sign in to continue to your care workspace'),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildAuthModeToggle(),
+                      const SizedBox(height: 24),
+                      if (_existingProviders.isNotEmpty) ...[
+                        _buildProviderNoticeBanner(),
+                        const SizedBox(height: 20),
+                      ],
+                      if (_authMode == AuthMode.password)
+                        _buildPasswordAuthForm()
+                      else
+                        _buildOtpAuthForm(),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white.withOpacity(0.5))),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _signInWithGoogle,
+                        icon: const GoogleLogo(size: 20),
+                        label: const Text('Continue with Google'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          backgroundColor: Colors.white.withOpacity(0.5),
+                          side: BorderSide(color: Colors.white.withOpacity(0.8)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey[300])),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _signInWithGoogle,
-                    icon: const GoogleLogo(size: 20),
-                    label: const Text('Continue with Google'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      side: BorderSide(color: Colors.grey[300]!),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.medium),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

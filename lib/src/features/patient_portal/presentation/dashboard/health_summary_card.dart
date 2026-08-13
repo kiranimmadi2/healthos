@@ -25,45 +25,50 @@ class _HealthSummaryCard extends ConsumerWidget {
           : 'Obese';
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Health summary',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            const Text('From your profile'),
-            const SizedBox(height: AppSpacing.xl),
-            _MetricRow(
-              icon: Icons.straighten_rounded,
-              iconColor: AppColors.primary,
-              label: 'Height',
-              value: height != null ? '${height.toStringAsFixed(0)} cm' : '—',
-              status: '',
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _MetricRow(
-              icon: Icons.scale_rounded,
-              iconColor: AppColors.secondary,
-              label: 'Weight',
-              value: weight != null ? '${weight.toStringAsFixed(0)} kg' : '—',
-              status: '',
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _MetricRow(
-              icon: Icons.monitor_heart_rounded,
-              iconColor: AppColors.error,
-              label: 'BMI',
-              value: bmi != null ? bmi.toStringAsFixed(1) : '—',
-              status: bmiStatus,
-            ),
-          ],
-        ),
+    return GlassContainer(
+      borderRadius: 28,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Health Summary',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Personal vital indicators',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          _MetricRow(
+            icon: Icons.straighten_rounded,
+            iconColor: AppColors.primary,
+            label: 'Height',
+            value: height != null ? '${height.toStringAsFixed(0)} cm' : '—',
+            status: '',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _MetricRow(
+            icon: Icons.scale_rounded,
+            iconColor: AppColors.secondary,
+            label: 'Weight',
+            value: weight != null ? '${weight.toStringAsFixed(0)} kg' : '—',
+            status: '',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _MetricRow(
+            icon: Icons.monitor_heart_rounded,
+            iconColor: AppColors.error,
+            label: 'BMI',
+            value: bmi != null ? bmi.toStringAsFixed(1) : '—',
+            status: bmiStatus,
+          ),
+        ],
       ),
     );
   }
 }
+

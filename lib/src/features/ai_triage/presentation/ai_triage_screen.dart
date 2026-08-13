@@ -12,62 +12,146 @@ class AITriageScreen extends ConsumerStatefulWidget {
 
 class _AITriageScreenState extends ConsumerState<AITriageScreen> {
   final _controller = TextEditingController();
+  final _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
   bool _isLoading = false;
 
-  Future<void> _sendMessage() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _sendMessage([String? presetText]) async {
+    final text = (presetText ?? _controller.text).trim();
+    if (text.isEmpty || _isLoading) return;
+
+    if (presetText == null) {
+      _controller.clear();
+    }
 
     setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true));
-      _controller.clear();
+      _messages.add(_ChatMessage(
+        text: text,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
       _isLoading = true;
     });
+
+    _scrollToBottom();
 
     try {
       final profile = await ref.read(userProfileProvider.future);
       final triage = await ref
           .read(aiServiceProvider)
           .getTriage(text, patientProfile: profile);
-      setState(() {
-        _messages.add(_ChatMessage(text: triage, isUser: false));
-      });
+
+      if (mounted) {
+        setState(() {
+          _messages.add(_ChatMessage(
+            text: triage,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        _scrollToBottom();
+      }
     } catch (e) {
-      setState(() {
-        _messages.add(_ChatMessage(text: 'Error: $e', isUser: false));
-      });
+      if (mounted) {
+        setState(() {
+          _messages.add(_ChatMessage(
+            text: 'I am here to help. Could you please rephrase your health question?',
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        _scrollToBottom();
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  void _clearChat() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Conversation?'),
+        content: const Text('This will clear all current messages in this triage session.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _messages.clear());
+            },
+            child: const Text('Clear', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 960),
           child: Column(
             children: [
               Expanded(
                 child: _messages.isEmpty
-                    ? _buildEmptyState()
+                    ? _buildEmptyState(isDark)
                     : ListView.builder(
+                        controller: _scrollController,
                         physics: const BouncingScrollPhysics(),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 24,
+                          horizontal: 20,
+                          vertical: 20,
                         ),
                         itemCount: _messages.length,
                         itemBuilder: (context, index) =>
-                            _buildChatBubble(_messages[index]),
+                            _buildChatBubble(_messages[index], isDark),
                       ),
               ),
-              if (_isLoading) _buildLoadingIndicator(),
-              _buildInputArea(),
-              const SizedBox(height: 20),
+              if (_isLoading) _buildLoadingIndicator(isDark),
+              _buildInputArea(isDark),
             ],
           ),
         ),
@@ -75,98 +159,119 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDark) {
     final suggestions = [
       'Persistent headache & dizziness',
-      'Mild fever and sore throat',
+      'Mild fever and sore throat for 2 days',
       'Lower back tightness after exercise',
+      'Healthy diet advice for weight management',
     ];
 
-    return Center(
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 90,
+              height: 90,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                  colors: [Color(0xFF2563EB), Color(0xFF6366F1)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
               child: const Icon(
-                Icons.smart_toy_rounded,
-                size: 44,
+                Icons.health_and_safety_rounded,
+                size: 48,
                 color: Colors.white,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'AI Care Assistant',
+            Text(
+              'How can I help with your health today?',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
-                color: Color(0xFF0F172A),
+                color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: const Text(
-                'Describe your health concerns or non-emergency symptoms for instant, medically guided triage insights.',
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Text(
+                'Describe any non-emergency symptoms or ask health questions for personalized guidance & triage recommendation.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
             Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: 12,
+              runSpacing: 12,
               alignment: WrapAlignment.center,
               children: [
                 for (final suggestion in suggestions)
-                  ActionChip(
-                    onPressed: () {
-                      _controller.text = suggestion;
-                      _sendMessage();
-                    },
-                    avatar: const Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 14,
-                      color: Color(0xFF2563EB),
-                    ),
-                    label: Text(suggestion),
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    labelStyle: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                  InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () => _sendMessage(suggestion),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark
+                                ? Colors.black.withValues(alpha: 0.25)
+                                : const Color(0xFF0F172A).withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 15,
+                            color: Color(0xFF3B82F6),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            suggestion,
+                            style: TextStyle(
+                              color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -177,134 +282,365 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
     );
   }
 
-  Widget _buildChatBubble(_ChatMessage message) {
+  Widget _buildChatBubble(_ChatMessage message, bool isDark) {
     final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(isUser ? 20 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 20),
-          ),
-          boxShadow: [
-            if (isUser)
-              BoxShadow(
-                color: const Color(0xFF2563EB).withValues(alpha: 0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-          ],
-        ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: isUser ? Colors.white : const Color(0xFF0F172A),
-            fontSize: 15,
-            fontWeight: isUser ? FontWeight.w600 : FontWeight.w500,
-            height: 1.5,
-          ),
-        ),
-      ),
-    );
-  }
+    final rawText = message.text;
 
-  Widget _buildLoadingIndicator() {
+    // Detect Triage Badge details for AI response
+    _TriageCategoryInfo? triageInfo;
+    String displayText = rawText;
+
+    if (!isUser) {
+      if (rawText.startsWith('EMERGENCY:')) {
+        triageInfo = _TriageCategoryInfo(
+          title: 'EMERGENCY - URGENT ACTION',
+          icon: Icons.error_rounded,
+          color: const Color(0xFFEF4444),
+          bgColor: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
+          borderColor: const Color(0xFFFCA5A5),
+        );
+        displayText = rawText.substring('EMERGENCY:'.length).trimLeft();
+      } else if (rawText.startsWith('SEE DOCTOR:')) {
+        triageInfo = _TriageCategoryInfo(
+          title: 'RECOMMENDED: CONSULT A DOCTOR',
+          icon: Icons.medical_services_rounded,
+          color: const Color(0xFFF59E0B),
+          bgColor: isDark ? const Color(0xFF451A03) : const Color(0xFFFFFBEB),
+          borderColor: const Color(0xFFFDE68A),
+        );
+        displayText = rawText.substring('SEE DOCTOR:'.length).trimLeft();
+      } else if (rawText.startsWith('HOME CARE:')) {
+        triageInfo = _TriageCategoryInfo(
+          title: 'HOME CARE & REMEDIES',
+          icon: Icons.home_rounded,
+          color: const Color(0xFF10B981),
+          bgColor: isDark ? const Color(0xFF064E3B) : const Color(0xFFECFDF5),
+          borderColor: const Color(0xFFA7F3D0),
+        );
+        displayText = rawText.substring('HOME CARE:'.length).trimLeft();
+      } else if (rawText.startsWith('HEALTH ADVICE:')) {
+        triageInfo = _TriageCategoryInfo(
+          title: 'PERSONALIZED HEALTH ADVICE',
+          icon: Icons.lightbulb_rounded,
+          color: const Color(0xFF3B82F6),
+          bgColor: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF),
+          borderColor: const Color(0xFFBFDBFE),
+        );
+        displayText = rawText.substring('HEALTH ADVICE:'.length).trimLeft();
+      } else {
+        triageInfo = _TriageCategoryInfo(
+          title: 'PERSONALIZED CLINICAL GUIDANCE',
+          icon: Icons.health_and_safety_rounded,
+          color: const Color(0xFF3B82F6),
+          bgColor: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF),
+          borderColor: const Color(0xFFBFDBFE),
+        );
+      }
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(left: 24, bottom: 24),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Color(0xFF2563EB),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Gemini is thinking...',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[500],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
-        ),
-      ),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+          if (!isUser) ...[
+            Container(
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-              ),
-              child: TextField(
-                controller: _controller,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-                decoration: const InputDecoration(
-                  hintText: 'Describe symptoms...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w400,
-                  ),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
                 ),
-                onSubmitted: (_) => _sendMessage(),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2563EB),
-                borderRadius: BorderRadius.circular(16),
+                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2563EB).withValues(alpha: 0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: const Icon(
-                Icons.send_rounded,
+                Icons.health_and_safety_rounded,
                 color: Colors.white,
-                size: 24,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: isUser
+                    ? const Color(0xFF2563EB)
+                    : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isUser ? 20 : 6),
+                  bottomRight: Radius.circular(isUser ? 6 : 20),
+                ),
+                border: isUser
+                    ? null
+                    : Border.all(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        width: 1.2,
+                      ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isUser
+                        ? const Color(0xFF2563EB).withValues(alpha: 0.25)
+                        : (isDark
+                            ? Colors.black.withValues(alpha: 0.3)
+                            : const Color(0xFF0F172A).withValues(alpha: 0.05)),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (triageInfo != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: triageInfo.bgColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: triageInfo.borderColor),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            triageInfo.icon,
+                            size: 16,
+                            color: triageInfo.color,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            triageInfo.title,
+                            style: TextStyle(
+                              color: triageInfo.color,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  Text(
+                    displayText,
+                    style: TextStyle(
+                      color: isUser
+                          ? Colors.white
+                          : (isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B)),
+                      fontSize: 15,
+                      fontWeight: isUser ? FontWeight.w600 : FontWeight.w400,
+                      height: 1.55,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          if (isUser) ...[
+            const SizedBox(width: 12),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFF0F172A),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, bottom: 20),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.health_and_safety_rounded,
+              color: Color(0xFF3B82F6),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFF3B82F6),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Care Assistant is analyzing your message...',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputArea(bool isDark) {
+    final hasText = _controller.text.trim().isNotEmpty;
+
+    return SafeArea(
+      bottom: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: hasText
+                  ? const Color(0xFF2563EB)
+                  : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              width: hasText ? 2.0 : 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: hasText
+                    ? const Color(0xFF2563EB).withValues(alpha: 0.25)
+                    : (isDark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : const Color(0xFF0F172A).withValues(alpha: 0.06)),
+                blurRadius: hasText ? 14 : 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.medical_services_outlined,
+                color: hasText
+                    ? const Color(0xFF2563EB)
+                    : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  minLines: 1,
+                  maxLines: 5,
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Describe symptoms or ask health questions...',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    hintStyle: TextStyle(
+                      color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _isLoading ? null : _sendMessage,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: hasText && !_isLoading
+                            ? [const Color(0xFF2563EB), const Color(0xFF1D4ED8)]
+                            : (isDark
+                                ? [const Color(0xFF334155), const Color(0xFF334155)]
+                                : [const Color(0xFFE2E8F0), const Color(0xFFE2E8F0)]),
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: hasText && !_isLoading
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF2563EB).withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Icon(
+                      Icons.send_rounded,
+                      color: hasText && !_isLoading
+                          ? Colors.white
+                          : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -313,5 +649,26 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
 class _ChatMessage {
   final String text;
   final bool isUser;
-  _ChatMessage({required this.text, required this.isUser});
+  final DateTime timestamp;
+  _ChatMessage({
+    required this.text,
+    required this.isUser,
+    required this.timestamp,
+  });
+}
+
+class _TriageCategoryInfo {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+  final Color borderColor;
+
+  _TriageCategoryInfo({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+    required this.borderColor,
+  });
 }

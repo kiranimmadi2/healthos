@@ -99,10 +99,11 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   void _showSuccessDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -120,12 +121,13 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'BOOKING REQUESTED',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.0,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 12),
@@ -133,7 +135,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               'Requested with ${widget.doctor.name}\n${DateFormat('MMM dd').format(_selectedDate)} at $_selectedTime\nYou will be notified once the doctor confirms.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -157,7 +159,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 700) {
@@ -173,6 +175,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   Widget _buildWebSplitLayout(BuildContext context) {
     final avatarUrl =
         'https://ui-avatars.com/api/?name=${Uri.encodeComponent(widget.doctor.name)}&background=6366F1&color=fff&size=512&bold=true';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       children: [
@@ -302,7 +305,9 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         // Right Panel: Booking Form (50%)
         Expanded(
           child: Container(
-            color: Colors.white,
+            color: isDark
+                ? const Color(0xFF0F172A).withOpacity(0.9)
+                : Colors.white,
             child: SafeArea(
               child: SingleChildScrollView(
                 padding:
@@ -310,12 +315,12 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Book Appointment',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -324,7 +329,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                       'Choose your preferred date and time slot for consultation.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                       ),
                     ),
                     const SizedBox(height: 36),
@@ -527,6 +532,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   Widget _buildDateSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 100,
       child: ListView.builder(
@@ -551,12 +557,14 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF2563EB)
-                    : const Color(0xFFF8FAFC),
+                    : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
                       ? Colors.transparent
-                      : Colors.grey.withValues(alpha: 0.1),
+                      : (isDark
+                          ? const Color(0xFF334155)
+                          : Colors.grey.withValues(alpha: 0.1)),
                 ),
                 boxShadow: [
                   if (isSelected)
@@ -573,7 +581,9 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                   Text(
                     DateFormat('EEE').format(date).toUpperCase(),
                     style: TextStyle(
-                      color: isSelected ? Colors.white70 : Colors.grey[500],
+                      color: isSelected
+                          ? Colors.white70
+                          : (isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
@@ -584,7 +594,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                     style: TextStyle(
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF0F172A),
+                          : (isDark ? Colors.white : const Color(0xFF0F172A)),
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                     ),
@@ -599,6 +609,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   Widget _buildTimeSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final schedule = ref.watch(doctorScheduleProvider(widget.doctor.uid));
     final bookedTimes = schedule.maybeWhen(
       data: (appointments) => {
@@ -626,17 +637,17 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
               color: isBooked
-                  ? const Color(0xFFF1F5F9)
+                  ? (isDark ? const Color(0xFF1E293B).withOpacity(0.5) : const Color(0xFFF1F5F9))
                   : isSelected
-                  ? const Color(0xFF0F172A)
-                  : Colors.white,
+                  ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
+                  : (isDark ? const Color(0xFF1E293B) : Colors.white),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isBooked
-                    ? const Color(0xFFE2E8F0)
+                    ? (isDark ? const Color(0xFF334155).withOpacity(0.5) : const Color(0xFFE2E8F0))
                     : isSelected
-                    ? const Color(0xFF0F172A)
-                    : Colors.grey.withValues(alpha: 0.2),
+                    ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
+                    : (isDark ? const Color(0xFF334155) : Colors.grey.withValues(alpha: 0.2)),
                 width: 1.5,
               ),
             ),
@@ -650,7 +661,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                         ? const Color(0xFF94A3B8)
                         : isSelected
                         ? Colors.white
-                        : const Color(0xFF0F172A),
+                        : (isDark ? Colors.white : const Color(0xFF0F172A)),
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
@@ -676,21 +687,30 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
   }
 
   Widget _buildSymptomsInput() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : Colors.grey.withValues(alpha: 0.1),
+        ),
       ),
       child: TextField(
         controller: _symptomsController,
         maxLines: 4,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-        decoration: const InputDecoration(
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white : const Color(0xFF0F172A),
+        ),
+        decoration: InputDecoration(
           hintText: 'Describe your condition...',
           border: InputBorder.none,
-          hintStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.w400),
+          hintStyle: TextStyle(
+            color: isDark ? const Color(0xFF94A3B8) : Colors.grey,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );

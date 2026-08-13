@@ -5,6 +5,7 @@ import '../../../app/theme/theme.dart';
 import '../../../shared/presentation/layout/responsive_layout.dart';
 import '../../../shared/presentation/shell/health_destination.dart';
 import '../../../shared/presentation/shell/health_shell.dart';
+import '../../../shared/presentation/widgets/user_profile_dialog.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/user_providers.dart';
 import '../../chat/application/chat_providers.dart';
@@ -141,9 +142,11 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
                 )
               : const Icon(Icons.notifications_outlined),
         ),
-        if (isDesktop)
-          CircleAvatar(
-            radius: 20,
+        InkWell(
+          onTap: () => showUserProfileModal(context),
+          borderRadius: BorderRadius.circular(20),
+          child: CircleAvatar(
+            radius: 18,
             backgroundColor: AppColors.secondarySoft,
             child: Text(
               initials,
@@ -153,6 +156,8 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
               ),
             ),
           ),
+        ),
+        const SizedBox(width: 8),
       ],
       child: _screens[_currentIndex],
     );

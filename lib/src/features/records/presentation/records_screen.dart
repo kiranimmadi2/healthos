@@ -14,8 +14,10 @@ class RecordsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recordsAsync = ref.watch(medicalRecordsProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.transparent,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 90),
         child: FloatingActionButton.extended(
@@ -59,6 +61,7 @@ class RecordsScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -69,8 +72,10 @@ class RecordsScreen extends ConsumerWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? const [Color(0xFF1E3A8A), Color(0xFF1E293B)]
+                      : const [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -90,23 +95,23 @@ class RecordsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 28),
-            const Text(
+            Text(
               'Your Medical Vault is Empty',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
-                color: Color(0xFF0F172A),
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
             const SizedBox(height: 10),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: const Text(
+              child: Text(
                 'Add lab reports, prescriptions, imaging scans, and immunization records to keep your complete health history in one secure location.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF64748B),
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -153,18 +158,28 @@ class RecordsScreen extends ConsumerWidget {
     WidgetRef ref,
     MedicalRecord record,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final (icon, color) = _categoryStyle(record.category);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark
+            ? const Color(0xFF1E293B).withOpacity(0.75)
+            : Colors.white.withOpacity(0.85),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF334155).withOpacity(0.8)
+              : Colors.grey.withValues(alpha: 0.15),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -187,10 +202,11 @@ class RecordsScreen extends ConsumerWidget {
               children: [
                 Text(
                   record.title.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 15,
                     letterSpacing: 0.5,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -199,7 +215,7 @@ class RecordsScreen extends ConsumerWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: Colors.grey[500],
+                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500],
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -230,12 +246,12 @@ class RecordsScreen extends ConsumerWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: isDark ? const Color(0xFF334155) : Colors.grey[100],
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.delete_outline_rounded,
-                color: Colors.black54,
+                color: isDark ? Colors.white70 : Colors.black54,
                 size: 20,
               ),
             ),
@@ -250,12 +266,20 @@ class RecordsScreen extends ConsumerWidget {
     WidgetRef ref,
     MedicalRecord record,
   ) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Delete record?'),
-        content: Text('"${record.title}" will be permanently removed.'),
+        title: Text(
+          'Delete record?',
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+        ),
+        content: Text(
+          '"${record.title}" will be permanently removed.',
+          style: TextStyle(color: isDark ? const Color(0xFF94A3B8) : Colors.black87),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -276,10 +300,11 @@ class RecordsScreen extends ConsumerWidget {
   }
 
   void _showAddRecordSheet(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),

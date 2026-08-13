@@ -10,13 +10,16 @@ class HealthOSApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: 'HealthOS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      themeAnimationDuration: const Duration(milliseconds: 250),
-      themeAnimationCurve: Curves.easeOutCubic,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      themeAnimationDuration: const Duration(milliseconds: 300),
+      themeAnimationCurve: Curves.easeInOutCubic,
       routerConfig: router,
     );
   }

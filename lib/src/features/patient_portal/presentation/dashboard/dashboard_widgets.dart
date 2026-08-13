@@ -86,12 +86,12 @@ class _ActionData {
     this.subtitle,
     this.icon,
     this.gradient,
-    this.destination,
+    this.onTap,
   );
 
   final String label;
   final String subtitle;
   final IconData icon;
   final LinearGradient gradient;
-  final int destination;
+  final VoidCallback onTap;
 }

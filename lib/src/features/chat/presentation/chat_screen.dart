@@ -207,6 +207,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Type a message...',
                         isDense: true,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
                       ),
                       onSubmitted: (_) => _send(),
                     ),

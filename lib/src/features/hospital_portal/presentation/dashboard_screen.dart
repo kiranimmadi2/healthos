@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/theme.dart';
 import '../../../shared/presentation/shell/health_page.dart';
 import '../../../shared/presentation/widgets/hos_widgets.dart';
+import '../../appointments/application/appointment_providers.dart';
+import '../../auth/application/user_providers.dart';
+import '../../doctors/application/doctor_providers.dart';
 
 class HospitalDashboardScreen extends ConsumerStatefulWidget {
   const HospitalDashboardScreen({super.key});
@@ -15,46 +18,27 @@ class HospitalDashboardScreen extends ConsumerStatefulWidget {
 
 class _HospitalDashboardScreenState
     extends ConsumerState<HospitalDashboardScreen> {
-  final List<Map<String, String>> _doctorActivity = [
-    {
-      'name': 'Dr. Asha Sharma',
-      'department': 'Cardiology',
-      'patients': '28',
-      'status': 'Active',
-      'shift': 'Morning',
-    },
-    {
-      'name': 'Dr. Rajesh Patel',
-      'department': 'Pediatrics',
-      'patients': '34',
-      'status': 'Active',
-      'shift': 'Full Day',
-    },
-    {
-      'name': 'Dr. Anita Roy',
-      'department': 'Neurology',
-      'patients': '19',
-      'status': 'On Leave',
-      'shift': 'Night',
-    },
-    {
-      'name': 'Dr. Vikram Singh',
-      'department': 'Orthopedics',
-      'patients': '42',
-      'status': 'Active',
-      'shift': 'Morning',
-    },
-    {
-      'name': 'Dr. Meera Nair',
-      'department': 'General Medicine',
-      'patients': '50',
-      'status': 'Active',
-      'shift': 'Evening',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final doctorsAsync = ref.watch(availableDoctorsProvider);
+    final patientsAsync = ref.watch(allPatientsProvider);
+    final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
+
+    final doctors = doctorsAsync.value ?? [];
+    final patientCount = patientsAsync.value?.length ?? 0;
+    final doctorCount = doctors.length;
+    final appointmentCount = appointmentsAsync.value?.length ?? 0;
+
+    final List<Map<String, String>> doctorActivity = doctors.map((doc) {
+      return {
+        'name': doc.name,
+        'department': doc.specialization.isEmpty ? 'General Medicine' : doc.specialization,
+        'patients': '${doc.experienceYears > 0 ? doc.experienceYears * 4 : 0}',
+        'status': doc.isAvailable ? 'Active' : 'Offline',
+        'shift': 'Full Day',
+      };
+    }).toList();
+
     return HealthPage(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,34 +93,34 @@ class _HospitalDashboardScreenState
                 shrinkWrap: true,
                 childAspectRatio: 2.8,
                 physics: const NeverScrollableScrollPhysics(),
-                children: const [
+                children: [
                   HosStatCard(
                     title: 'Total Patients',
-                    value: '1,248',
-                    subtitle: '+12% this month',
+                    value: '$patientCount',
+                    subtitle: 'Registered patients',
                     icon: HosIcons.user,
                     accentColor: AppColors.primary,
                   ),
                   HosStatCard(
                     title: 'Active Doctors',
-                    value: '42',
-                    subtitle: 'Across 8 departments',
+                    value: '$doctorCount',
+                    subtitle: 'Verified medical staff',
                     icon: HosIcons.stethoscope,
                     accentColor: AppColors.secondary,
                   ),
                   HosStatCard(
-                    title: 'Appointments Today',
-                    value: '86',
-                    subtitle: '14 pending check-in',
+                    title: 'Total Appointments',
+                    value: '$appointmentCount',
+                    subtitle: 'Active & booked visits',
                     icon: HosIcons.calendar,
                     accentColor: AppColors.warning,
                   ),
-                  HosStatCard(
-                    title: 'Pending Verifications',
-                    value: '5',
-                    subtitle: 'Credentials review',
+                  const HosStatCard(
+                    title: 'Hospital Status',
+                    value: 'Operational',
+                    subtitle: 'All systems online',
                     icon: HosIcons.shield,
-                    accentColor: AppColors.error,
+                    accentColor: AppColors.primary,
                   ),
                 ],
               );
@@ -152,63 +136,90 @@ class _HospitalDashboardScreenState
                 ),
           ),
           const SizedBox(height: AppSpacing.md),
-          HosDataTable<Map<String, String>>(
-            columns: const [
-              'Doctor Name',
-              'Department',
-              'Assigned Patients',
-              'Shift',
-              'Status',
-              'Action',
-            ],
-            data: _doctorActivity,
-            rowBuilder: (doc) => [
-              Text(
-                doc['name']!,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+          if (doctorActivity.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.85),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
               ),
-              Text(doc['department']!),
-              Text(doc['patients']!),
-              Text(doc['shift']!),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: doc['status'] == 'Active'
-                      ? AppColors.primarySoft
-                      : AppColors.background,
-                  borderRadius: BorderRadius.circular(AppRadius.small),
-                  border: Border.all(
+              child: Column(
+                children: const [
+                  Icon(HosIcons.stethoscope, size: 40, color: AppColors.textMuted),
+                  SizedBox(height: 12),
+                  Text(
+                    'No doctors currently registered',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Doctors will appear here as soon as they sign up or are onboarded.',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  ),
+                ],
+              ),
+            )
+          else
+            HosDataTable<Map<String, String>>(
+              columns: const [
+                'Doctor Name',
+                'Department',
+                'Assigned Patients',
+                'Shift',
+                'Status',
+                'Action',
+              ],
+              data: doctorActivity,
+              rowBuilder: (doc) => [
+                Text(
+                  doc['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(doc['department']!),
+                Text(doc['patients']!),
+                Text(doc['shift']!),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
                     color: doc['status'] == 'Active'
-                        ? AppColors.primary
-                        : AppColors.border,
+                        ? AppColors.primarySoft
+                        : AppColors.background,
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                    border: Border.all(
+                      color: doc['status'] == 'Active'
+                          ? AppColors.primary
+                          : AppColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    doc['status']!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: doc['status'] == 'Active'
+                          ? AppColors.primary
+                          : AppColors.textMuted,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                child: Text(
-                  doc['status']!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: doc['status'] == 'Active'
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                    fontWeight: FontWeight.bold,
+                OutlinedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Managing ${doc['name']}')),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   ),
+                  child: const Text('Manage'),
                 ),
-              ),
-              OutlinedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Managing ${doc['name']}')),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                ),
-                child: const Text('Manage'),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );
   }
 }
+
