@@ -1,14 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../app/theme/theme.dart';
 import '../../appointments/application/appointment_providers.dart';
 import '../../appointments/domain/appointment.dart';
 import '../../auth/application/user_providers.dart';
 import '../../records/application/record_providers.dart';
 import '../../records/domain/medical_record.dart';
-import '../demo/doctor_workspace_models.dart';
+import '../domain/doctor_workspace_models.dart';
 
 /// Aggregated, real metrics for the signed-in doctor, derived from the live
 /// appointment and diagnostic-report streams. Everything the doctor dashboard
@@ -119,8 +117,8 @@ final doctorStatsProvider = Provider<DoctorStats>((ref) {
     completedAppointments: completed,
     todayAppointments: today,
     patientsSeen: seenPatients.length,
-    reportsToReview: reports.where((r) => r.status == 'Needs review').length,
-    highPriorityReports: reports.where((r) => r.priority == 'High').length,
+    reportsToReview: reports.where((r) => r.status == ReportStatus.needsReview).length,
+    highPriorityReports: reports.where((r) => r.priority.isHigh).length,
   );
 });
 
@@ -145,44 +143,45 @@ final allDiagnosticReportsProvider = Provider<AsyncValue<List<DiagnosticReport>>
   };
 
   final reports = records
-      .where((r) => r.category == RecordCategory.labReport || r.category == RecordCategory.imaging)
-      .map((record) {
-        final patientName = patientNames[record.patientId] ?? 'Unknown Patient';
-
-        IconData icon = Icons.description_outlined;
-        Color iconColor = AppColors.primary;
-        Color iconBackground = AppColors.primarySoft;
-
-        if (record.category == RecordCategory.labReport) {
-          icon = Icons.science_outlined;
-          iconColor = AppColors.warning;
-          iconBackground = AppColors.warningSoft;
-        } else if (record.category == RecordCategory.imaging) {
-          icon = Icons.portrait_rounded;
-          iconColor = AppColors.secondary;
-          iconBackground = AppColors.secondarySoft;
-        }
-
-        final isHigh = record.title.toLowerCase().contains('critical') ||
-            record.title.toLowerCase().contains('elevated') ||
-            record.notes.toLowerCase().contains('critical') ||
-            record.notes.toLowerCase().contains('high') ||
-            record.notes.toLowerCase().contains('danger');
-
-        return DiagnosticReport(
+      .where(
+        (r) =>
+            r.category == RecordCategory.labReport ||
+            r.category == RecordCategory.imaging,
+      )
+      .map(
+        (record) => DiagnosticReport(
           id: record.id,
           type: record.title,
-          patient: patientName,
+          patient: patientNames[record.patientId] ?? 'Unknown Patient',
           ordered: DateFormat('MMM dd, yyyy').format(record.date),
           summary: record.notes.isEmpty ? 'No notes provided' : record.notes,
-          status: 'Needs review',
-          priority: isHigh ? 'High' : 'Normal',
-          icon: icon,
-          iconColor: isHigh ? AppColors.error : iconColor,
-          iconBackground: isHigh ? AppColors.errorSoft : iconBackground,
-        );
-      })
+          category: record.category,
+          priority: _priorityOf(record),
+        ),
+      )
       .toList();
 
   return AsyncValue.data(reports);
 });
+
+/// Flags a record as high priority when its title or notes mention a concern.
+///
+/// A keyword scan, not a clinical judgement — it only drives a badge and a
+/// filter, never anything presented as a finding.
+///
+/// The two term lists differ, and that asymmetry is preserved from the original
+/// implementation rather than tidied: 'elevated' is matched only in the title,
+/// while 'high' and 'danger' are matched only in the notes. It looks like an
+/// oversight, but widening it would silently re-classify existing records, so
+/// it is left alone deliberately.
+ReportPriority _priorityOf(MedicalRecord record) {
+  const titleTerms = ['critical', 'elevated'];
+  const noteTerms = ['critical', 'high', 'danger'];
+
+  final title = record.title.toLowerCase();
+  final notes = record.notes.toLowerCase();
+  final isHigh =
+      titleTerms.any(title.contains) || noteTerms.any(notes.contains);
+
+  return isHigh ? ReportPriority.high : ReportPriority.normal;
+}

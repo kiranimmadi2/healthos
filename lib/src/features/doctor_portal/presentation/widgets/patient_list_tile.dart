@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/widgets/status_pill.dart';
-import '../../demo/doctor_workspace_models.dart';
+import '../../domain/doctor_workspace_models.dart';
 import 'doctor_workspace_widgets.dart';
 
 class PatientListTile extends StatelessWidget {
@@ -28,7 +28,7 @@ class PatientListTile extends StatelessWidget {
               children: [
                 AvatarInitials(
                   initials: patient.initials,
-                  color: patient.color,
+                  color: avatarColorFor(patient.name),
                   radius: 24,
                 ),
                 const SizedBox(width: 14),

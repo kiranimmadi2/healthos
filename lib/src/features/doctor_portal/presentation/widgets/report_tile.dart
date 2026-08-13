@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/widgets/status_pill.dart';
-import '../../demo/doctor_workspace_models.dart';
+import '../../domain/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
+import 'report_icon.dart';
 
 class ReportTile extends StatelessWidget {
   const ReportTile({
@@ -24,15 +25,7 @@ class ReportTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: report.iconBackground,
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-            ),
-            child: Icon(report.icon, color: report.iconColor),
-          ),
+          ReportIcon(report: report),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -46,7 +39,7 @@ class ReportTile extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
-                    if (report.priority == 'High')
+                    if (report.priority.isHigh)
                       const StatusPill(
                         label: 'High priority',
                         foreground: AppColors.error,
@@ -71,7 +64,7 @@ class ReportTile extends StatelessWidget {
                       icon: const Icon(Icons.visibility_outlined, size: 18),
                       label: const Text('Open report'),
                     ),
-                    if (!reviewed && report.status == 'Needs review')
+                    if (!reviewed && report.status == ReportStatus.needsReview)
                       TextButton.icon(
                         onPressed: onReviewed,
                         icon: const Icon(Icons.check_rounded, size: 18),

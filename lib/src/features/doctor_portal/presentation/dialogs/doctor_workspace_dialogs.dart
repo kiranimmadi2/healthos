@@ -9,9 +9,10 @@ import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../ai_triage/application/ai_triage_providers.dart';
 import '../../../records/application/record_providers.dart';
-import '../../../records/domain/medical_record.dart';
-import '../../demo/doctor_workspace_models.dart';
+import '../../../records/records.dart';
+import '../../domain/doctor_workspace_models.dart';
 import '../widgets/doctor_workspace_widgets.dart';
+import '../widgets/report_icon.dart';
 
 void showActionSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
@@ -46,7 +47,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                         children: [
                           AvatarInitials(
                             initials: patient.initials,
-                            color: patient.color,
+                            color: avatarColorFor(patient.name),
                             radius: 30,
                           ),
                           const SizedBox(width: 16),
@@ -377,7 +378,7 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                                     'MMM dd, yyyy',
                                   ).format(record.date),
                                   icon: _timelineIcon(record.category),
-                                  color: _timelineColor(context, record.category),
+                                  color: recordCategoryColor(context, record.category),
                                 ),
                             ],
                           );
@@ -430,17 +431,6 @@ IconData _timelineIcon(String category) {
   };
 }
 
-Color _timelineColor(BuildContext context, String category) {
-  final hos = context.hos;
-  return switch (category) {
-    RecordCategory.labReport => hos.categoryLab,
-    RecordCategory.prescription => hos.categoryPrescription,
-    RecordCategory.imaging => hos.categoryImaging,
-    RecordCategory.immunization => hos.categoryImmunization,
-    _ => hos.categoryOther,
-  };
-}
-
 Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {
   return showModalBottomSheet<void>(
     context: context,
@@ -455,15 +445,7 @@ Future<void> showReportSheet(BuildContext context, DiagnosticReport report) {
           children: [
             Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: report.iconBackground,
-                    borderRadius: BorderRadius.circular(AppRadius.medium),
-                  ),
-                  child: Icon(report.icon, color: report.iconColor),
-                ),
+                ReportIcon(report: report, size: 48),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(

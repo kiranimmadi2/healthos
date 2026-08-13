@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
 import '../../application/doctor_portal_providers.dart';
-import '../../demo/doctor_workspace_models.dart';
+import '../../domain/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
 import '../widgets/doctor_workspace_widgets.dart';
 import '../widgets/report_tile.dart';

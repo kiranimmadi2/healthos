@@ -10,6 +10,7 @@ import '../../auth/application/auth_providers.dart';
 import '../application/record_providers.dart';
 import '../domain/medical_record.dart';
 import 'add_record_form.dart';
+import 'record_category_style.dart';
 
 class RecordsScreen extends ConsumerWidget {
   const RecordsScreen({super.key});
@@ -76,23 +77,13 @@ class RecordsScreen extends ConsumerWidget {
     );
   }
 
-  static (IconData, Color) _categoryStyle(BuildContext context, String category) {
-    final hos = context.hos;
+  static IconData _categoryIcon(String category) {
     return switch (category) {
-      RecordCategory.labReport => (Icons.bloodtype_rounded, hos.categoryLab),
-      RecordCategory.prescription => (
-        Icons.medication_rounded,
-        hos.categoryPrescription,
-      ),
-      RecordCategory.imaging => (
-        Icons.document_scanner_rounded,
-        hos.categoryImaging,
-      ),
-      RecordCategory.immunization => (
-        Icons.shield_rounded,
-        hos.categoryImmunization,
-      ),
-      _ => (Icons.description_rounded, hos.categoryOther),
+      RecordCategory.labReport => Icons.bloodtype_rounded,
+      RecordCategory.prescription => Icons.medication_rounded,
+      RecordCategory.imaging => Icons.document_scanner_rounded,
+      RecordCategory.immunization => Icons.shield_rounded,
+      _ => Icons.description_rounded,
     };
   }
 
@@ -103,7 +94,8 @@ class RecordsScreen extends ConsumerWidget {
   ) {
     final hos = context.hos;
     final theme = Theme.of(context);
-    final (icon, color) = _categoryStyle(context, record.category);
+    final icon = _categoryIcon(record.category);
+    final color = recordCategoryColor(context, record.category);
 
     return GlassContainer(
       margin: const EdgeInsets.only(bottom: 20),

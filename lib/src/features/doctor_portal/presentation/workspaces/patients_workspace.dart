@@ -11,7 +11,7 @@ import '../../../appointments/domain/appointment.dart';
 import '../../../auth/application/user_providers.dart';
 import '../../../auth/domain/user_profile.dart';
 import '../../application/doctor_portal_providers.dart';
-import '../../demo/doctor_workspace_models.dart';
+import '../../domain/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
 import '../widgets/doctor_workspace_widgets.dart';
 import '../widgets/patient_list_tile.dart';
@@ -21,20 +21,6 @@ class PatientsWorkspace extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<PatientsWorkspace> createState() => _PatientsWorkspaceState();
-}
-
-/// Stable avatar tint for a patient, so the same person keeps the same colour
-/// between rebuilds and screens.
-Color _avatarColor(String name) {
-  const palette = [
-    AppColors.primary,
-    AppColors.secondary,
-    AppColors.warning,
-    AppColors.error,
-    Color(0xFF7C3AED),
-    Color(0xFF0891B2),
-  ];
-  return palette[name.hashCode.abs() % palette.length];
 }
 
 class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
@@ -83,7 +69,6 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
             lastVisit: latest == null
                 ? 'No visits yet'
                 : DateFormat('dd MMM yyyy').format(latest.dateTime),
-            color: _avatarColor(patient.name),
             needsFollowUp: latest?.status == AppointmentStatus.pending,
           );
         }).toList();

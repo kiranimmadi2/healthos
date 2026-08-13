@@ -44,6 +44,23 @@ class WorkspaceHeading extends StatelessWidget {
   }
 }
 
+/// Stable avatar tint for a person, so the same name keeps the same colour
+/// across rebuilds and screens.
+///
+/// Lives here rather than on the model: it is a rendering choice, and baking it
+/// into DoctorPatient meant the application layer had to import Flutter.
+Color avatarColorFor(String name) {
+  const palette = [
+    AppColors.primary,
+    AppColors.secondary,
+    AppColors.warning,
+    AppColors.error,
+    Color(0xFF7C3AED),
+    Color(0xFF0891B2),
+  ];
+  return palette[name.hashCode.abs() % palette.length];
+}
+
 class AvatarInitials extends StatelessWidget {
   const AvatarInitials({
     super.key,
