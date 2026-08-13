@@ -36,6 +36,19 @@ class UserRepository {
     } catch (_) {}
   }
 
+  /// Drops the cached profile for [uid] from memory and disk.
+  ///
+  /// Called on sign-out. Without this the static memory cache outlives the
+  /// session, so the next sign-in briefly re-emits the previous user's profile
+  /// before Firestore responds.
+  Future<void> clearCache(String uid) async {
+    _memoryCache.remove(uid);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cacheKey(uid));
+    } catch (_) {}
+  }
+
   /// Reads cached user profile from SharedPreferences or Memory
   Future<Map<String, dynamic>?> _loadFromLocalCache(String uid) async {
     if (_memoryCache.containsKey(uid) && _memoryCache[uid]!.isNotEmpty) {

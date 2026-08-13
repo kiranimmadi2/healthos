@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 import 'app_dimensions.dart';
+import 'hos_colors.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -18,6 +19,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      extensions: const [HosColors.light],
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
       splashFactory: InkRipple.splashFactory,
@@ -250,6 +252,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      extensions: const [HosColors.dark],
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.darkBackground,
       splashFactory: InkRipple.splashFactory,

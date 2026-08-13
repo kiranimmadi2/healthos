@@ -193,6 +193,12 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    // Drop the cached profile first: the memory cache is static, so without
+    // this the next sign-in re-emits the previous user's profile.
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await _userRepository?.clearCache(uid);
+    }
     if (!kIsWeb) {
       await _googleSignIn.signOut();
     }

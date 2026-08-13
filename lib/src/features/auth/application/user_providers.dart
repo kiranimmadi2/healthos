@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/user_repository.dart';
+import '../domain/user_profile.dart';
 import 'auth_providers.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
@@ -14,6 +15,18 @@ final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
   if (user == null) return Stream.value(null);
 
   return ref.watch(userRepositoryProvider).watchUserData(user.uid);
+});
+
+/// Typed view of [userProfileProvider].
+///
+/// Prefer this over the raw map. The map provider is kept while screens are
+/// converted; both are backed by the same stream, so there is no extra read.
+final currentUserProfileProvider = Provider<AsyncValue<UserProfile?>>((ref) {
+  final user = ref.watch(authStateProvider).value;
+  return ref.watch(userProfileProvider).whenData((data) {
+    if (data == null || user == null) return null;
+    return UserProfile.fromMap(user.uid, data);
+  });
 });
 
 final userRoleProvider = Provider<AsyncValue<String?>>((ref) {
