@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/theme/theme.dart';
 import '../../../shared/presentation/widgets/hos_states.dart';
 import '../../appointments/presentation/book_appointment_screen.dart';
 import '../application/doctor_providers.dart';
@@ -13,6 +14,9 @@ class DoctorListScreen extends ConsumerStatefulWidget {
 }
 
 class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   late final TextEditingController _searchController;
 
   @override
@@ -125,13 +129,13 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_rounded, size: 56, color: isDark ? const Color(0xFF64748B) : Colors.grey[400]),
+            Icon(Icons.search_off_rounded, size: 56, color: hos.textMuted),
             const SizedBox(height: 16),
             Text(
               message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDark ? const Color(0xFFCBD5E1) : Colors.grey[600],
+                color: hos.textSecondary,
                 fontWeight: FontWeight.w600,
                 height: 1.5,
               ),
@@ -176,20 +180,20 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
           },
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: hos.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: 'Search specialists...',
             icon: Icon(
               Icons.search_rounded,
-              color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+              color: hos.brand,
               size: 22,
             ),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
             hintStyle: TextStyle(
-              color: isDark ? const Color(0xFF94A3B8) : Colors.grey,
+              color: hos.textMuted,
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -220,14 +224,14 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
               },
               label: Text(cat.toUpperCase()),
               backgroundColor: isSelected
-                  ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
+                  ? (hos.textPrimary)
                   : (isDark
                       ? const Color(0xFF1E293B).withOpacity(0.7)
                       : Colors.white.withOpacity(0.85)),
               labelStyle: TextStyle(
                 color: isSelected
                     ? Colors.white
-                    : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
+                    : (hos.textSecondary),
                 fontWeight: FontWeight.w900,
                 fontSize: 10,
                 letterSpacing: 0.5,
@@ -259,11 +263,11 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
     final borderColor = isDark
         ? const Color(0xFF334155).withOpacity(0.8)
         : const Color(0xFFE2E8F0);
-    final nameColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final nameColor = hos.textPrimary;
     final specColor = isDark ? const Color(0xFF38BDF8) : const Color(0xFF0F8F83);
-    final locationColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-    final expBg = isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF);
-    final expFg = isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+    final locationColor = hos.textMuted;
+    final expBg = hos.brandSoft;
+    final expFg = hos.brand;
     final ratingBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFECFDF5);
     final ratingFg = isDark ? const Color(0xFF34D399) : const Color(0xFF059669);
 
@@ -330,7 +334,7 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
                           color: const Color(0xFF10B981),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                            color: hos.surface,
                             width: 2.5,
                           ),
                         ),

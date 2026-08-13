@@ -14,6 +14,9 @@ class AITriageScreen extends ConsumerStatefulWidget {
 }
 
 class _AITriageScreenState extends ConsumerState<AITriageScreen> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<_ChatMessage> _messages = [];
@@ -211,7 +214,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
-                color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                color: hos.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -222,7 +225,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                 'Describe any non-emergency symptoms or ask health questions for personalized guidance & triage recommendation.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  color: hos.textMuted,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -244,10 +247,10 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        color: hos.surface,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                          color: hos.borderStrong,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -271,7 +274,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                           Text(
                             suggestion,
                             style: TextStyle(
-                              color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B),
+                              color: hos.textPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -331,7 +334,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
           title: 'PERSONALIZED HEALTH ADVICE',
           icon: Icons.lightbulb_rounded,
           color: const Color(0xFF3B82F6),
-          bgColor: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF),
+          bgColor: hos.brandSoft,
           borderColor: const Color(0xFFBFDBFE),
         );
         displayText = rawText.substring('HEALTH ADVICE:'.length).trimLeft();
@@ -340,7 +343,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
           title: 'PERSONALIZED CLINICAL GUIDANCE',
           icon: Icons.health_and_safety_rounded,
           color: const Color(0xFF3B82F6),
-          bgColor: isDark ? const Color(0xFF1E3A8A) : const Color(0xFFEFF6FF),
+          bgColor: hos.brandSoft,
           borderColor: const Color(0xFFBFDBFE),
         );
       }
@@ -384,7 +387,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
               decoration: BoxDecoration(
                 color: isUser
                     ? const Color(0xFF2563EB)
-                    : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                    : (hos.surface),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -394,7 +397,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                 border: isUser
                     ? null
                     : Border.all(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        color: hos.border,
                         width: 1.2,
                       ),
                 boxShadow: [
@@ -451,7 +454,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                     style: TextStyle(
                       color: isUser
                           ? Colors.white
-                          : (isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B)),
+                          : (hos.textPrimary),
                       fontSize: 15,
                       fontWeight: isUser ? FontWeight.w600 : FontWeight.w400,
                       height: 1.55,
@@ -504,10 +507,10 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: hos.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: hos.border,
               ),
             ),
             child: const HosTypingIndicator(label: 'Analyzing your message'),
@@ -539,12 +542,12 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            color: hos.surface,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: hasText
                   ? const Color(0xFF2563EB)
-                  : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                  : (hos.borderStrong),
               width: hasText ? 2.0 : 1.5,
             ),
             boxShadow: [
@@ -567,7 +570,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                 Icons.medical_services_outlined,
                 color: hasText
                     ? const Color(0xFF2563EB)
-                    : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                    : (hos.textMuted),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -577,7 +580,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                   minLines: 1,
                   maxLines: 5,
                   style: TextStyle(
-                    color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                    color: hos.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -592,7 +595,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                     errorBorder: InputBorder.none,
                     focusedErrorBorder: InputBorder.none,
                     hintStyle: TextStyle(
-                      color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      color: hos.textMuted,
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
                     ),
@@ -632,7 +635,7 @@ class _AITriageScreenState extends ConsumerState<AITriageScreen> {
                       Icons.send_rounded,
                       color: hasText && !_isLoading
                           ? Colors.white
-                          : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                          : (hos.textMuted),
                       size: 18,
                     ),
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/theme/theme.dart';
 import 'package:intl/intl.dart';
 import '../../auth/application/auth_providers.dart';
 import '../../auth/application/user_providers.dart';
@@ -18,6 +19,9 @@ class BookAppointmentScreen extends ConsumerStatefulWidget {
 }
 
 class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String? _selectedTime;
   final _symptomsController = TextEditingController();
@@ -103,7 +107,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: hos.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -127,7 +131,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.0,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: hos.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -135,7 +139,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               'Requested with ${widget.doctor.name}\n${DateFormat('MMM dd').format(_selectedDate)} at $_selectedTime\nYou will be notified once the doctor confirms.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                color: hos.textMuted,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -320,7 +324,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: hos.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -329,7 +333,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                       'Choose your preferred date and time slot for consultation.',
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                        color: hos.textMuted,
                       ),
                     ),
                     const SizedBox(height: 36),
@@ -557,7 +561,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF2563EB)
-                    : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                    : (hos.surfaceMuted),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isSelected
@@ -583,7 +587,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                     style: TextStyle(
                       color: isSelected
                           ? Colors.white70
-                          : (isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
+                          : (hos.textMuted),
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                     ),
@@ -594,7 +598,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                     style: TextStyle(
                       color: isSelected
                           ? Colors.white
-                          : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                          : (hos.textPrimary),
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                     ),
@@ -639,15 +643,15 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
               color: isBooked
                   ? (isDark ? const Color(0xFF1E293B).withOpacity(0.5) : const Color(0xFFF1F5F9))
                   : isSelected
-                  ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
-                  : (isDark ? const Color(0xFF1E293B) : Colors.white),
+                  ? (hos.textPrimary)
+                  : (hos.surface),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isBooked
                     ? (isDark ? const Color(0xFF334155).withOpacity(0.5) : const Color(0xFFE2E8F0))
                     : isSelected
-                    ? (isDark ? const Color(0xFF2563EB) : const Color(0xFF0F172A))
-                    : (isDark ? const Color(0xFF334155) : Colors.grey.withValues(alpha: 0.2)),
+                    ? (hos.textPrimary)
+                    : (hos.border.withValues(alpha: 0.2)),
                 width: 1.5,
               ),
             ),
@@ -661,7 +665,7 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
                         ? const Color(0xFF94A3B8)
                         : isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                        : (hos.textPrimary),
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
@@ -691,10 +695,10 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        color: hos.surfaceMuted,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : Colors.grey.withValues(alpha: 0.1),
+          color: hos.border.withValues(alpha: 0.1),
         ),
       ),
       child: TextField(
@@ -702,13 +706,13 @@ class _BookAppointmentScreenState extends ConsumerState<BookAppointmentScreen> {
         maxLines: 4,
         style: TextStyle(
           fontWeight: FontWeight.w500,
-          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          color: hos.textPrimary,
         ),
         decoration: InputDecoration(
           hintText: 'Describe your condition...',
           border: InputBorder.none,
           hintStyle: TextStyle(
-            color: isDark ? const Color(0xFF94A3B8) : Colors.grey,
+            color: hos.textMuted,
             fontWeight: FontWeight.w400,
           ),
         ),

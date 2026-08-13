@@ -16,6 +16,9 @@ class MealAnalyzerScreen extends ConsumerStatefulWidget {
 }
 
 class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   final _inputController = TextEditingController();
   String _selectedMealType = 'Lunch ☀️';
 
@@ -216,7 +219,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             'What food or meal are you planning to eat?',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  color: hos.textPrimary,
                 ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -270,7 +273,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
             enabled: !isLoading,
             maxLines: 2,
             style: TextStyle(
-              color: isDark ? Colors.white : AppColors.textPrimary,
+              color: hos.textPrimary,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
@@ -371,7 +374,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
               'Or try a quick preset meal:',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    color: hos.textPrimary,
                   ),
             ),
           ],
@@ -386,7 +389,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
               label: Text(preset['name']!),
               backgroundColor: isDark ? const Color(0xFF1E293B).withOpacity(0.7) : AppColors.surface,
               side: BorderSide(color: isDark ? const Color(0xFF334155) : AppColors.border),
-              labelStyle: TextStyle(fontSize: 12, color: isDark ? Colors.white : AppColors.textPrimary),
+              labelStyle: TextStyle(fontSize: 12, color: hos.textPrimary),
               onPressed: () => _selectPreset(preset['name']!, preset['type']!),
             );
           }).toList(),
@@ -469,7 +472,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
               Text(
                 result.summary,
                 style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  color: hos.textPrimary,
                   fontSize: 14,
                   height: 1.4,
                 ),
@@ -485,7 +488,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
           'Estimated Macro Breakdown',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+                color: hos.textPrimary,
               ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -596,7 +599,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       '• $warning',
-                      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary, fontSize: 13),
+                      style: TextStyle(color: hos.textPrimary, fontSize: 13),
                     ),
                   ),
                 ),
@@ -634,7 +637,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        color: hos.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -699,7 +702,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    color: hos.textPrimary,
                   ),
                 ),
               ],
@@ -721,7 +724,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
           'Recently Processed Meals',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+                color: hos.textPrimary,
               ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -756,7 +759,7 @@ class _MealAnalyzerScreenState extends ConsumerState<MealAnalyzerScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color: hos.textPrimary,
                           ),
                         ),
                         Text(

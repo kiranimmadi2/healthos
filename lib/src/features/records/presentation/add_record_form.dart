@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../app/theme/theme.dart';
 
 import '../domain/medical_record.dart';
 
@@ -13,6 +14,9 @@ class AddRecordForm extends StatefulWidget {
 }
 
 class _AddRecordFormState extends State<AddRecordForm> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   final _titleController = TextEditingController();
   final _notesController = TextEditingController();
   String _category = RecordCategory.labReport;
@@ -82,7 +86,7 @@ class _AddRecordFormState extends State<AddRecordForm> {
               fontSize: 16,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.0,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: hos.textPrimary,
             ),
           ),
           const SizedBox(height: 24),

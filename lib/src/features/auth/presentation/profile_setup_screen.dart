@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/theme/theme.dart';
 import 'package:intl/intl.dart';
 import '../application/auth_providers.dart';
 import '../application/user_providers.dart';
@@ -12,6 +13,9 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
+  /// Brightness-aware semantic colours for this screen.
+  HosColors get hos => context.hos;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
