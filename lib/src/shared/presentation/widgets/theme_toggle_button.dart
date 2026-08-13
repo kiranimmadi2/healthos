@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/theme/hos_colors.dart';
 import '../../../app/theme/theme_provider.dart';
 
 class ThemeToggleButton extends ConsumerWidget {
@@ -34,21 +35,12 @@ class ThemeToggleButton extends ConsumerWidget {
           curve: Curves.easeOutCubic,
           padding: EdgeInsets.all(isCompact ? 8 : 10),
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF1E293B).withOpacity(0.85)
-                : Colors.white.withOpacity(0.75),
+            color: context.hos.glassFillStrong,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark
-                  ? const Color(0xFF334155)
-                  : Colors.white.withOpacity(0.8),
-              width: 1.5,
-            ),
+            border: Border.all(color: context.hos.glassBorder, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.35)
-                    : const Color(0xFF0F172A).withOpacity(0.06),
+                color: context.hos.glassShadow,
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -64,7 +56,11 @@ class ThemeToggleButton extends ConsumerWidget {
                   icon,
                   key: ValueKey(icon),
                   size: isCompact ? 18 : 20,
-                  color: isDark ? const Color(0xFFF59E0B) : const Color(0xFF2563EB),
+                  // Amber sun / blue moon: intentionally constant, they read
+                  // as the sun and the moon rather than as theme surfaces.
+                  color: isDark
+                      ? const Color(0xFFF59E0B)
+                      : const Color(0xFF2563EB),
                 ),
               ),
               if (!isCompact) ...[
@@ -74,7 +70,7 @@ class ThemeToggleButton extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                    color: context.hos.textPrimary,
                   ),
                 ),
               ],

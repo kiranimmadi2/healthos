@@ -89,7 +89,7 @@ class HealthShell extends StatelessWidget {
                                 ? const _BrandMark(showLabel: true)
                                 : const _BrandMark(showLabel: false),
                           ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.4)),
+                          Divider(height: 1, color: context.hos.glassBorder),
                           const SizedBox(height: 16),
                           Expanded(
                             child: ListView.builder(
@@ -110,14 +110,13 @@ class HealthShell extends StatelessWidget {
                                         height: 52,
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? Colors.white
+                                              ? context.hos.glassFillStrong
                                               : Colors.transparent,
                                           borderRadius: BorderRadius.circular(20),
                                           boxShadow: isSelected
                                               ? [
                                                   BoxShadow(
-                                                    color: AppColors.textPrimary
-                                                        .withOpacity(0.08),
+                                                    color: context.hos.glassShadow,
                                                     blurRadius: 16,
                                                     offset: const Offset(0, 4),
                                                   ),
@@ -129,8 +128,8 @@ class HealthShell extends StatelessWidget {
                                               ? destination.selectedIcon
                                               : destination.icon,
                                           color: isSelected
-                                              ? AppColors.primary
-                                              : AppColors.textMuted,
+                                              ? context.hos.brand
+                                              : context.hos.textMuted,
                                           size: 22,
                                         ),
                                       ),
@@ -138,10 +137,10 @@ class HealthShell extends StatelessWidget {
                                   );
                                 }
 
-                                final isDark = Theme.of(context).brightness == Brightness.dark;
-                                final activeBgColor = isDark ? const Color(0xFF2563EB) : Colors.white;
-                                final activeTextColor = isDark ? Colors.white : AppColors.textPrimary;
-                                final unselectedTextColor = isDark ? const Color(0xFF94A3B8) : AppColors.textSecondary;
+                                final hos = context.hos;
+                                final activeBgColor = hos.glassFillStrong;
+                                final activeTextColor = hos.textPrimary;
+                                final unselectedTextColor = hos.textSecondary;
 
                                 return Container(
                                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -161,16 +160,14 @@ class HealthShell extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(24),
                                         border: isSelected
                                             ? Border.all(
-                                                color: isDark ? const Color(0xFF60A5FA) : Colors.white,
+                                                color: hos.glassBorder,
                                                 width: 1.5,
                                               )
                                             : null,
                                         boxShadow: isSelected
                                             ? [
                                                 BoxShadow(
-                                                  color: isDark
-                                                      ? Colors.blue.withOpacity(0.3)
-                                                      : const Color(0xFF0F172A).withOpacity(0.08),
+                                                  color: hos.glassShadow,
                                                   blurRadius: 16,
                                                   spreadRadius: 0,
                                                   offset: const Offset(0, 4),
@@ -213,7 +210,7 @@ class HealthShell extends StatelessWidget {
                             ),
                           ),
                           if (leading != null) ...[
-                            Divider(height: 1, color: Colors.white.withOpacity(0.4)),
+                            Divider(height: 1, color: context.hos.glassBorder),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                               child: isDesktop
@@ -276,7 +273,7 @@ class HealthShell extends StatelessWidget {
               subtitle!,
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+              ).textTheme.bodySmall?.copyWith(color: context.hos.textMuted),
             ),
         ],
       ),
@@ -314,7 +311,7 @@ class HealthShell extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: context.hos.textMuted,
                         fontSize: 13,
                       ),
                     ),

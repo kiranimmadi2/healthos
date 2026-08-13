@@ -73,10 +73,10 @@ class HosStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: context.hos.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x05000000),
+            color: context.hos.glassShadow,
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -106,7 +106,7 @@ class HosStatCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textMuted,
+                          color: context.hos.textMuted,
                           fontWeight: FontWeight.w500,
                         ),
                   ),
@@ -116,7 +116,7 @@ class HosStatCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: context.hos.textPrimary,
                         ),
                   ),
                   if (subtitle != null) ...[
@@ -125,7 +125,7 @@ class HosStatCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
+                            color: context.hos.textMuted,
                             fontSize: 10,
                           ),
                     ),
@@ -168,9 +168,9 @@ class HosVitalsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft.withValues(alpha: 0.5),
+        color: context.hos.brandSoft,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.hos.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -181,16 +181,16 @@ class HosVitalsCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 v.$2,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
               Text(
                 v.$1,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.textMuted,
+                  color: context.hos.textMuted,
                 ),
               ),
             ],
@@ -226,7 +226,7 @@ class HosPrescriptionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.hos.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +242,7 @@ class HosPrescriptionCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   medicationName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -256,7 +256,7 @@ class HosPrescriptionCard extends StatelessWidget {
                 ),
                 child: Text(
                   duration,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
@@ -268,7 +268,7 @@ class HosPrescriptionCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Dosage: $dosage · Frequency: $frequency',
-            style: const TextStyle(fontSize: 13, color: AppColors.textMuted),
+            style: TextStyle(fontSize: 13, color: context.hos.textMuted),
           ),
           if (notes != null && notes!.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -334,7 +334,7 @@ class HosTimeline extends StatelessWidget {
                   Container(
                     width: 2,
                     height: 36,
-                    color: AppColors.border,
+                    color: context.hos.border,
                   ),
               ],
             ),
@@ -350,16 +350,16 @@ class HosTimeline extends StatelessWidget {
                       children: [
                         Text(
                           item.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
                         Text(
                           item.date,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textMuted,
+                            color: context.hos.textMuted,
                           ),
                         ),
                       ],
@@ -367,9 +367,9 @@ class HosTimeline extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       item.subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textMuted,
+                        color: context.hos.textMuted,
                       ),
                     ),
                   ],
@@ -402,20 +402,20 @@ class HosDataTable<T> extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.hos.border),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowColor: WidgetStateProperty.all(AppColors.background),
+          headingRowColor: WidgetStateProperty.all(context.hos.surfaceMuted),
           columns: columns
               .map(
                 (col) => DataColumn(
                   label: Text(
                     col,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: context.hos.textPrimary,
                     ),
                   ),
                 ),

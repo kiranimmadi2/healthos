@@ -13,7 +13,7 @@ class GlassCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hos = context.hos;
 
     return Stack(
       children: [
@@ -22,123 +22,79 @@ class GlassCanvas extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: isDark
-                    ? const [
-                        Color(0xFF090D16),
-                        Color(0xFF0F172A),
-                        Color(0xFF131C31),
-                      ]
-                    : const [
-                        Color(0xFFE2E8F0),
-                        Color(0xFFE0E7FF),
-                        Color(0xFFF1F5F9),
-                      ],
+                colors: [hos.canvasStart, hos.canvasMid, hos.canvasEnd],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
         ),
-        // Top-left glowing blue orb
-        Positioned(
+        _Orb(
           top: -120,
           left: -100,
-          child: Container(
-            width: 450,
-            height: 450,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF2563EB).withOpacity(0.35),
-                        const Color(0xFF1D4ED8).withOpacity(0.15),
-                        Colors.transparent,
-                      ]
-                    : [
-                        const Color(0xFF3B82F6).withOpacity(0.28),
-                        const Color(0xFF60A5FA).withOpacity(0.12),
-                        Colors.transparent,
-                      ],
-              ),
-            ),
-          ),
+          size: 450,
+          colors: [hos.orbBlue, hos.orbBlueSoft, Colors.transparent],
         ),
-        // Top-right glowing purple/violet orb
-        Positioned(
+        _Orb(
           top: -60,
           right: -80,
-          child: Container(
-            width: 500,
-            height: 500,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF7C3AED).withOpacity(0.30),
-                        const Color(0xFF6D28D9).withOpacity(0.12),
-                        Colors.transparent,
-                      ]
-                    : [
-                        const Color(0xFF8B5CF6).withOpacity(0.25),
-                        const Color(0xFFA78BFA).withOpacity(0.10),
-                        Colors.transparent,
-                      ],
-              ),
-            ),
-          ),
+          size: 500,
+          colors: [hos.orbPurple, hos.orbPurpleSoft, Colors.transparent],
         ),
-        // Center-right glowing cyan orb
-        Positioned(
+        _Orb(
           top: 300,
           right: -100,
-          child: Container(
-            width: 400,
-            height: 400,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF0E7490).withOpacity(0.28),
-                        Colors.transparent,
-                      ]
-                    : [
-                        const Color(0xFF06B6D4).withOpacity(0.20),
-                        const Color(0xFF38BDF8).withOpacity(0.06),
-                        Colors.transparent,
-                      ],
-              ),
-            ),
-          ),
+          size: 400,
+          colors: [hos.orbCyan, hos.orbCyanSoft, Colors.transparent],
         ),
-        // Bottom-left soft lavender glow
-        Positioned(
+        _Orb(
           bottom: -100,
           left: -120,
-          child: Container(
-            width: 450,
-            height: 450,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: isDark
-                    ? [
-                        const Color(0xFF9333EA).withOpacity(0.22),
-                        Colors.transparent,
-                      ]
-                    : [
-                        const Color(0xFFC084FC).withOpacity(0.20),
-                        Colors.transparent,
-                      ],
-              ),
-            ),
-          ),
+          size: 450,
+          colors: [hos.orbLavender, Colors.transparent],
         ),
         // Main Child
         Positioned.fill(child: child),
       ],
+    );
+  }
+}
+
+/// One blurred ambient glow behind the glass surfaces.
+class _Orb extends StatelessWidget {
+  const _Orb({
+    required this.size,
+    required this.colors,
+    this.top,
+    this.left,
+    this.right,
+    this.bottom,
+  });
+
+  final double size;
+  final List<Color> colors;
+  final double? top;
+  final double? left;
+  final double? right;
+  final double? bottom;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      left: left,
+      right: right,
+      bottom: bottom,
+      child: IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(colors: colors),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -176,16 +132,16 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hos = context.hos;
 
-    final defaultBg = isDark
-        ? const Color(0xFF1E293B).withOpacity(opacity * 0.95)
-        : Colors.white.withOpacity(opacity);
+    // `opacity` scales the token's own alpha so callers that pass a custom
+    // value keep working across both themes.
+    final base = hos.glassFill;
+    final defaultBg = base.withValues(
+      alpha: (base.a * (opacity / 0.65)).clamp(0.0, 1.0),
+    );
     final effectiveBg = backgroundColor ?? (gradient == null ? defaultBg : null);
-
-    final defaultBorder = isDark
-        ? const Color(0xFF334155).withOpacity(0.85)
-        : Colors.white.withOpacity(0.75);
+    final defaultBorder = hos.glassBorder;
 
     Widget content = Container(
       width: width,
@@ -201,20 +157,19 @@ class GlassContainer extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.35)
-                : const Color(0xFF0F172A).withOpacity(0.06),
+            color: hos.glassShadow,
             blurRadius: 24,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
-          if (!isDark)
-            BoxShadow(
-              color: Colors.white.withOpacity(0.6),
-              blurRadius: 4,
-              spreadRadius: 0,
-              offset: const Offset(0, -1),
-            ),
+          // Inner top highlight. Fully transparent in dark, where it would
+          // read as a seam rather than a bevel.
+          BoxShadow(
+            color: hos.glassHighlight,
+            blurRadius: 4,
+            spreadRadius: 0,
+            offset: const Offset(0, -1),
+          ),
         ],
       ),
       child: child,
@@ -264,6 +219,7 @@ class GlassPillButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hos = context.hos;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -273,14 +229,16 @@ class GlassPillButton extends StatelessWidget {
           GlassContainer(
             borderRadius: 30,
             blur: 16,
-            opacity: isSelected ? 0.90 : 0.60,
-            borderColor: isSelected ? accentColor.withOpacity(0.5) : Colors.white.withOpacity(0.8),
-            backgroundColor: isSelected ? Colors.white : Colors.white.withOpacity(0.55),
+            borderColor: isSelected
+                ? accentColor.withValues(alpha: 0.5)
+                : hos.glassBorder,
+            backgroundColor:
+                isSelected ? hos.glassFillStrong : hos.glassFill,
             padding: const EdgeInsets.all(16),
             child: Icon(
               icon,
               size: 22,
-              color: isSelected ? accentColor : AppColors.textPrimary,
+              color: isSelected ? accentColor : hos.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -289,7 +247,7 @@ class GlassPillButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? accentColor : AppColors.textPrimary,
+              color: isSelected ? accentColor : hos.textPrimary,
             ),
           ),
         ],
