@@ -1,26 +1,39 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'otp_service.dart';
+import 'phone_auth_service.dart';
 import 'user_repository.dart';
+
+/// Provider ids recorded on the user document, so the sign-in screen can tell
+/// a returning user which method their account uses.
+abstract final class AuthProviderId {
+  static const password = 'password';
+  static const google = 'google.com';
+  static const phone = 'phone';
+
+  /// Accounts created by the removed email-OTP flow. Nothing issues this any
+  /// more; it is still recognised so those users can be offered a recovery
+  /// path. See [AuthRepository.sendPasswordReset].
+  static const legacyEmailLink = 'emailLink';
+}
 
 class AuthRepository {
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
-  final OtpService _otpService;
+  final PhoneAuthService _phoneAuth;
   final UserRepository? _userRepository;
 
   AuthRepository(
     this._auth,
     this._googleSignIn, {
-    OtpService? otpService,
+    PhoneAuthService? phoneAuthService,
     UserRepository? userRepository,
-  })  : _otpService = otpService ?? OtpService(),
+  })  : _phoneAuth = phoneAuthService ?? PhoneAuthService(_auth),
         _userRepository = userRepository;
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
-  OtpService get otpService => _otpService;
+  PhoneAuthService get phoneAuth => _phoneAuth;
 
   /// Fetches registered sign-in methods for an email address.
   /// Used to inform the user if an account exists under another provider (Password vs Google vs OTP).
@@ -40,56 +53,51 @@ class AuthRepository {
     return [];
   }
 
-  /// Sends a 6-digit OTP code using production-grade OtpService.
-  Future<String> sendEmailOtp(String email) async {
-    return _otpService.sendOtp(email, firebaseAuth: _auth);
+  /// Signs in with a code delivered by SMS.
+  ///
+  /// If someone is already signed in (an email or Google user adding a phone),
+  /// the credential is linked to that account instead of creating a second one.
+  Future<UserCredential> signInWithPhoneCredential(
+    PhoneAuthCredential credential,
+  ) async {
+    final existingUser = _auth.currentUser;
+
+    UserCredential result;
+    if (existingUser != null) {
+      try {
+        result = await _phoneAuth.linkToCurrentUser(credential);
+      } on FirebaseAuthException catch (e) {
+        // The number already belongs to another account; sign in as that one.
+        if (e.code == 'credential-already-in-use' ||
+            e.code == 'provider-already-linked') {
+          result = await _phoneAuth.signIn(credential);
+        } else {
+          rethrow;
+        }
+      }
+    } else {
+      result = await _phoneAuth.signIn(credential);
+    }
+
+    final user = result.user;
+    if (user != null) {
+      await _userRepository?.recordSignInProvider(
+        user.uid,
+        AuthProviderId.phone,
+        email: user.email,
+        name: user.displayName,
+      );
+    }
+    return result;
   }
 
-  /// Verifies OTP code and signs in/links user account seamlessly.
-  Future<UserCredential?> verifyEmailOtp(String email, String otpCode) async {
-    final cleanEmail = email.trim().toLowerCase();
-
-    // Verify code with rate-limiting and expiration checks
-    _otpService.verifyOtp(cleanEmail, otpCode);
-
-    final derivedPassword = _deriveOtpPassword(cleanEmail);
-
-    UserCredential? credential;
-    try {
-      credential = await _auth.signInWithEmailAndPassword(
-        email: cleanEmail,
-        password: derivedPassword,
-      );
-    } catch (e) {
-      try {
-        credential = await _auth.createUserWithEmailAndPassword(
-          email: cleanEmail,
-          password: derivedPassword,
-        );
-      } on FirebaseAuthException catch (authErr) {
-        if (authErr.code == 'email-already-in-use') {
-          throw FirebaseAuthException(
-            code: 'email-already-in-use',
-            message:
-                'An account with this email already exists using Password or Google login. Please switch tabs to sign in.',
-          );
-        }
-        rethrow;
-      } catch (_) {
-        // Fallback for offline/test environments without initialized Firebase
-        return null;
-      }
-    }
-
-    if (credential?.user != null) {
-      await _userRepository?.recordSignInProvider(
-        credential!.user!.uid,
-        'emailLink',
-        email: cleanEmail,
-      );
-    }
-
-    return credential;
+  /// Recovery path for accounts created by the removed email-OTP flow.
+  ///
+  /// Those accounts have a real Firebase password that was derived from the
+  /// email address, so the user has never seen it and cannot type it. Sending a
+  /// reset lets them set one they know.
+  Future<void> sendPasswordReset(String email) {
+    return _auth.sendPasswordResetEmail(email: email.trim().toLowerCase());
   }
 
   Future<UserCredential> signInWithEmail(String email, String password) async {
@@ -101,7 +109,7 @@ class AuthRepository {
     if (credential.user != null) {
       await _userRepository?.recordSignInProvider(
         credential.user!.uid,
-        'password',
+        AuthProviderId.password,
         email: cleanEmail,
       );
     }
@@ -117,7 +125,7 @@ class AuthRepository {
     if (credential.user != null) {
       await _userRepository?.recordSignInProvider(
         credential.user!.uid,
-        'password',
+        AuthProviderId.password,
         email: cleanEmail,
       );
     }
@@ -131,7 +139,7 @@ class AuthRepository {
       if (credential.user != null) {
         await _userRepository?.recordSignInProvider(
           credential.user!.uid,
-          'google.com',
+          AuthProviderId.google,
           email: credential.user!.email,
           name: credential.user!.displayName,
         );
@@ -179,17 +187,13 @@ class AuthRepository {
     if (resultCredential?.user != null) {
       await _userRepository?.recordSignInProvider(
         resultCredential!.user!.uid,
-        'google.com',
+        AuthProviderId.google,
         email: resultCredential.user!.email,
         name: resultCredential.user!.displayName,
       );
     }
 
     return resultCredential;
-  }
-
-  String _deriveOtpPassword(String email) {
-    return 'HealthOS_OTP_Secret_${email.hashCode.abs()}_SecureKey!';
   }
 
   Future<void> signOut() async {

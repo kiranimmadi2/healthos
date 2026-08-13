@@ -21,16 +21,77 @@ We use the official Firebase CLI tool to securely link the app without manually 
    ```
    *Follow the prompts in the terminal: select your HealthOS project, and select the platforms you want to support (Android, iOS, Web).* This generates the `lib/firebase_options.dart` file.
 
-## Step 3: Enable Authentication & Add SHA-1 (For Google Sign-In)
+## Step 3: Enable Authentication
+
 1. In the Firebase Console, go to **Build > Authentication** -> **Get Started**.
 2. Go to the **Sign-in method** tab.
 3. Enable **Email/Password**.
-4. Enable **Google** (It will ask for a support email).
-5. **CRITICAL FOR ANDROID:** To make Google Sign-In work on Android, you must add your SHA-1 key to Firebase.
-   - In your terminal, navigate to the android folder: `cd android`
-   - Run the signing report: `./gradlew signingReport`
-   - Copy the `SHA1` string listed under the `debug` variant.
-   - In the Firebase Console, go to **Project Settings** (gear icon top left) -> Scroll down to your Android App -> Click **Add fingerprint** and paste the SHA-1.
+4. Enable **Google** (it will ask for a support email).
+5. Enable **Phone**.
+
+### 3a. Register SHA fingerprints (required for Android)
+
+Google Sign-In needs these. Phone auth needs them too — without them Play
+Integrity cannot attest the request and sign-in fails with
+`missing-client-identifier`.
+
+```bash
+cd android
+./gradlew signingReport
+```
+
+Register **both** SHA-1 and SHA-256, for **both** the debug and release
+variants, under **Project Settings > Your apps > Android > Add fingerprint**.
+
+> Registering only the release fingerprint is the usual mistake.
+> `android/app/build.gradle.kts` falls back to the **debug** signing config when
+> `key.properties` is absent, so a local `flutter run --release` is signed with
+> the debug key and will fail phone auth unless that fingerprint is registered
+> too.
+
+Re-download `google-services.json` afterwards and place it in `android/app/`.
+It is gitignored, so every machine needs its own copy.
+
+### 3b. Enable Play Integrity (Android)
+
+In Google Cloud Console, enable the **Play Integrity API** for the project.
+Without it Firebase falls back to a reCAPTCHA web-view interstitial mid-flow,
+which works but looks broken.
+
+### 3c. Authorised domains (web)
+
+Phone auth on web uses an invisible reCAPTCHA that the SDK renders itself — no
+code required. Add your hosting domain under **Authentication > Settings >
+Authorized domains** (`localhost` is there by default).
+
+### 3d. Test phone numbers (development)
+
+**Authentication > Sign-in method > Phone > Phone numbers for testing.**
+
+Add a number and a fixed code, e.g. `+1 650-555-3434` / `123456`. That number
+then signs in without sending a real SMS.
+
+This is the *only* supported way to skip SMS during development. It is enforced
+by Firebase, scoped to numbers you list, and inert in production — unlike the
+previous hardcoded `123456` bypass, which accepted that code for **any**
+account in **release** builds. Do not reintroduce a client-side shortcut;
+`test/phone_auth_test.dart` fails the build if one appears.
+
+### 3e. Cost note
+
+SMS is metered and per-project quotas apply. If you only need passwordless
+sign-in for a demo, email/password plus Google is free and needs none of the
+setup above.
+
+### 3f. Migrating accounts from the retired email-code flow
+
+Earlier builds had an "Email OTP" mode whose Firebase password was derived from
+the email address, so those users have a password they have never seen. They
+cannot sign in via the Password tab.
+
+The sign-in screen detects this (the `emailLink` entry in `authProviders`) and
+offers **"Set a password for this account"**, which sends a normal reset email.
+Google sign-in also still works for them. No admin action is needed.
 
 ## Step 4: Enable Firestore Database
 1. In the Firebase Console, go to **Build > Firestore Database**.
