@@ -7,6 +7,7 @@ import '../../domain/app_failure.dart';
 import '../../../app/theme/theme_provider.dart';
 import '../../../features/auth/application/auth_providers.dart';
 import '../../../features/auth/application/user_providers.dart';
+import '../../../features/auth/domain/user_profile.dart';
 
 /// Function to trigger opening the User Profile & Settings Modal Sheet
 Future<void> showUserProfileModal(BuildContext context) async {
@@ -112,61 +113,43 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
     }
   }
 
+  /// Fills the form from the saved profile, falling back to the auth account
+  /// for the three fields it can supply.
   void _loadCurrentUserData() {
     final authUser = ref.read(authStateProvider).value;
-    final profile = ref.read(userProfileProvider).value;
+    final profile = ref.read(currentUserProfileProvider).value;
 
-    _nameController.text =
-        profile?['name'] as String? ?? authUser?.displayName ?? '';
-    _emailController.text =
-        profile?['email'] as String? ?? authUser?.email ?? '';
-    _phoneController.text =
-        profile?['phone'] as String? ?? authUser?.phoneNumber ?? '';
+    String orElse(String? value, String? fallback) =>
+        (value?.isNotEmpty ?? false) ? value! : (fallback ?? '');
 
-    _selectedGender = profile?['gender'] as String?;
-    _selectedBloodGroup = profile?['bloodGroup'] as String? ?? profile?['blood_group'] as String?;
-    _selectedSpecialization = profile?['specialization'] as String?;
+    _nameController.text = orElse(profile?.name, authUser?.displayName);
+    _emailController.text = orElse(profile?.email, authUser?.email);
+    _phoneController.text = orElse(profile?.phone, authUser?.phoneNumber);
 
-    if (profile?['dob'] != null) {
-      try {
-        _selectedDob = DateTime.parse(profile!['dob'].toString());
-      } catch (_) {}
-    }
+    _selectedGender = profile?.gender;
+    _selectedBloodGroup = profile?.bloodGroup;
+    _selectedSpecialization = profile?.specialization;
+    _selectedDob = profile?.dob;
 
-    if (profile?['height'] != null) {
-      _heightController.text = profile!['height'].toString();
-    }
-    if (profile?['weight'] != null) {
-      _weightController.text = profile!['weight'].toString();
-    }
+    _heightController.text = profile?.heightCm?.toString() ?? '';
+    _weightController.text = profile?.weightKg?.toString() ?? '';
+    _conditionsController.text = profile?.medicalConditions.join(', ') ?? '';
+    _allergiesController.text = profile?.allergies.join(', ') ?? '';
+    _medicationsController.text = profile?.medications.join(', ') ?? '';
 
-    final conditions = profile?['medicalHistory'] ?? profile?['conditions'] ?? profile?['chronicConditions'];
-    if (conditions != null) {
-      _conditionsController.text = conditions is List ? conditions.join(', ') : conditions.toString();
-    }
+    _hospitalController.text = profile?.hospitalName ?? '';
+    _licenseController.text = profile?.licenseNumber ?? '';
+    _experienceController.text = profile?.yearsOfExperience?.toString() ?? '';
+    _bioController.text = profile?.bio ?? '';
+  }
 
-    final allergies = profile?['allergies'];
-    if (allergies != null) {
-      _allergiesController.text = allergies is List ? allergies.join(', ') : allergies.toString();
-    }
-
-    final medications = profile?['medications'] ?? profile?['currentMedications'];
-    if (medications != null) {
-      _medicationsController.text = medications is List ? medications.join(', ') : medications.toString();
-    }
-
-    if (profile?['hospital'] != null) {
-      _hospitalController.text = profile!['hospital'].toString();
-    }
-    if (profile?['licenseNumber'] != null) {
-      _licenseController.text = profile!['licenseNumber'].toString();
-    }
-    if (profile?['yearsOfExperience'] != null) {
-      _experienceController.text = profile!['yearsOfExperience'].toString();
-    }
-    if (profile?['bio'] != null) {
-      _bioController.text = profile!['bio'].toString();
-    }
+  /// Splits a comma-separated field into a clean list.
+  List<String> _listFrom(TextEditingController controller) {
+    return controller.text
+        .split(',')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
   }
 
   @override
@@ -206,61 +189,39 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
       final user = ref.read(authStateProvider).value;
       if (user == null) return;
 
-      final existingProfile = ref.read(userProfileProvider).value ?? {};
-      final role = existingProfile['role'] as String? ?? 'patient';
+      final existing =
+          ref.read(currentUserProfileProvider).value ??
+          UserProfile(uid: user.uid, name: '', role: UserRole.patient);
 
-      final Map<String, dynamic> updatedData = {
-        'name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'bio': _bioController.text.trim(),
+      // Start from the saved profile so untouched fields survive, then apply
+      // only the ones this role's form actually shows. toMap() handles the
+      // legacy field aliases, which used to be triple-written by hand here.
+      final isPatient = existing.role.toLowerCase() != UserRole.doctor &&
+          existing.role.toLowerCase() != UserRole.hospital;
+
+      final edited = existing.copyWith(
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        bio: _bioController.text.trim(),
+        gender: isPatient ? _selectedGender : null,
+        bloodGroup: isPatient ? _selectedBloodGroup : null,
+        dob: isPatient ? _selectedDob : null,
+        heightCm: isPatient ? double.tryParse(_heightController.text) : null,
+        weightKg: isPatient ? double.tryParse(_weightController.text) : null,
+        medicalConditions: isPatient ? _listFrom(_conditionsController) : null,
+        allergies: isPatient ? _listFrom(_allergiesController) : null,
+        medications: isPatient ? _listFrom(_medicationsController) : null,
+        specialization: isPatient ? null : _selectedSpecialization,
+        hospitalName: isPatient ? null : _hospitalController.text.trim(),
+        licenseNumber: isPatient ? null : _licenseController.text.trim(),
+        yearsOfExperience:
+            isPatient ? null : int.tryParse(_experienceController.text),
+      );
+
+      final updatedData = <String, dynamic>{
+        ...edited.toMap(),
         'updatedAt': DateTime.now().toIso8601String(),
       };
-
-      if (role == 'patient' || role == 'PATIENT') {
-        if (_selectedGender != null) updatedData['gender'] = _selectedGender;
-        if (_selectedBloodGroup != null) {
-          updatedData['bloodGroup'] = _selectedBloodGroup;
-          updatedData['blood_group'] = _selectedBloodGroup;
-        }
-        if (_selectedDob != null) {
-          updatedData['dob'] = _selectedDob!.toIso8601String();
-        }
-        if (_heightController.text.isNotEmpty) {
-          updatedData['height'] = double.tryParse(_heightController.text);
-        }
-        if (_weightController.text.isNotEmpty) {
-          updatedData['weight'] = double.tryParse(_weightController.text);
-        }
-        if (_conditionsController.text.isNotEmpty) {
-          final list = _conditionsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-          updatedData['medicalHistory'] = list;
-          updatedData['conditions'] = list;
-          updatedData['chronicConditions'] = list;
-        }
-        if (_allergiesController.text.isNotEmpty) {
-          final list = _allergiesController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-          updatedData['allergies'] = list;
-        }
-        if (_medicationsController.text.isNotEmpty) {
-          final list = _medicationsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-          updatedData['medications'] = list;
-          updatedData['currentMedications'] = list;
-        }
-      } else {
-        if (_selectedSpecialization != null) {
-          updatedData['specialization'] = _selectedSpecialization;
-        }
-        if (_hospitalController.text.isNotEmpty) {
-          updatedData['hospital'] = _hospitalController.text.trim();
-        }
-        if (_licenseController.text.isNotEmpty) {
-          updatedData['licenseNumber'] = _licenseController.text.trim();
-        }
-        if (_experienceController.text.isNotEmpty) {
-          updatedData['yearsOfExperience'] =
-              int.tryParse(_experienceController.text);
-        }
-      }
 
       // Update Firebase auth user display name
       if (_nameController.text.trim().isNotEmpty) {
@@ -309,24 +270,17 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeModeProvider);
-    final profile = ref.watch(userProfileProvider).value;
+    final profile = ref.watch(currentUserProfileProvider).value;
     final authUser = ref.watch(authStateProvider).value;
 
-    final displayName =
-        profile?['name'] as String? ?? authUser?.displayName ?? 'User Profile';
-    final email = profile?['email'] as String? ?? authUser?.email ?? '';
-    final role =
-        (profile?['role'] as String? ?? 'patient').toUpperCase();
-
-    final initials = displayName.trim().isNotEmpty
-        ? displayName
-            .trim()
-            .split(' ')
-            .map((e) => e[0])
-            .take(2)
-            .join()
-            .toUpperCase()
-        : 'P';
+    final displayName = (profile?.name.trim().isNotEmpty ?? false)
+        ? profile!.name.trim()
+        : (authUser?.displayName ?? 'User Profile');
+    final email = profile?.email ?? authUser?.email ?? '';
+    final role = (profile?.role.isNotEmpty ?? false)
+        ? profile!.role.toUpperCase()
+        : UserRole.patient.toUpperCase();
+    final initials = UserProfile.initialsOf(displayName, fallback: 'P');
 
     return Container(
       constraints: BoxConstraints(
@@ -445,394 +399,10 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    // --- Theme Switcher Section ---
-                    _buildSectionHeader(
-                      context,
-                      title: 'Appearance & Theme',
-                      icon: Icons.palette_outlined,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _buildThemeOption(
-                          context,
-                          label: 'Light',
-                          icon: Icons.light_mode_rounded,
-                          mode: ThemeMode.light,
-                          currentMode: themeMode,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildThemeOption(
-                          context,
-                          label: 'Dark',
-                          icon: Icons.dark_mode_rounded,
-                          mode: ThemeMode.dark,
-                          currentMode: themeMode,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildThemeOption(
-                          context,
-                          label: 'System',
-                          icon: Icons.brightness_auto_rounded,
-                          mode: ThemeMode.system,
-                          currentMode: themeMode,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // --- Personal Details Form ---
-                    _buildSectionHeader(
-                      context,
-                      title: 'Personal & Account Details',
-                      icon: Icons.person_outline_rounded,
-                    ),
-                    const SizedBox(height: 12),
-
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person_rounded),
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Name is required' : null,
-                    ),
-                    const SizedBox(height: 12),
-
-                    TextFormField(
-                      controller: _emailController,
-                      readOnly: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address (Registered)',
-                        prefixIcon: Icon(Icons.email_rounded),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    TextFormField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        prefixIcon: Icon(Icons.phone_rounded),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Patient specific fields
-                    if (role == 'PATIENT') ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _genders.contains(_selectedGender)
-                                  ? _selectedGender
-                                  : null,
-                              decoration: const InputDecoration(
-                                labelText: 'Gender',
-                                prefixIcon: Icon(Icons.wc_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                              items: _genders
-                                  .map((g) => DropdownMenuItem(
-                                        value: g,
-                                        child: Text(g),
-                                      ))
-                                  .toList(),
-                              onChanged: (val) =>
-                                  setState(() => _selectedGender = val),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: InkWell(
-                              onTap: _selectDateOfBirth,
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date of Birth',
-                                  prefixIcon: Icon(Icons.cake_rounded),
-                                  border: OutlineInputBorder(),
-                                ),
-                                child: Text(
-                                  _selectedDob != null
-                                      ? DateFormat('yyyy-MM-dd')
-                                          .format(_selectedDob!)
-                                      : 'Select Date',
-                                  style: TextStyle(
-                                    color: _selectedDob == null
-                                        ? context.hos.textMuted
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _heightController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Height (cm)',
-                                prefixIcon: Icon(Icons.height_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _weightController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Weight (kg)',
-                                prefixIcon: Icon(Icons.monitor_weight_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _bloodGroups.contains(_selectedBloodGroup)
-                                  ? _selectedBloodGroup
-                                  : null,
-                              decoration: const InputDecoration(
-                                labelText: 'Blood Group',
-                                prefixIcon: Icon(Icons.bloodtype_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                              items: _bloodGroups
-                                  .map((b) => DropdownMenuItem(
-                                        value: b,
-                                        child: Text(b),
-                                      ))
-                                  .toList(),
-                              onChanged: (val) =>
-                                  setState(() => _selectedBloodGroup = val),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextFormField(
-                        controller: _conditionsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Pre-existing Conditions / Diseases (comma-separated)',
-                          hintText: 'e.g. Diabetes, Hypertension, Asthma, Anemia',
-                          prefixIcon: Icon(Icons.healing_rounded),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _allergiesController,
-                              decoration: const InputDecoration(
-                                labelText: 'Known Allergies',
-                                hintText: 'e.g. Penicillin, Dust, Peanuts',
-                                prefixIcon: Icon(Icons.warning_amber_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _medicationsController,
-                              decoration: const InputDecoration(
-                                labelText: 'Current Medications',
-                                hintText: 'e.g. Metformin 500mg, Thyroid 50mcg',
-                                prefixIcon: Icon(Icons.medication_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // Doctor specific fields
-                    if (role == 'DOCTOR') ...[
-                      DropdownButtonFormField<String>(
-                        value: _specializations.contains(_selectedSpecialization)
-                            ? _selectedSpecialization
-                            : null,
-                        decoration: const InputDecoration(
-                          labelText: 'Specialization',
-                          prefixIcon: Icon(Icons.medical_services_rounded),
-                          border: OutlineInputBorder(),
-                        ),
-                        items: _specializations
-                            .map((s) => DropdownMenuItem(
-                                  value: s,
-                                  child: Text(s),
-                                ))
-                            .toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedSpecialization = val),
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextFormField(
-                        controller: _hospitalController,
-                        decoration: const InputDecoration(
-                          labelText: 'Hospital / Clinic Name',
-                          prefixIcon: Icon(Icons.local_hospital_rounded),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _licenseController,
-                              decoration: const InputDecoration(
-                                labelText: 'License No.',
-                                prefixIcon: Icon(Icons.verified_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _experienceController,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Experience (Years)',
-                                prefixIcon: Icon(Icons.work_history_rounded),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    TextFormField(
-                      controller: _bioController,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Bio / Notes',
-                        prefixIcon: Icon(Icons.notes_rounded),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // --- Notifications & Preferences Section ---
-                    _buildSectionHeader(
-                      context,
-                      title: 'Preferences & Notifications',
-                      icon: Icons.notifications_none_rounded,
-                    ),
-                    const SizedBox(height: 8),
-
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Push Notifications'),
-                      subtitle: const Text('Reminders, appointment updates & alerts'),
-                      value: _pushNotifications,
-                      onChanged: (val) => setState(() => _pushNotifications = val),
-                      activeColor: AppColors.primary,
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Email Alerts'),
-                      subtitle: const Text('Receive health reports & lab results in inbox'),
-                      value: _emailAlerts,
-                      onChanged: (val) => setState(() => _emailAlerts = val),
-                      activeColor: AppColors.primary,
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('In-App Sound Effects'),
-                      subtitle: const Text('Play subtle sounds on actions'),
-                      value: _soundEffects,
-                      onChanged: (val) => setState(() => _soundEffects = val),
-                      activeColor: AppColors.primary,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // --- Save Changes Button ---
-                    ElevatedButton.icon(
-                      onPressed: _isSaving ? null : _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.save_rounded),
-                      label: Text(
-                        _isSaving ? 'Saving Changes...' : 'Save Profile Changes',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // --- Sign Out Button ---
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        await ref.read(authRepositoryProvider).signOut();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: const BorderSide(color: AppColors.error),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      icon: const Icon(Icons.logout_rounded),
-                      label: const Text(
-                        'Sign Out',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
+                    ..._themeSection(context, themeMode, isDark),
+                    ..._personalDetailsSection(context, isDark, role),
+                    ..._preferencesSection(context, isDark),
+                    ..._actionsSection(context, isDark),
                   ],
                 ),
               ),
@@ -841,6 +411,426 @@ class _UserProfileModalSheetState extends ConsumerState<UserProfileModalSheet> {
         ),
       ),
     );
+  }
+
+  /// Light/dark/system picker.
+  List<Widget> _themeSection(
+    BuildContext context,
+    ThemeMode themeMode,
+    bool isDark,
+  ) {
+    return [
+      // --- Theme Switcher Section ---
+      _buildSectionHeader(
+        context,
+        title: 'Appearance & Theme',
+        icon: Icons.palette_outlined,
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          _buildThemeOption(
+            context,
+            label: 'Light',
+            icon: Icons.light_mode_rounded,
+            mode: ThemeMode.light,
+            currentMode: themeMode,
+          ),
+          const SizedBox(width: 8),
+          _buildThemeOption(
+            context,
+            label: 'Dark',
+            icon: Icons.dark_mode_rounded,
+            mode: ThemeMode.dark,
+            currentMode: themeMode,
+          ),
+          const SizedBox(width: 8),
+          _buildThemeOption(
+            context,
+            label: 'System',
+            icon: Icons.brightness_auto_rounded,
+            mode: ThemeMode.system,
+            currentMode: themeMode,
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 24),
+
+    ];
+  }
+
+  /// The editable profile form. Which fields appear depends on the role.
+  List<Widget> _personalDetailsSection(
+    BuildContext context,
+    bool isDark,
+    String role,
+  ) {
+    return [
+      // --- Personal Details Form ---
+      _buildSectionHeader(
+        context,
+        title: 'Personal & Account Details',
+        icon: Icons.person_outline_rounded,
+      ),
+      const SizedBox(height: 12),
+
+      TextFormField(
+        controller: _nameController,
+        decoration: const InputDecoration(
+          labelText: 'Full Name',
+          prefixIcon: Icon(Icons.person_rounded),
+          border: OutlineInputBorder(),
+        ),
+        validator: (v) =>
+            v == null || v.trim().isEmpty ? 'Name is required' : null,
+      ),
+      const SizedBox(height: 12),
+
+      TextFormField(
+        controller: _emailController,
+        readOnly: true,
+        decoration: const InputDecoration(
+          labelText: 'Email Address (Registered)',
+          prefixIcon: Icon(Icons.email_rounded),
+          border: OutlineInputBorder(),
+          filled: true,
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      TextFormField(
+        controller: _phoneController,
+        keyboardType: TextInputType.phone,
+        decoration: const InputDecoration(
+          labelText: 'Phone Number',
+          prefixIcon: Icon(Icons.phone_rounded),
+          border: OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+
+      // Patient specific fields
+      if (role == 'PATIENT') ...[
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _genders.contains(_selectedGender)
+                    ? _selectedGender
+                    : null,
+                decoration: const InputDecoration(
+                  labelText: 'Gender',
+                  prefixIcon: Icon(Icons.wc_rounded),
+                  border: OutlineInputBorder(),
+                ),
+                items: _genders
+                    .map((g) => DropdownMenuItem(
+                          value: g,
+                          child: Text(g),
+                        ))
+                    .toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedGender = val),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: InkWell(
+                onTap: _selectDateOfBirth,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Date of Birth',
+                    prefixIcon: Icon(Icons.cake_rounded),
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(
+                    _selectedDob != null
+                        ? DateFormat('yyyy-MM-dd')
+                            .format(_selectedDob!)
+                        : 'Select Date',
+                    style: TextStyle(
+                      color: _selectedDob == null
+                          ? context.hos.textMuted
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _heightController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Height (cm)',
+                  prefixIcon: Icon(Icons.height_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _weightController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Weight (kg)',
+                  prefixIcon: Icon(Icons.monitor_weight_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _bloodGroups.contains(_selectedBloodGroup)
+                    ? _selectedBloodGroup
+                    : null,
+                decoration: const InputDecoration(
+                  labelText: 'Blood Group',
+                  prefixIcon: Icon(Icons.bloodtype_rounded),
+                  border: OutlineInputBorder(),
+                ),
+                items: _bloodGroups
+                    .map((b) => DropdownMenuItem(
+                          value: b,
+                          child: Text(b),
+                        ))
+                    .toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedBloodGroup = val),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        TextFormField(
+          controller: _conditionsController,
+          decoration: const InputDecoration(
+            labelText: 'Pre-existing Conditions / Diseases (comma-separated)',
+            hintText: 'e.g. Diabetes, Hypertension, Asthma, Anemia',
+            prefixIcon: Icon(Icons.healing_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _allergiesController,
+                decoration: const InputDecoration(
+                  labelText: 'Known Allergies',
+                  hintText: 'e.g. Penicillin, Dust, Peanuts',
+                  prefixIcon: Icon(Icons.warning_amber_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _medicationsController,
+                decoration: const InputDecoration(
+                  labelText: 'Current Medications',
+                  hintText: 'e.g. Metformin 500mg, Thyroid 50mcg',
+                  prefixIcon: Icon(Icons.medication_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
+
+      // Doctor specific fields
+      if (role == 'DOCTOR') ...[
+        DropdownButtonFormField<String>(
+          value: _specializations.contains(_selectedSpecialization)
+              ? _selectedSpecialization
+              : null,
+          decoration: const InputDecoration(
+            labelText: 'Specialization',
+            prefixIcon: Icon(Icons.medical_services_rounded),
+            border: OutlineInputBorder(),
+          ),
+          items: _specializations
+              .map((s) => DropdownMenuItem(
+                    value: s,
+                    child: Text(s),
+                  ))
+              .toList(),
+          onChanged: (val) =>
+              setState(() => _selectedSpecialization = val),
+        ),
+        const SizedBox(height: 12),
+
+        TextFormField(
+          controller: _hospitalController,
+          decoration: const InputDecoration(
+            labelText: 'Hospital / Clinic Name',
+            prefixIcon: Icon(Icons.local_hospital_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _licenseController,
+                decoration: const InputDecoration(
+                  labelText: 'License No.',
+                  prefixIcon: Icon(Icons.verified_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: _experienceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Experience (Years)',
+                  prefixIcon: Icon(Icons.work_history_rounded),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
+
+      TextFormField(
+        controller: _bioController,
+        maxLines: 2,
+        decoration: const InputDecoration(
+          labelText: 'Bio / Notes',
+          prefixIcon: Icon(Icons.notes_rounded),
+          border: OutlineInputBorder(),
+        ),
+      ),
+
+      const SizedBox(height: 24),
+
+    ];
+  }
+
+  /// Notification and sound toggles.
+  List<Widget> _preferencesSection(BuildContext context, bool isDark) {
+    return [
+      // --- Notifications & Preferences Section ---
+      _buildSectionHeader(
+        context,
+        title: 'Preferences & Notifications',
+        icon: Icons.notifications_none_rounded,
+      ),
+      const SizedBox(height: 8),
+
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: const Text('Push Notifications'),
+        subtitle: const Text('Reminders, appointment updates & alerts'),
+        value: _pushNotifications,
+        onChanged: (val) => setState(() => _pushNotifications = val),
+        activeColor: AppColors.primary,
+      ),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: const Text('Email Alerts'),
+        subtitle: const Text('Receive health reports & lab results in inbox'),
+        value: _emailAlerts,
+        onChanged: (val) => setState(() => _emailAlerts = val),
+        activeColor: AppColors.primary,
+      ),
+      SwitchListTile(
+        contentPadding: EdgeInsets.zero,
+        title: const Text('In-App Sound Effects'),
+        subtitle: const Text('Play subtle sounds on actions'),
+        value: _soundEffects,
+        onChanged: (val) => setState(() => _soundEffects = val),
+        activeColor: AppColors.primary,
+      ),
+
+      const SizedBox(height: 24),
+    ];
+  }
+
+  /// Save and sign-out buttons.
+  List<Widget> _actionsSection(BuildContext context, bool isDark) {
+    return [
+
+      // --- Save Changes Button ---
+      ElevatedButton.icon(
+        onPressed: _isSaving ? null : _saveProfile,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        icon: _isSaving
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.save_rounded),
+        label: Text(
+          _isSaving ? 'Saving Changes...' : 'Save Profile Changes',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 16),
+
+      // --- Sign Out Button ---
+      OutlinedButton.icon(
+        onPressed: () async {
+          Navigator.pop(context);
+          await ref.read(authRepositoryProvider).signOut();
+        },
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.error,
+          side: const BorderSide(color: AppColors.error),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        icon: const Icon(Icons.logout_rounded),
+        label: const Text(
+          'Sign Out',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+
+      const SizedBox(height: 12),
+    ];
   }
 
   Widget _buildSectionHeader(

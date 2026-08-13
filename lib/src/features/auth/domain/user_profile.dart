@@ -52,6 +52,7 @@ class UserProfile {
     this.medicalConditions = const [],
     this.medications = const [],
     this.dietGoal,
+    this.bio,
     this.specialization,
     this.licenseNumber,
     this.hospitalId,
@@ -80,6 +81,9 @@ class UserProfile {
   final List<String> medicalConditions;
   final List<String> medications;
   final String? dietGoal;
+
+  /// Free-text "about me", shown on the profile sheet.
+  final String? bio;
 
   // Doctor
   final String? specialization;
@@ -199,6 +203,7 @@ class UserProfile {
         data['medications'] ?? data['currentMedications'],
       ),
       dietGoal: _string(data['dietGoal']),
+      bio: _string(data['bio']),
       specialization: _string(data['specialization']),
       licenseNumber: _string(data['licenseNumber']),
       hospitalId: _string(data['hospitalId']),
@@ -243,6 +248,7 @@ class UserProfile {
       'chronicConditions': medicalConditions,
       'currentMedications': medications,
       if (dietGoal != null) 'dietGoal': dietGoal,
+      if (bio != null) 'bio': bio,
       if (specialization != null) 'specialization': specialization,
       if (licenseNumber != null) 'licenseNumber': licenseNumber,
       if (hospitalId != null) 'hospitalId': hospitalId,
@@ -271,6 +277,7 @@ class UserProfile {
     List<String>? medicalConditions,
     List<String>? medications,
     String? dietGoal,
+    String? bio,
     String? specialization,
     String? licenseNumber,
     String? hospitalId,
@@ -295,6 +302,7 @@ class UserProfile {
       medicalConditions: medicalConditions ?? this.medicalConditions,
       medications: medications ?? this.medications,
       dietGoal: dietGoal ?? this.dietGoal,
+      bio: bio ?? this.bio,
       specialization: specialization ?? this.specialization,
       licenseNumber: licenseNumber ?? this.licenseNumber,
       hospitalId: hospitalId ?? this.hospitalId,
