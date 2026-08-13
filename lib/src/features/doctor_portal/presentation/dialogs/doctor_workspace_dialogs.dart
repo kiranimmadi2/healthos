@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../ai_triage/application/ai_triage_providers.dart';
 import '../../../records/application/record_providers.dart';
@@ -241,9 +242,10 @@ Future<void> showPatientSheet(BuildContext context, DoctorPatient patient) {
                             child: HosLoading(),
                           ),
                         ),
-                        error: (err, _) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Text('Error loading vault: $err'),
+                        error: (err, _) => HosErrorState(
+                          error: err,
+                          compact: true,
+                          title: 'Could not load records',
                         ),
                         data: (records) {
                           if (records.isEmpty) {

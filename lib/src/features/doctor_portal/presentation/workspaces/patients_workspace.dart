@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/hos_widgets.dart';
 import '../../../appointments/application/appointment_providers.dart';
 import '../../../appointments/domain/appointment.dart';
 import '../../../auth/application/user_providers.dart';
+import '../../application/doctor_portal_providers.dart';
 import '../../demo/doctor_workspace_models.dart';
 import '../dialogs/doctor_workspace_dialogs.dart';
 import '../widgets/doctor_workspace_widgets.dart';
@@ -21,11 +23,28 @@ class PatientsWorkspace extends ConsumerStatefulWidget {
 }
 
 class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
+  final _searchController = TextEditingController();
   String _query = '';
   String _filter = 'All patients';
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // The workspace header writes here; mirror it into the local field so a
+    // search started from the app bar visibly lands on this screen.
+    ref.listen<String>(workspaceSearchProvider, (previous, next) {
+      if (next == _query) return;
+      setState(() {
+        _query = next;
+        _searchController.text = next;
+      });
+    });
+
     final patientsAsync = ref.watch(allPatientsProvider);
     final appointments = ref.watch(doctorAppointmentsProvider).value ?? const [];
 
@@ -129,10 +148,22 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 700;
               final search = TextField(
+                controller: _searchController,
                 onChanged: (value) => setState(() => _query = value),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search by patient or condition',
-                  prefixIcon: Icon(HosIcons.search),
+                  prefixIcon: const Icon(HosIcons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: 'Clear search',
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(workspaceSearchProvider.notifier).clear();
+                            setState(() => _query = '');
+                          },
+                        ),
                 ),
               );
               final filters = Wrap(
@@ -186,11 +217,10 @@ class _PatientsWorkspaceState extends ConsumerState<PatientsWorkspace> {
                 child: HosLoading(),
               ),
             ),
-            error: (e, st) => Card(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Text('Error loading patients: $e'),
-              ),
+            error: (e, st) => HosErrorState(
+              error: e,
+              compact: true,
+              title: 'Could not load patients',
             ),
             data: (_) {
               if (filteredPatients.isEmpty) {

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/theme/theme.dart';
+import '../../../shared/domain/app_failure.dart';
+import '../../../shared/presentation/widgets/hos_states.dart';
 import '../../auth/application/auth_providers.dart';
 import '../application/chat_providers.dart';
 
@@ -62,7 +64,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Could not send: $e')));
+        ).showSnackBar(SnackBar(content: Text(describeFailure(e))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -73,11 +75,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.threadId));
     final currentUid = ref.watch(authStateProvider).value?.uid;
+    final hos = context.hos;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: hos.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: hos.surface,
         elevation: 0,
         title: Row(
           children: [
@@ -111,17 +114,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: messagesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('Error: $e')),
+            child: messagesAsync.hosWhen(
+              loading: () => const HosSkeletonList(count: 3),
+              onRetry: () =>
+                  ref.invalidate(chatMessagesProvider(widget.threadId)),
+              errorTitle: 'Could not load this conversation',
               data: (messages) {
                 if (messages.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No messages yet.\nSay hello!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey[500], height: 1.5),
-                    ),
+                  return HosEmptyState(
+                    icon: Icons.forum_outlined,
+                    title: 'No messages yet',
+                    message: 'Say hello to ${widget.otherPartyName}.',
                   );
                 }
                 return ListView.builder(
@@ -146,9 +149,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         decoration: BoxDecoration(
-                          color: isMine
-                              ? AppColors.primary
-                              : AppColors.surfaceMuted,
+                          color: isMine ? AppColors.primary : hos.surfaceMuted,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(18),
                             topRight: const Radius.circular(18),
@@ -162,9 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             Text(
                               message.text,
                               style: TextStyle(
-                                color: isMine
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
+                                color: isMine ? Colors.white : hos.textPrimary,
                                 fontSize: 15,
                                 height: 1.4,
                               ),
@@ -176,7 +175,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 style: TextStyle(
                                   color: isMine
                                       ? Colors.white70
-                                      : AppColors.textMuted,
+                                      : hos.textMuted,
                                   fontSize: 11,
                                 ),
                               ),
@@ -194,9 +193,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             top: false,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppColors.border)),
+              decoration: BoxDecoration(
+                color: hos.surface,
+                border: Border(top: BorderSide(color: hos.border)),
               ),
               child: Row(
                 children: [

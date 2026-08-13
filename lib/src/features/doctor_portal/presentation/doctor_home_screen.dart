@@ -117,14 +117,7 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
                     prefixIcon: Icon(Icons.search_rounded),
                     isDense: true,
                   ),
-                  onSubmitted: (value) {
-                    if (value.trim().isEmpty) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Searching for “${value.trim()}”'),
-                      ),
-                    );
-                  },
+                  onSubmitted: _applySearch,
                 )
               : IconButton(
                   tooltip: 'Search workspace',
@@ -163,6 +156,20 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
     );
   }
 
+  /// Applies a header search: stores the query and reveals the patient list,
+  /// which filters on it.
+  void _applySearch(String value) {
+    final query = value.trim();
+    if (query.isEmpty) return;
+    ref.read(workspaceSearchProvider.notifier).set(query);
+    final patientsIndex = _destinations.indexWhere(
+      (d) => d.label == 'Patients',
+    );
+    if (patientsIndex != -1 && patientsIndex != _currentIndex) {
+      _selectSection(patientsIndex);
+    }
+  }
+
   Future<void> _showSearch(BuildContext context) async {
     await showModalBottomSheet<void>(
       context: context,
@@ -177,10 +184,13 @@ class _DoctorHomeScreenState extends ConsumerState<DoctorHomeScreen> {
         child: TextField(
           autofocus: true,
           decoration: const InputDecoration(
-            hintText: 'Search patients, reports, messages...',
+            hintText: 'Search patients by name or condition',
             prefixIcon: Icon(Icons.search_rounded),
           ),
-          onSubmitted: (_) => Navigator.pop(context),
+          onSubmitted: (value) {
+            Navigator.pop(context);
+            _applySearch(value);
+          },
         ),
       ),
     );

@@ -64,6 +64,22 @@ class DoctorStats {
   );
 }
 
+/// Search text entered in the doctor workspace header.
+///
+/// Shared so the header field actually drives the patient list; previously it
+/// only raised a SnackBar echoing the query.
+final workspaceSearchProvider = NotifierProvider<WorkspaceSearch, String>(
+  WorkspaceSearch.new,
+);
+
+class WorkspaceSearch extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void set(String value) => state = value.trim();
+  void clear() => state = '';
+}
+
 final doctorStatsProvider = Provider<DoctorStats>((ref) {
   final appointments =
       ref.watch(doctorAppointmentsProvider).value ?? const <Appointment>[];

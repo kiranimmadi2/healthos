@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/presentation/widgets/hos_states.dart';
 import '../../appointments/presentation/book_appointment_screen.dart';
 import '../application/doctor_providers.dart';
 import '../domain/doctor_profile.dart';
@@ -58,9 +59,9 @@ class _DoctorListScreenState extends ConsumerState<DoctorListScreen> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1000),
-          child: doctorsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, st) => Center(child: Text('Error: $e')),
+          child: doctorsAsync.hosWhen(
+            onRetry: () => ref.invalidate(availableDoctorsProvider),
+            errorTitle: 'Could not load doctors',
             data: (doctors) {
               final categories = [
                 'All',

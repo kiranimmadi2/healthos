@@ -16,6 +16,40 @@ class _CareUpdates extends ConsumerWidget {
     }
   }
 
+  /// Opens the conversation with the doctor on this update.
+  ///
+  /// These tiles previously had an empty `onTap`, so they looked interactive
+  /// and did nothing.
+  Future<void> _openThread(
+    BuildContext context,
+    WidgetRef ref,
+    Appointment appointment,
+  ) async {
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    try {
+      final threadId = await ref
+          .read(chatRepositoryProvider)
+          .openThread(
+            patientId: appointment.patientId,
+            patientName: appointment.patientName,
+            doctorId: appointment.doctorId,
+            doctorName: appointment.doctorName,
+          );
+      if (!context.mounted) return;
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => ChatScreen(
+            threadId: threadId,
+            otherPartyName: appointment.doctorName,
+          ),
+        ),
+      );
+    } catch (error) {
+      messenger?.showSnackBar(SnackBar(content: Text(describeFailure(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appointmentsAsync = ref.watch(patientAppointmentsProvider);
@@ -24,12 +58,16 @@ class _CareUpdates extends ConsumerWidget {
       loading: () => const GlassContainer(
         borderRadius: 28,
         padding: EdgeInsets.all(AppSpacing.xl),
-        child: Center(child: CircularProgressIndicator()),
+        child: HosSkeletonList(count: 2, padding: EdgeInsets.zero),
       ),
       error: (e, st) => GlassContainer(
         borderRadius: 28,
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Text('Could not load updates: $e'),
+        child: HosErrorState(
+          error: e,
+          compact: true,
+          title: 'Could not load updates',
+        ),
       ),
       data: (appointments) {
         if (appointments.isEmpty) {
@@ -67,7 +105,7 @@ class _CareUpdates extends ConsumerWidget {
                         foreground: color,
                         background: color.withOpacity(0.12),
                       ),
-                      onTap: () {},
+                      onTap: () => _openThread(context, ref, appointment),
                     );
                   },
                 ),

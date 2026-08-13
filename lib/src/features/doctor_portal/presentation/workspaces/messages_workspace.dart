@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../auth/application/auth_providers.dart';
 import '../../../chat/application/chat_providers.dart';
 import '../../../chat/domain/chat_message.dart';
@@ -472,13 +473,20 @@ class _LiveMessageThreadState extends ConsumerState<_LiveMessageThread> {
           const Divider(),
           Expanded(
             child: messagesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('Could not load: $e')),
+              loading: () => const HosSkeletonList(count: 3),
+              error: (e, st) => HosErrorState(
+                error: e,
+                compact: true,
+                title: 'Could not load this conversation',
+              ),
               data: (messages) {
                 _scrollToLatest(messages.length);
                 if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet. Start the conversation.'),
+                  return const HosEmptyState(
+                    compact: true,
+                    icon: Icons.forum_outlined,
+                    title: 'No messages yet',
+                    message: 'Start the conversation.',
                   );
                 }
                 return ListView.builder(

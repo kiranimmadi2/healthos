@@ -12,6 +12,7 @@ import '../../doctors/doctors.dart';
 import '../../food_nutrition/food_nutrition.dart';
 import '../../records/records.dart';
 import 'dashboard/dashboard_content.dart';
+import 'notifications_sheet.dart';
 
 class PatientHomeScreen extends ConsumerStatefulWidget {
   const PatientHomeScreen({super.key});
@@ -125,15 +126,7 @@ class _PatientHomeScreenState extends ConsumerState<PatientHomeScreen> {
         ),
       ),
       actions: [
-        IconButton(
-          tooltip: 'Notifications',
-          onPressed: () {},
-          icon: const Badge(
-            backgroundColor: AppColors.error,
-            smallSize: 8,
-            child: Icon(Icons.notifications_none_rounded, size: 22),
-          ),
-        ),
+        const NotificationsBell(),
         const SizedBox(width: 6),
 
         Semantics(

@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../shared/presentation/layout/responsive_layout.dart';
 import '../../../../shared/presentation/shell/health_page.dart';
+import '../../../../shared/domain/app_failure.dart';
 import '../../../../shared/presentation/widgets/glass_container.dart';
+import '../../../../shared/presentation/widgets/hos_states.dart';
 import '../../../../shared/presentation/widgets/status_pill.dart';
 import '../../../appointments/appointments.dart';
 import '../../../auth/application/auth_providers.dart';
@@ -705,8 +707,12 @@ class _AppointmentQueueCard extends ConsumerWidget {
                 ],
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const SizedBox(),
+            loading: () => const HosSkeletonList(count: 2, padding: EdgeInsets.zero),
+            error: (error, _) => HosErrorState(
+              error: error,
+              compact: true,
+              title: 'Could not load doctors',
+            ),
           ),
         ],
       ),
